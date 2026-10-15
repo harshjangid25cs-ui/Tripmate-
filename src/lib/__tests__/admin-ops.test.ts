@@ -4,16 +4,39 @@ import {
   adminAssignDriverOrVehicleAction,
   adminResolveApprovalAction,
   fetchAdminOperationalSnapshot,
+  adminUpsertCircuitAction,
+  adminToggleCircuitStatusAction,
+  adminControlActiveTripAction,
+  adminUpsertVehicleAction,
+  adminDeleteVehicleAction,
+  adminUpsertDriverAction,
+  adminUpsertHotelAction,
+  adminUpsertStopAction,
+  adminUpsertDestinationAction,
 } from "@/lib/actions/admin-ops";
 import {
   mapDatabaseTripToAdminBooking,
   mapDatabaseCommercialToAdminApproval,
   mapDatabaseCircuitToAdminTrip,
+  mapDatabaseVehicleToAdminVehicle,
+  mapDatabaseDriverToAdminDriver,
+  mapDatabaseHotelToAdminHotel,
+  mapDatabaseStopToAdminStop,
+  mapDatabaseDestinationToAdminDestination,
 } from "@/lib/admin/mappers";
 import {
   adminUpdateBookingStatusSchema,
   adminAssignDriverSchema,
   adminResolveApprovalSchema,
+  adminUpsertCircuitSchema,
+  adminToggleCircuitStatusSchema,
+  adminControlActiveTripSchema,
+  adminUpsertVehicleSchema,
+  adminDeleteVehicleSchema,
+  adminUpsertDriverSchema,
+  adminUpsertHotelSchema,
+  adminUpsertStopSchema,
+  adminUpsertDestinationSchema,
 } from "@/lib/validations/actions";
 
 describe("Admin Operations & Live Data Integration", () => {
@@ -368,4 +391,378 @@ describe("Admin Operations & Live Data Integration", () => {
       expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_resolve_approval(uuid, text, text) TO authenticated, service_role;");
     });
   });
+
+  describe("Catalog CRUD Zod Validation Schemas", () => {
+    it("validates and parses circuit payloads correctly", () => {
+      const valid = adminUpsertCircuitSchema.safeParse({
+        destinationId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        title: "Royal Rajputana Circuit",
+        days: 4,
+        nights: 3,
+        basePricePerPerson: 12500,
+        badge: "Bestseller",
+        categories: ["heritage", "luxury"],
+      });
+      expect(valid.success).toBe(true);
+
+      const invalid = adminUpsertCircuitSchema.safeParse({
+        destinationId: "",
+        title: "X",
+        days: 0,
+        basePricePerPerson: -100,
+      });
+      expect(invalid.success).toBe(false);
+    });
+
+    it("validates and parses vehicle payloads correctly", () => {
+      const valid = adminUpsertVehicleSchema.safeParse({
+        name: "Toyota Innova Crysta",
+        type: "car",
+        capacity: 7,
+        luggageCapacity: 4,
+        pricePerDay: 4500,
+        driverType: "chauffeur",
+      });
+      expect(valid.success).toBe(true);
+
+      const invalidType = adminUpsertVehicleSchema.safeParse({
+        name: "Helicopter",
+        type: "aircraft",
+        pricePerDay: 50000,
+      });
+      expect(invalidType.success).toBe(false);
+
+      const validToggle = adminToggleCircuitStatusSchema.safeParse({
+        circuitId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        isActive: false,
+      });
+      expect(validToggle.success).toBe(true);
+
+      const validDelete = adminDeleteVehicleSchema.safeParse({
+        vehicleId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        reason: "Decommissioned old vehicle",
+      });
+      expect(validDelete.success).toBe(true);
+    });
+
+    it("validates active trip control updates", () => {
+      const valid = adminControlActiveTripSchema.safeParse({
+        tripId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        startDate: "2026-11-01",
+        endDate: "2026-11-05",
+        status: "confirmed",
+        vehicleId: "e22ac10b-58cc-4372-a567-0e02b2c3d479",
+        driverId: "d33ac10b-58cc-4372-a567-0e02b2c3d479",
+        hotelId: "a11ac10b-58cc-4372-a567-0e02b2c3d479",
+        rooms: 2,
+        reason: "Customer requested upgrade to luxury SUV and driver reassignment",
+      });
+      expect(valid.success).toBe(true);
+    });
+
+    it("validates driver, hotel, stop, and destination payloads", () => {
+      const validDriver = adminUpsertDriverSchema.safeParse({
+        name: "Vikramaditya Singh",
+        phone: "+91 98111 22233",
+        licensePlate: "RJ 14 TA 8899",
+        rating: 4.95,
+      });
+      expect(validDriver.success).toBe(true);
+
+      const invalidDriver = adminUpsertDriverSchema.safeParse({
+        name: "",
+        phone: "123",
+        licensePlate: "",
+      });
+      expect(invalidDriver.success).toBe(false);
+
+      const validHotel = adminUpsertHotelSchema.safeParse({
+        destinationId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        name: "Rambagh Palace",
+        pricePerNight: 28000,
+        rating: 4.98,
+      });
+      expect(validHotel.success).toBe(true);
+
+      const validStop = adminUpsertStopSchema.safeParse({
+        name: "Midway Highway Retreat",
+        price: 650,
+        pricingUnit: "per_person",
+      });
+      expect(validStop.success).toBe(true);
+
+      const validDest = adminUpsertDestinationSchema.safeParse({
+        slug: "udaipur",
+        name: "Udaipur",
+        region: "Mewar, Rajasthan",
+      });
+      expect(validDest.success).toBe(true);
+    });
+  });
+
+  describe("Catalog CRUD Server Actions Auth Rejection", () => {
+    it("rejects unauthorized caller for adminUpsertCircuitAction", async () => {
+      const res = await adminUpsertCircuitAction({
+        destinationId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        title: "Test Circuit",
+        days: 3,
+        basePricePerPerson: 5000,
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+
+    it("rejects unauthorized caller for adminToggleCircuitStatusAction", async () => {
+      const res = await adminToggleCircuitStatusAction({
+        circuitId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        isActive: false,
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+
+    it("rejects unauthorized caller for adminControlActiveTripAction", async () => {
+      const res = await adminControlActiveTripAction({
+        tripId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        status: "confirmed",
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+
+    it("rejects unauthorized caller for adminUpsertVehicleAction", async () => {
+      const res = await adminUpsertVehicleAction({
+        name: "Maruti Ertiga",
+        type: "car",
+        pricePerDay: 2800,
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+
+    it("rejects unauthorized caller for adminDeleteVehicleAction", async () => {
+      const res = await adminDeleteVehicleAction({
+        vehicleId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+
+    it("rejects unauthorized caller for adminUpsertDriverAction", async () => {
+      const res = await adminUpsertDriverAction({
+        name: "Satish Kumar",
+        phone: "+91 98765 43210",
+        licensePlate: "DL 1Y 9900",
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+
+    it("rejects unauthorized caller for adminUpsertHotelAction", async () => {
+      const res = await adminUpsertHotelAction({
+        destinationId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        name: "Hotel Clarks Amer",
+        pricePerNight: 5500,
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+
+    it("rejects unauthorized caller for adminUpsertStopAction", async () => {
+      const res = await adminUpsertStopAction({
+        name: "Neemrana Stepwell Stop",
+        price: 450,
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+
+    it("rejects unauthorized caller for adminUpsertDestinationAction", async () => {
+      const res = await adminUpsertDestinationAction({
+        slug: "jodhpur",
+        name: "Jodhpur",
+      });
+      expect(res.ok).toBe(false);
+      expect(res.error).toBe("Unauthorized admin access.");
+    });
+  });
+
+  describe("Catalog Entity Database Mappers", () => {
+    it("maps database vehicle row to AdminVehicle structure", () => {
+      const dbVehicle = {
+        id: "veh-99",
+        type: "bus",
+        name: "BharatBenz Luxury Coach",
+        subtitle: "Executive 45-Seater",
+        capacity: 45,
+        luggage_capacity: 50,
+        features: ["Wi-Fi", "Reclining Seats", "AC"],
+        fuel_policy: "Included",
+        driver_type: "chauffeur",
+        price: 18000,
+        image_path: "/images/coach.jpg",
+        is_active: true,
+      };
+
+      const mapped = mapDatabaseVehicleToAdminVehicle(dbVehicle);
+      expect(mapped.id).toBe("veh-99");
+      expect(mapped.name).toBe("BharatBenz Luxury Coach");
+      expect(mapped.type).toBe("bus");
+      expect(mapped.capacity).toBe(45);
+      expect(mapped.price_per_day).toBe(18000);
+      expect(mapped.is_active).toBe(true);
+    });
+
+    it("maps database driver row to AdminDriver structure", () => {
+      const dbDriver = {
+        id: "drv-55",
+        full_name: "Mahaveer Rathore",
+        phone: "+91 98290 12345",
+        plate_number: "RJ 14 CC 1122",
+        rating: 4.96,
+        is_active: true,
+      };
+
+      const mapped = mapDatabaseDriverToAdminDriver(dbDriver);
+      expect(mapped.id).toBe("drv-55");
+      expect(mapped.name).toBe("Mahaveer Rathore");
+      expect(mapped.phone).toBe("+91 98290 12345");
+      expect(mapped.license_plate).toBe("RJ 14 CC 1122");
+      expect(mapped.rating).toBe(4.96);
+      expect(mapped.is_active).toBe(true);
+    });
+
+    it("maps database hotel row to AdminHotel structure", () => {
+      const dbHotel = {
+        id: "htl-12",
+        destination_id: "dest-1",
+        name: "Samode Haveli",
+        price_per_night: 14500,
+        rating: 4.9,
+        neighborhood: "Gangapole",
+        distance_text: "Old City",
+        badge: "Heritage",
+        image_paths: ["/images/samode.jpg"],
+        amenities: ["Pool", "Spa"],
+        is_active: true,
+        destinations: { name: "Jaipur" },
+      };
+
+      const mapped = mapDatabaseHotelToAdminHotel(dbHotel);
+      expect(mapped.id).toBe("htl-12");
+      expect(mapped.name).toBe("Samode Haveli");
+      expect(mapped.destination_name).toBe("Jaipur");
+      expect(mapped.price_per_night).toBe(14500);
+      expect(mapped.image_url).toBe("/images/samode.jpg");
+    });
+
+    it("maps database stop row to AdminStop structure", () => {
+      const dbStop = {
+        id: "stp-01",
+        destination_id: "dest-1",
+        name: "Old Rao Dhaba",
+        price: 350,
+        pricing_unit: "per_person",
+        distance_text: "75 km from Delhi",
+        turnaround_text: "Direct highway service road",
+        amenities: ["Pure Ghee Paranthas", "Clean Washrooms"],
+        is_active: true,
+        destinations: { name: "Jaipur" },
+      };
+
+      const mapped = mapDatabaseStopToAdminStop(dbStop);
+      expect(mapped.id).toBe("stp-01");
+      expect(mapped.name).toBe("Old Rao Dhaba");
+      expect(mapped.price).toBe(350);
+      expect(mapped.pricing_unit).toBe("per_person");
+    });
+
+    it("maps database destination row to AdminDestination structure", () => {
+      const dbDest = {
+        id: "dest-jodhpur",
+        slug: "jodhpur",
+        name: "Jodhpur",
+        region: "Rajasthan",
+        tagline: "The Sun City",
+        description: "Historic blue city with majestic Mehrangarh Fort.",
+        starting_price: 9200,
+        rating: 4.85,
+        review_count: 850,
+        recommended_days: "3 Days",
+        best_season: "Nov–Feb",
+        badge: "Trending",
+        categories: ["heritage"],
+        origin_label: "Delhi NCR",
+        drive_hours: 9,
+        drive_km: 550,
+        is_featured: true,
+        is_bookable: true,
+        is_active: true,
+      };
+
+      const mapped = mapDatabaseDestinationToAdminDestination(dbDest);
+      expect(mapped.id).toBe("dest-jodhpur");
+      expect(mapped.name).toBe("Jodhpur");
+      expect(mapped.slug).toBe("jodhpur");
+      expect(mapped.is_bookable).toBe(true);
+      expect(mapped.is_active).toBe(true);
+    });
+  });
+
+  describe("Migration 11 Admin Catalog & Trip Control RPC Security Verification", () => {
+    it("enforces is_admin_jwt(), search_path pinning, and anon revokes in migration 11", async () => {
+      const fs = await import("fs");
+      const path = await import("path");
+      const sqlPath = path.resolve(process.cwd(), "supabase/migrations/20261015000011_admin_catalog_crud_rpc.sql");
+      const sql = fs.readFileSync(sqlPath, "utf-8");
+
+      // Verify all required RPC functions are defined in migration 11
+      const requiredFunctions = [
+        "admin_get_operational_snapshot",
+        "admin_get_catalog_snapshot",
+        "admin_upsert_circuit",
+        "admin_toggle_circuit_status",
+        "admin_control_active_trip",
+        "admin_upsert_vehicle",
+        "admin_delete_vehicle",
+        "admin_upsert_driver",
+        "admin_upsert_hotel",
+        "admin_upsert_stop",
+        "admin_upsert_destination",
+      ];
+
+      for (const fnName of requiredFunctions) {
+        expect(sql).toContain(`FUNCTION public.${fnName}`);
+      }
+
+      // 42501 Unauthorized enforcement in all catalog RPCs
+      const errorMatches = sql.match(/RAISE EXCEPTION 'Unauthorized: Admin privileges required' USING ERRCODE = '42501'/g);
+      expect(errorMatches?.length).toBeGreaterThanOrEqual(8);
+
+      // Check search_path = public on all functions
+      const searchPathMatches = sql.match(/SET search_path = public/g);
+      expect(searchPathMatches?.length).toBeGreaterThanOrEqual(10);
+
+      // Verify anon and PUBLIC revokes
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_upsert_circuit(jsonb) FROM PUBLIC, anon;");
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_toggle_circuit_status(uuid, boolean) FROM PUBLIC, anon;");
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_control_active_trip(uuid, jsonb) FROM PUBLIC, anon;");
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_upsert_vehicle(jsonb) FROM PUBLIC, anon;");
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_delete_vehicle(uuid) FROM PUBLIC, anon;");
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_upsert_driver(jsonb) FROM PUBLIC, anon;");
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_upsert_hotel(jsonb) FROM PUBLIC, anon;");
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_upsert_stop(jsonb) FROM PUBLIC, anon;");
+      expect(sql).toContain("REVOKE ALL ON FUNCTION public.admin_upsert_destination(jsonb) FROM PUBLIC, anon;");
+
+      // Verify authenticated and service_role grants
+      expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_upsert_circuit(jsonb) TO authenticated, service_role;");
+      expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_control_active_trip(uuid, jsonb) TO authenticated, service_role;");
+      expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_upsert_vehicle(jsonb) TO authenticated, service_role;");
+      expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_upsert_driver(jsonb) TO authenticated, service_role;");
+      expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_upsert_hotel(jsonb) TO authenticated, service_role;");
+      expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_upsert_stop(jsonb) TO authenticated, service_role;");
+      expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_upsert_destination(jsonb) TO authenticated, service_role;");
+    });
+  });
 });
+

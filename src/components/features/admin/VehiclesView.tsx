@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { VehicleAdmin } from "@/lib/admin/types";
+import { adminUpsertVehicleAction } from "@/lib/actions/admin-ops";
 import { Plus, Edit2, Users, Briefcase, EyeOff, Eye } from "lucide-react";
 
 export function VehiclesView() {
-  const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
+  const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
   const [vehicles, setVehicles] = useState<VehicleAdmin[]>(() =>
     AdminService.getVehicles()
   );
@@ -16,6 +17,10 @@ export function VehiclesView() {
 
   const canWrite = hasPermission("catalog_write");
   const refresh = () => setVehicles(AdminService.getVehicles());
+
+  useEffect(() => {
+    return AdminService.subscribe(refresh);
+  }, []);
 
   const handleToggleActive = (veh: VehicleAdmin) => {
     if (!canWrite) {
@@ -26,10 +31,19 @@ export function VehiclesView() {
     requestReasonModal(
       nextVal ? "Activate Vehicle" : "Disable Vehicle",
       `${nextVal ? "Restore" : "Disable"} ${veh.name} (${veh.type}) from active fleet.`,
-      (reason) => {
+      async (reason) => {
         AdminService.updateVehicle(currentAdmin, veh.id, { is_active: nextVal }, reason);
+        await adminUpsertVehicleAction({
+          id: veh.id,
+          name: veh.name,
+          type: veh.type,
+          pricePerDay: veh.price_per_day,
+          isActive: nextVal,
+          reason,
+        });
         toast(`Vehicle ${veh.name} is now ${nextVal ? "active" : "disabled"}.`, "success");
         refresh();
+        await refreshOperationalData();
       }
     );
   };
@@ -49,7 +63,24 @@ export function VehiclesView() {
     requestReasonModal(
       formData.id ? "Update Vehicle" : "Add Vehicle",
       `Save modifications to fleet vehicle ${formData.name}.`,
-      (reason) => {
+      async (reason) => {
+        await adminUpsertVehicleAction({
+          id: formData.id,
+          name: formData.name!,
+          type: formData.type!,
+          subtitle: formData.subtitle || "",
+          description: formData.description || "",
+          capacity: Number(formData.capacity) || (formData.type === "bus" ? 45 : 4),
+          luggageCapacity: Number(formData.luggage_capacity) || 2,
+          features: formData.features || ["Air Conditioning", "Commercial Permit"],
+          fuelPolicy: formData.fuel_policy || "Driver Provided · Fuel Included in Base",
+          driverType: formData.driver_type?.toLowerCase().includes("self") ? "self_drive" : "chauffeur",
+          pricePerDay: Number(formData.price_per_day) || 3000,
+          imageUrl: formData.image_url || "/images/placeholder.jpg",
+          isActive: formData.is_active ?? true,
+          reason,
+        });
+
         if (formData.id) {
           AdminService.updateVehicle(currentAdmin, formData.id, formData, reason);
           toast(`Updated vehicle ${formData.name}`, "success");
@@ -75,6 +106,7 @@ export function VehiclesView() {
         }
         setIsEditing(false);
         refresh();
+        await refreshOperationalData();
       }
     );
   };

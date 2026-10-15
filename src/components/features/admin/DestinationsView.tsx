@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { DestinationAdmin } from "@/lib/admin/types";
+import { adminUpsertDestinationAction } from "@/lib/actions/admin-ops";
 import {
   CheckCircle2,
   XCircle,
@@ -13,7 +14,7 @@ import {
 } from "lucide-react";
 
 export function DestinationsView() {
-  const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
+  const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
   const [destinations, setDestinations] = useState<DestinationAdmin[]>(() =>
     AdminService.getDestinations()
   );
@@ -32,6 +33,10 @@ export function DestinationsView() {
   const refresh = () => {
     setDestinations(AdminService.getDestinations());
   };
+
+  useEffect(() => {
+    return AdminService.subscribe(refresh);
+  }, []);
 
   const handleMakeBookable = (dest: DestinationAdmin, currentVal: boolean) => {
     if (!canWrite) {
@@ -59,7 +64,7 @@ export function DestinationsView() {
       nextVal
         ? `Enable customer bookings for ${dest.name}. Requires verified checklist passing.`
         : `Disable customer bookings for ${dest.name}. Existing bookings remain active.`,
-      (reason) => {
+      async (reason) => {
         const res = AdminService.setDestinationBookable(
           currentAdmin,
           dest.id,
@@ -67,6 +72,15 @@ export function DestinationsView() {
           reason
         );
         if (res.ok) {
+          await adminUpsertDestinationAction({
+            id: dest.id,
+            slug: dest.slug,
+            name: dest.name,
+            region: dest.region,
+            isBookable: nextVal,
+            isActive: dest.is_active,
+            reason,
+          });
           toast(
             nextVal
               ? `Destination ${dest.name} is now bookable on customer app!`
@@ -75,6 +89,7 @@ export function DestinationsView() {
           );
           setChecklistResults(null);
           refresh();
+          await refreshOperationalData();
         } else {
           toast(res.missing?.join(", ") || "Failed to update", "error");
         }
@@ -92,7 +107,25 @@ export function DestinationsView() {
     requestReasonModal(
       formData.id ? "Update Destination" : "Create Destination",
       `Save modifications to catalog item ${formData.name}.`,
-      (reason) => {
+      async (reason) => {
+        await adminUpsertDestinationAction({
+          id: formData.id,
+          slug: formData.slug!,
+          name: formData.name!,
+          region: formData.region || "Rajasthan",
+          tagline: formData.tagline || "",
+          description: formData.description || "",
+          startingPrice: Number(formData.starting_price) || 0,
+          rating: Number(formData.rating) || 4.8,
+          badge: formData.badge || null,
+          categories: formData.categories || ["heritage"],
+          heroImagePath: formData.hero_image_path || "/images/placeholder.jpg",
+          isBookable: Boolean(formData.is_bookable),
+          isActive: formData.is_active ?? true,
+          isFeatured: Boolean(formData.is_featured),
+          reason,
+        });
+
         if (formData.id) {
           AdminService.updateDestination(
             currentAdmin,
@@ -137,6 +170,7 @@ export function DestinationsView() {
         }
         setIsEditing(false);
         refresh();
+        await refreshOperationalData();
       }
     );
   };

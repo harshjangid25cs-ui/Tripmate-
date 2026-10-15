@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { BookingAdmin } from "@/lib/admin/types";
@@ -24,9 +24,10 @@ export function BookingsView() {
   const [selectedBooking, setSelectedBooking] = useState<BookingAdmin | null>(null);
   const [isMutating, setIsMutating] = useState(false);
 
-  // Driver Assignment dialog state
+  // Driver & Vehicle Assignment dialog state
   const [isAssigningDriver, setIsAssigningDriver] = useState(false);
   const [selectedDriverId, setSelectedDriverId] = useState("");
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
 
   // Cancel Booking dialog state
   const [isCancelOpen, setIsCancelOpen] = useState(false);
@@ -38,6 +39,7 @@ export function BookingsView() {
   const [newNote, setNewNote] = useState("");
 
   const drivers = AdminService.getDrivers().filter((d) => d.is_active);
+  const vehicles = AdminService.getVehicles().filter((v) => v.is_active);
 
   const canCancelPolicy = hasPermission("cancel_by_policy");
   const canCancelDiscretionary = hasPermission("cancel_full_custom_none");
@@ -53,6 +55,11 @@ export function BookingsView() {
       if (updated) setSelectedBooking(updated);
     }
   };
+
+  useEffect(() => {
+    return AdminService.subscribe(refresh);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filteredBookings = bookings.filter((b) => {
     const query = searchQuery.toLowerCase().trim();
@@ -128,8 +135,8 @@ export function BookingsView() {
     if (!selectedBooking || !selectedDriverId) return;
 
     requestReasonModal(
-      "Confirm Driver Assignment",
-      `Assign verified driver to booking ${selectedBooking.booking_ref}. Customer will be emailed with driver contact details.`,
+      "Confirm Dispatch Assignment",
+      `Assign verified driver and fleet vehicle to booking ${selectedBooking.booking_ref}. Customer will be emailed with trip details.`,
       async (reason) => {
         setIsMutating(true);
         try {
@@ -142,11 +149,13 @@ export function BookingsView() {
 
           const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedBooking.id);
           const isDriverUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedDriverId);
+          const isVehicleUuid = selectedVehicleId ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedVehicleId) : true;
 
-          if (isUuid && isDriverUuid) {
+          if (isUuid && isDriverUuid && isVehicleUuid) {
             const serverRes = await adminAssignDriverOrVehicleAction({
               tripId: selectedBooking.id,
               driverId: selectedDriverId,
+              vehicleId: selectedVehicleId || undefined,
               reason,
             });
             if (!serverRes.ok) {
@@ -155,7 +164,7 @@ export function BookingsView() {
           }
 
           if (res.ok) {
-            toast("Driver assigned and notification dispatched", "success");
+            toast("Driver & transport dispatch updated", "success");
             setIsAssigningDriver(false);
             refresh();
             await refreshOperationalData();
@@ -583,26 +592,41 @@ export function BookingsView() {
                   )}
 
                   {isAssigningDriver && (
-                    <form onSubmit={handleAssignDriver} className="mt-3 flex items-center gap-2">
-                      <select
-                        value={selectedDriverId}
-                        onChange={(e) => setSelectedDriverId(e.target.value)}
-                        className="rounded-xl border border-slate-300 p-2 text-xs flex-1 font-semibold"
-                        required
-                      >
-                        <option value="">Select verified active driver...</option>
-                        {drivers.map((d) => (
-                          <option key={d.id} value={d.id}>
-                            {d.name} ({d.license_plate}) - Rating {d.rating} ★
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        type="submit"
-                        className="rounded-xl bg-primary-600 text-white px-3 py-2 text-xs font-bold hover:bg-primary-700"
-                      >
-                        Save
-                      </button>
+                    <form onSubmit={handleAssignDriver} className="mt-3 space-y-2">
+                      <div className="flex flex-col sm:flex-row items-center gap-2">
+                        <select
+                          value={selectedDriverId}
+                          onChange={(e) => setSelectedDriverId(e.target.value)}
+                          className="rounded-xl border border-slate-300 p-2 text-xs flex-1 font-semibold w-full"
+                          required
+                        >
+                          <option value="">Select verified active driver...</option>
+                          {drivers.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.name} ({d.license_plate}) - Rating {d.rating} ★
+                            </option>
+                          ))}
+                        </select>
+                        <select
+                          value={selectedVehicleId}
+                          onChange={(e) => setSelectedVehicleId(e.target.value)}
+                          className="rounded-xl border border-slate-300 p-2 text-xs flex-1 font-semibold w-full"
+                        >
+                          <option value="">(Optional) Assign Fleet Vehicle...</option>
+                          {vehicles.map((v) => (
+                            <option key={v.id} value={v.id}>
+                              {v.name} ({v.type})
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="submit"
+                          disabled={isMutating}
+                          className="rounded-xl bg-primary-600 text-white px-4 py-2 text-xs font-bold hover:bg-primary-700 w-full sm:w-auto"
+                        >
+                          Save
+                        </button>
+                      </div>
                     </form>
                   )}
                 </div>

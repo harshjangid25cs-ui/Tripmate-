@@ -303,6 +303,18 @@ function mapStop(row: StopRow): Stop {
   };
 }
 
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 5000): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) => {
+      const timer = setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs);
+      if (typeof (timer as unknown as { unref?: () => void }).unref === "function") {
+        (timer as unknown as { unref: () => void }).unref();
+      }
+    }),
+  ]);
+}
+
 export async function getHotelsForDestination(
   destinationId?: string | null
 ): Promise<Hotel[]> {
@@ -312,7 +324,7 @@ export async function getHotelsForDestination(
     if (destinationId) {
       query = query.eq("destination_id", destinationId);
     }
-    const { data, error } = await query;
+    const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
       return destinationId
         ? FALLBACK_HOTELS.filter((h) => h.destinationId === destinationId)
@@ -337,7 +349,7 @@ export async function getVehicles(
     } else {
       query = query.in("type", ["car", "bike"]);
     }
-    const { data, error } = await query;
+    const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
       return type
         ? FALLBACK_VEHICLES.filter((v) => v.type === type)
@@ -356,10 +368,11 @@ export async function getStopsForDestination(
 ): Promise<Stop[]> {
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const query = supabase
       .from("stops")
       .select("*")
       .eq("is_active", true);
+    const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
       return FALLBACK_STOPS;
     }

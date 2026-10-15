@@ -1,9 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { CircuitAdmin } from "@/lib/admin/types";
+import {
+  adminUpsertCircuitAction,
+  adminToggleCircuitStatusAction,
+} from "@/lib/actions/admin-ops";
 import {
   Plus,
   Edit2,
@@ -32,6 +36,10 @@ export function TripsView() {
     setCircuits(AdminService.getCircuits());
   };
 
+  useEffect(() => {
+    return AdminService.subscribe(refresh);
+  }, []);
+
   const handleToggleActive = (circuit: CircuitAdmin) => {
     if (!canWrite) {
       toast("Restricted: Catalog Manager or Super Admin role required", "error");
@@ -48,6 +56,11 @@ export function TripsView() {
           { is_active: nextVal },
           reason
         );
+        await adminToggleCircuitStatusAction({
+          circuitId: circuit.id,
+          isActive: nextVal,
+          reason,
+        });
         toast(
           `Circuit ${circuit.title} is now ${nextVal ? "visible" : "hidden"}.`,
           "success"
@@ -72,6 +85,27 @@ export function TripsView() {
       formData.id ? "Update Circuit" : "Create Circuit",
       `Save modifications to circuit '${formData.title}'.`,
       async (reason) => {
+        const days = Number(formData.days) || 3;
+        const nights = Math.max(0, days - 1);
+
+        await adminUpsertCircuitAction({
+          id: formData.id,
+          destinationId: formData.destination_id!,
+          title: formData.title!,
+          days,
+          nights,
+          basePricePerPerson: Number(formData.base_price_per_person) || 5000,
+          rating: Number(formData.rating) || 4.8,
+          badge: formData.badge || null,
+          categories: formData.categories || ["heritage"],
+          summary: formData.summary || "",
+          description: formData.description || "",
+          imageUrl: formData.image_url || "/images/placeholder.jpg",
+          isFeatured: Boolean(formData.is_featured),
+          isActive: formData.is_active ?? true,
+          reason,
+        });
+
         if (formData.id) {
           AdminService.updateCircuit(
             currentAdmin,
@@ -87,8 +121,8 @@ export function TripsView() {
               destination_id: formData.destination_id!,
               destination_name: destName,
               title: formData.title!,
-              days: Number(formData.days) || 3,
-              nights: Math.max(1, (Number(formData.days) || 3) - 1),
+              days,
+              nights,
               base_price_per_person: Number(formData.base_price_per_person) || 5000,
               rating: Number(formData.rating) || 4.9,
               badge: formData.badge || null,

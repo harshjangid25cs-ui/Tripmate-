@@ -39,6 +39,11 @@ export default defineConfig({
       name: "chromium",
       use: {
         browserName: "chromium",
+        launchOptions: {
+          args: [
+            "--host-resolver-rules=MAP jqywwuzycnyjidiescue.supabase.co 104.18.38.10",
+          ],
+        },
       },
     },
   ],
@@ -47,5 +52,8 @@ export default defineConfig({
     url: "http://localhost:3000",
     reuseExistingServer: true,
     timeout: 120000,
+    env: {
+      NODE_OPTIONS: "--dns-result-order=ipv4first",
+    },
   },
 });

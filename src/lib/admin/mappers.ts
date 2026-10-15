@@ -2,6 +2,11 @@ import type {
   AdminBooking,
   AdminTrip,
   AdminApproval,
+  AdminVehicle,
+  AdminDriver,
+  AdminHotel,
+  AdminStop,
+  AdminDestination,
   DriverAdmin,
   TravellerAdmin,
 } from "./types";
@@ -156,5 +161,121 @@ export function mapDatabaseCircuitToAdminTrip(c: DbRecord): AdminTrip {
     hotel_ids: Array.isArray(c.hotel_ids) ? (c.hotel_ids as string[]) : [],
     vehicle_ids: Array.isArray(c.vehicle_ids) ? (c.vehicle_ids as string[]) : [],
     stop_ids: Array.isArray(c.stop_ids) ? (c.stop_ids as string[]) : [],
+  };
+}
+
+/**
+ * Maps a Supabase `vehicles` row to `AdminVehicle` (`VehicleAdmin`).
+ */
+export function mapDatabaseVehicleToAdminVehicle(v: DbRecord): AdminVehicle {
+  return {
+    id: String(v.id || ""),
+    type: (v.type || "car") as "car" | "bike" | "bus",
+    name: String(v.name || "Fleet Vehicle"),
+    subtitle: String(v.subtitle || ""),
+    capacity: Number(v.capacity) || 4,
+    luggage_capacity: Number(v.luggage_capacity) || 2,
+    features: Array.isArray(v.features) ? (v.features as string[]) : ["Air Conditioning", "Commercial Permit"],
+    fuel_policy: String(v.fuel_policy || "Driver Provided · Fuel Included"),
+    driver_type: String(v.driver_type || "Professional Chauffeur"),
+    price_per_day: Number(v.price_per_day || v.price) || 3000,
+    image_url: String(v.image_path || v.image_url || "/images/placeholder.jpg"),
+    is_active: Boolean(v.is_active ?? true),
+  };
+}
+
+/**
+ * Maps a Supabase `drivers` row to `AdminDriver` (`DriverAdmin`).
+ */
+export function mapDatabaseDriverToAdminDriver(d: DbRecord): AdminDriver {
+  return {
+    id: String(d.id || ""),
+    name: String(d.full_name || d.name || "Driver"),
+    phone: String(d.phone || ""),
+    license_plate: String(d.plate_number || d.license_plate || "DL 1Y AA 4088"),
+    rating: Number(d.rating) || 4.9,
+    is_active: Boolean(d.is_active ?? true),
+  };
+}
+
+/**
+ * Maps a Supabase `hotels` row to `AdminHotel` (`HotelAdmin`).
+ */
+export function mapDatabaseHotelToAdminHotel(h: DbRecord): AdminHotel {
+  const destination = asRecord(h.destinations);
+  const destName = String(destination.name || h.destination_name || "Jaipur");
+  let img = "/images/placeholder.jpg";
+  if (Array.isArray(h.image_paths) && h.image_paths[0]) {
+    img = String(h.image_paths[0]);
+  } else if (h.image_url) {
+    img = String(h.image_url);
+  }
+
+  return {
+    id: String(h.id || ""),
+    destination_id: String(h.destination_id || ""),
+    destination_name: destName,
+    name: String(h.name || "Hotel"),
+    rating: Number(h.rating) || 4.8,
+    neighborhood: String(h.neighborhood || ""),
+    distance_text: String(h.distance_text || ""),
+    price_per_night: Number(h.price_per_night) || 3500,
+    amenities: Array.isArray(h.amenities) ? (h.amenities as string[]) : ["Free Wi-Fi", "Swimming Pool"],
+    image_url: img,
+    badge: h.badge ? String(h.badge) : null,
+    is_active: Boolean(h.is_active ?? true),
+  };
+}
+
+/**
+ * Maps a Supabase `stops` row to `AdminStop` (`StopAdmin`).
+ */
+export function mapDatabaseStopToAdminStop(s: DbRecord): AdminStop {
+  const destination = asRecord(s.destinations);
+  return {
+    id: String(s.id || ""),
+    destination_id: String(s.destination_id || ""),
+    destination_name: String(destination.name || s.destination_name || ""),
+    name: String(s.name || "Highway Stop"),
+    price: Number(s.price) || 0,
+    pricing_unit: (s.pricing_unit || "per_person") as "per_person" | "flat",
+    distance_text: String(s.distance_text || ""),
+    turnaround_text: String(s.turnaround_text || ""),
+    amenities: Array.isArray(s.amenities) ? (s.amenities as string[]) : ["Clean Restrooms", "Artisan Chai"],
+    is_active: Boolean(s.is_active ?? true),
+  };
+}
+
+/**
+ * Maps a Supabase `destinations` row to `AdminDestination` (`DestinationAdmin`).
+ */
+export function mapDatabaseDestinationToAdminDestination(d: DbRecord): AdminDestination {
+  return {
+    id: String(d.id || ""),
+    slug: String(d.slug || ""),
+    name: String(d.name || ""),
+    region: String(d.region || ""),
+    tagline: String(d.tagline || ""),
+    description: String(d.description || ""),
+    hero_image_path: d.hero_image_path ? String(d.hero_image_path) : null,
+    starting_price: d.starting_price !== null && d.starting_price !== undefined ? Number(d.starting_price) : 5000,
+    rating: d.rating !== null && d.rating !== undefined ? Number(d.rating) : 4.8,
+    review_count: Number(d.review_count) || 0,
+    recommended_days: String(d.recommended_days || "3-4 Days"),
+    best_season: String(d.best_season || "Oct - Mar"),
+    badge: d.badge ? String(d.badge) : null,
+    categories: Array.isArray(d.categories) ? (d.categories as string[]) : ["popular"],
+    origin_label: String(d.origin_label || "Delhi NCR"),
+    drive_hours: d.drive_hours !== null && d.drive_hours !== undefined ? Number(d.drive_hours) : null,
+    drive_km: d.drive_km !== null && d.drive_km !== undefined ? Number(d.drive_km) : null,
+    is_featured: Boolean(d.is_featured),
+    is_bookable: Boolean(d.is_bookable ?? true),
+    is_active: Boolean(d.is_active ?? true),
+    allow_car: true,
+    allow_bike: false,
+    vehicle_required: true,
+    min_days: 2,
+    max_days: 7,
+    max_travellers: 20,
   };
 }

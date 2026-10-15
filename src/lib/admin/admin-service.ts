@@ -1052,6 +1052,11 @@ export class AdminService {
   static hydrateOperationalData(snapshot: {
     bookings?: BookingAdmin[];
     circuits?: CircuitAdmin[];
+    vehicles?: VehicleAdmin[];
+    drivers?: DriverAdmin[];
+    hotels?: HotelAdmin[];
+    stops?: StopAdmin[];
+    destinations?: DestinationAdmin[];
   }) {
     if (snapshot.bookings && snapshot.bookings.length > 0) {
       const liveBookingIds = new Set(snapshot.bookings.map((b) => b.id));
@@ -1063,6 +1068,36 @@ export class AdminService {
       const liveCircuitIds = new Set(snapshot.circuits.map((c) => c.id));
       const fallbackMocks = currentState.circuits.filter((c) => !liveCircuitIds.has(c.id));
       currentState.circuits = [...snapshot.circuits, ...fallbackMocks];
+    }
+
+    if (snapshot.vehicles && snapshot.vehicles.length > 0) {
+      const liveVehicleIds = new Set(snapshot.vehicles.map((v) => v.id));
+      const fallbackMocks = currentState.vehicles.filter((v) => !liveVehicleIds.has(v.id));
+      currentState.vehicles = [...snapshot.vehicles, ...fallbackMocks];
+    }
+
+    if (snapshot.drivers && snapshot.drivers.length > 0) {
+      const liveDriverIds = new Set(snapshot.drivers.map((d) => d.id));
+      const fallbackMocks = currentState.drivers.filter((d) => !liveDriverIds.has(d.id));
+      currentState.drivers = [...snapshot.drivers, ...fallbackMocks];
+    }
+
+    if (snapshot.hotels && snapshot.hotels.length > 0) {
+      const liveHotelIds = new Set(snapshot.hotels.map((h) => h.id));
+      const fallbackMocks = currentState.hotels.filter((h) => !liveHotelIds.has(h.id));
+      currentState.hotels = [...snapshot.hotels, ...fallbackMocks];
+    }
+
+    if (snapshot.stops && snapshot.stops.length > 0) {
+      const liveStopIds = new Set(snapshot.stops.map((s) => s.id));
+      const fallbackMocks = currentState.stops.filter((s) => !liveStopIds.has(s.id));
+      currentState.stops = [...snapshot.stops, ...fallbackMocks];
+    }
+
+    if (snapshot.destinations && snapshot.destinations.length > 0) {
+      const liveDestinationIds = new Set(snapshot.destinations.map((d) => d.id));
+      const fallbackMocks = currentState.destinations.filter((d) => !liveDestinationIds.has(d.id));
+      currentState.destinations = [...snapshot.destinations, ...fallbackMocks];
     }
 
     this.notify();

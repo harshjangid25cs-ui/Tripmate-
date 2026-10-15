@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { StopAdmin } from "@/lib/admin/types";
+import { adminUpsertStopAction } from "@/lib/actions/admin-ops";
 import { Plus, Edit2, EyeOff, Eye } from "lucide-react";
 
 export function StopsView() {
-  const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
+  const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
   const [stops, setStops] = useState<StopAdmin[]>(() => AdminService.getStops());
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<StopAdmin>>({});
@@ -15,6 +16,10 @@ export function StopsView() {
   const destinations = AdminService.getDestinations();
   const canWrite = hasPermission("catalog_write");
   const refresh = () => setStops(AdminService.getStops());
+
+  useEffect(() => {
+    return AdminService.subscribe(refresh);
+  }, []);
 
   const handleToggleActive = (stop: StopAdmin) => {
     if (!canWrite) {
@@ -25,10 +30,18 @@ export function StopsView() {
     requestReasonModal(
       nextVal ? "Activate Stop" : "Disable Stop",
       `${nextVal ? "Restore" : "Disable"} highway stop ${stop.name}.`,
-      (reason) => {
+      async (reason) => {
         AdminService.updateStop(currentAdmin, stop.id, { is_active: nextVal }, reason);
+        await adminUpsertStopAction({
+          id: stop.id,
+          name: stop.name,
+          price: stop.price,
+          isActive: nextVal,
+          reason,
+        });
         toast(`Stop ${stop.name} is now ${nextVal ? "active" : "disabled"}.`, "success");
         refresh();
+        await refreshOperationalData();
       }
     );
   };
@@ -46,7 +59,20 @@ export function StopsView() {
     requestReasonModal(
       formData.id ? "Update Stop" : "Add Highway Stop",
       `Save modifications to stop ${formData.name}.`,
-      (reason) => {
+      async (reason) => {
+        await adminUpsertStopAction({
+          id: formData.id,
+          destinationId: formData.destination_id || null,
+          name: formData.name!,
+          price: Number(formData.price) || 500,
+          pricingUnit: formData.pricing_unit === "flat" ? "flat" : "per_person",
+          distanceText: formData.distance_text || "",
+          turnaroundText: formData.turnaround_text || "",
+          amenities: formData.amenities || ["Clean Restrooms", "Artisan Chai Lounge"],
+          isActive: formData.is_active ?? true,
+          reason,
+        });
+
         if (formData.id) {
           AdminService.updateStop(currentAdmin, formData.id, formData, reason);
           toast(`Updated stop ${formData.name}`, "success");
@@ -70,6 +96,7 @@ export function StopsView() {
         }
         setIsEditing(false);
         refresh();
+        await refreshOperationalData();
       }
     );
   };

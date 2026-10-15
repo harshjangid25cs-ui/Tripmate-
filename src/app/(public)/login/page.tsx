@@ -62,7 +62,6 @@ function LoginForm() {
         }
 
         router.push("/home");
-        router.refresh();
       } else {
         const { data, error } = await supabase.auth.signUp({
           email: cleanEmail,
@@ -83,7 +82,6 @@ function LoginForm() {
         // If email confirmation is disabled, session is returned immediately
         if (data.session) {
           router.push("/home");
-          router.refresh();
         } else {
           setInfoMsg(
             "Account created! Please check your email inbox to verify your account, or sign in."

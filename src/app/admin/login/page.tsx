@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAdmin } from "@/lib/admin/admin-context";
 import { ADMIN_ROLES } from "@/lib/admin/permissions";
 import type { AdminRole } from "@/lib/admin/types";
@@ -18,7 +17,6 @@ const ROLE_EMAILS: Record<AdminRole, string> = {
 };
 
 export default function AdminLoginPage() {
-  const router = useRouter();
   const { switchRole, verifyMfa, toast } = useAdmin();
 
   const [step, setStep] = useState<"credentials" | "mfa">("credentials");
@@ -62,7 +60,7 @@ export default function AdminLoginPage() {
 
       switchRole(selectedRole);
       toast("AAL2 MFA Verified. Welcome to TripMate Operations.", "success");
-      router.push("/admin");
+      window.location.href = "/admin";
     } finally {
       setLoading(false);
     }
@@ -87,7 +85,7 @@ export default function AdminLoginPage() {
       switchRole(role);
       verifyMfa("123456");
       toast(`Authenticated as ${ADMIN_ROLES.find((r) => r.id === role)?.label} (AAL2 Verified)`, "success");
-      router.push("/admin");
+      window.location.href = "/admin";
     } finally {
       setLoading(false);
     }

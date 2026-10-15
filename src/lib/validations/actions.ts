@@ -172,6 +172,137 @@ export const adminResolveApprovalSchema = z.object({
   notes: z.string().trim().optional(),
 });
 
+export const adminUpsertCircuitSchema = z.object({
+  id: z.string().min(1).optional(),
+  destinationId: z.string().min(1, "Destination is required."),
+  title: z.string().trim().min(2, "Title must be at least 2 characters."),
+  days: z.number().int().min(1, "Circuit must be at least 1 day."),
+  nights: z.number().int().min(0).optional(),
+  basePricePerPerson: z.number().min(0, "Base price cannot be negative."),
+  rating: z.number().min(0).max(5).optional(),
+  badge: z.string().nullable().optional(),
+  categories: z.array(z.string()).optional(),
+  summary: z.string().optional(),
+  description: z.string().optional(),
+  imageUrl: z.string().optional(),
+  isFeatured: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminToggleCircuitStatusSchema = z.object({
+  circuitId: z.string().min(1, "Circuit ID is required."),
+  isActive: z.boolean(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminControlActiveTripSchema = z.object({
+  tripId: z.string().min(1, "Trip ID is required."),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  status: z.enum(["draft", "pending_approval", "confirmed", "cancelled", "completed"]).optional(),
+  totalAmount: z.number().min(0).optional(),
+  travelerCount: z.number().int().min(1).optional(),
+  vehicleId: z.string().optional(),
+  driverId: z.string().optional(),
+  hotelId: z.string().optional(),
+  rooms: z.number().int().min(1).optional(),
+  stopIds: z.array(z.string()).optional(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminUpsertVehicleSchema = z.object({
+  id: z.string().min(1).optional(),
+  name: z.string().trim().min(2, "Vehicle name must be at least 2 characters."),
+  type: z.enum(["car", "bike", "bus"], {
+    errorMap: () => ({ message: "Vehicle type must be car, bike, or bus." }),
+  }),
+  subtitle: z.string().optional(),
+  description: z.string().optional(),
+  capacity: z.number().int().min(1).optional(),
+  luggageCapacity: z.number().int().min(0).optional(),
+  features: z.array(z.string()).optional(),
+  fuelPolicy: z.string().optional(),
+  driverType: z.string().optional(),
+  pricePerDay: z.number().min(0, "Price per day cannot be negative."),
+  imageUrl: z.string().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminDeleteVehicleSchema = z.object({
+  vehicleId: z.string().min(1, "Vehicle ID is required."),
+  reason: z.string().trim().optional(),
+});
+
+export const adminUpsertDriverSchema = z.object({
+  id: z.string().min(1).optional(),
+  name: z.string().trim().min(2, "Driver name must be at least 2 characters."),
+  phone: z.string().trim().min(8, "Valid phone number is required."),
+  licensePlate: z.string().trim().min(4, "Vehicle license plate is required."),
+  rating: z.number().min(0).max(5).optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminUpsertHotelSchema = z.object({
+  id: z.string().min(1).optional(),
+  destinationId: z.string().min(1, "Destination ID is required."),
+  name: z.string().trim().min(2, "Hotel name must be at least 2 characters."),
+  description: z.string().optional(),
+  neighborhood: z.string().optional(),
+  distanceText: z.string().optional(),
+  pricePerNight: z.number().min(0, "Price per night cannot be negative."),
+  rating: z.number().min(0).max(5).optional(),
+  badge: z.string().nullable().optional(),
+  amenities: z.array(z.string()).optional(),
+  imageUrl: z.string().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminUpsertStopSchema = z.object({
+  id: z.string().min(1).optional(),
+  destinationId: z.string().optional().nullable(),
+  name: z.string().trim().min(2, "Stop name must be at least 2 characters."),
+  description: z.string().optional(),
+  distanceText: z.string().optional(),
+  turnaroundText: z.string().optional(),
+  price: z.number().min(0, "Price cannot be negative."),
+  pricingUnit: z.enum(["per_person", "flat"]).optional(),
+  amenities: z.array(z.string()).optional(),
+  imageUrl: z.string().optional(),
+  isActive: z.boolean().optional(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminUpsertDestinationSchema = z.object({
+  id: z.string().min(1).optional(),
+  slug: z.string().trim().min(2, "Destination slug is required."),
+  name: z.string().trim().min(2, "Destination name is required."),
+  region: z.string().optional(),
+  tagline: z.string().optional(),
+  description: z.string().optional(),
+  startingPrice: z.number().min(0).optional(),
+  rating: z.number().min(0).max(5).optional(),
+  badge: z.string().nullable().optional(),
+  categories: z.array(z.string()).optional(),
+  heroImagePath: z.string().optional(),
+  isBookable: z.boolean().optional(),
+  isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  reason: z.string().trim().optional(),
+});
+
 export type AdminUpdateBookingStatusInput = z.infer<typeof adminUpdateBookingStatusSchema>;
 export type AdminAssignDriverInput = z.infer<typeof adminAssignDriverSchema>;
 export type AdminResolveApprovalInput = z.infer<typeof adminResolveApprovalSchema>;
+export type AdminUpsertCircuitInput = z.infer<typeof adminUpsertCircuitSchema>;
+export type AdminToggleCircuitStatusInput = z.infer<typeof adminToggleCircuitStatusSchema>;
+export type AdminControlActiveTripInput = z.infer<typeof adminControlActiveTripSchema>;
+export type AdminUpsertVehicleInput = z.infer<typeof adminUpsertVehicleSchema>;
+export type AdminDeleteVehicleInput = z.infer<typeof adminDeleteVehicleSchema>;
+export type AdminUpsertDriverInput = z.infer<typeof adminUpsertDriverSchema>;
+export type AdminUpsertHotelInput = z.infer<typeof adminUpsertHotelSchema>;
+export type AdminUpsertStopInput = z.infer<typeof adminUpsertStopSchema>;
+export type AdminUpsertDestinationInput = z.infer<typeof adminUpsertDestinationSchema>;

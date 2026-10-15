@@ -290,6 +290,18 @@ const FALLBACK_CIRCUITS: Circuit[] = [
   },
 ];
 
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 5000): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((_, reject) => {
+      const timer = setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs);
+      if (typeof (timer as unknown as { unref?: () => void }).unref === "function") {
+        (timer as unknown as { unref: () => void }).unref();
+      }
+    }),
+  ]);
+}
+
 export async function getDestinations(category?: string): Promise<Destination[]> {
   try {
     const supabase = createClient();
@@ -305,7 +317,7 @@ export async function getDestinations(category?: string): Promise<Destination[]>
       query = query.contains("categories", [category.toLowerCase()]);
     }
 
-    const { data, error } = await query;
+    const { data, error } = await withTimeout(query, 5000);
     if (error || !data || (data as unknown[]).length === 0) {
       if (error) console.error("Error fetching destinations:", error.message);
       return filterFallbackDestinations(category);
@@ -355,13 +367,16 @@ export async function getDestinationBySlug(
 ): Promise<{ destination: Destination | null; highlights: DestinationHighlight[] }> {
   try {
     const supabase = createClient();
-    const { data: rawD, error } = await supabase
-      .from("destinations")
-      .select(
-        "id, slug, name, region, tagline, description, hero_image_path, starting_price, rating, review_count, recommended_days, best_season, badge, categories, origin_label, drive_hours, drive_km, is_featured, is_bookable, is_active"
-      )
-      .eq("slug", slug.toLowerCase())
-      .single();
+    const { data: rawD, error } = await withTimeout(
+      supabase
+        .from("destinations")
+        .select(
+          "id, slug, name, region, tagline, description, hero_image_path, starting_price, rating, review_count, recommended_days, best_season, badge, categories, origin_label, drive_hours, drive_km, is_featured, is_bookable, is_active"
+        )
+        .eq("slug", slug.toLowerCase())
+        .single(),
+      5000
+    );
 
     const d = rawD as unknown as DestinationRow | null;
 
@@ -376,11 +391,14 @@ export async function getDestinationBySlug(
       return { destination: fallback, highlights };
     }
 
-    const { data: rawHighlights } = await supabase
-      .from("destination_highlights")
-      .select("id, destination_id, title, category, duration_text, badge, sort_order")
-      .eq("destination_id", d.id)
-      .order("sort_order", { ascending: true });
+    const { data: rawHighlights } = await withTimeout(
+      supabase
+        .from("destination_highlights")
+        .select("id, destination_id, title, category, duration_text, badge, sort_order")
+        .eq("destination_id", d.id)
+        .order("sort_order", { ascending: true }),
+      5000
+    );
 
     const highlightRows = (rawHighlights ?? []) as unknown as HighlightRow[];
 
@@ -461,7 +479,7 @@ export async function searchCircuits(params: {
       dbQuery = dbQuery.order("rating", { ascending: false });
     }
 
-    const { data, error } = await dbQuery;
+    const { data, error } = await withTimeout(dbQuery, 5000);
     if (error || !data || (data as unknown[]).length === 0) {
       return filterFallbackCircuits(params);
     }
@@ -534,13 +552,16 @@ function filterFallbackCircuits(params: {
 export async function getFeaturedCircuits(): Promise<Circuit[]> {
   try {
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from("circuits")
-      .select(
-        "id, destination_id, title, days, nights, summary, description, base_price_per_person, rating, badge, categories, is_featured, image_path, is_active, destinations (name, slug)"
-      )
-      .eq("is_active", true)
-      .eq("is_featured", true);
+    const { data, error } = await withTimeout(
+      supabase
+        .from("circuits")
+        .select(
+          "id, destination_id, title, days, nights, summary, description, base_price_per_person, rating, badge, categories, is_featured, image_path, is_active, destinations (name, slug)"
+        )
+        .eq("is_active", true)
+        .eq("is_featured", true),
+      5000
+    );
 
     if (error || !data || (data as unknown[]).length === 0) {
       return FALLBACK_CIRCUITS.filter((c) => c.isFeatured);

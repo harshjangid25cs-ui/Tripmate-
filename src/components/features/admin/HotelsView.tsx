@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { HotelAdmin } from "@/lib/admin/types";
+import { adminUpsertHotelAction } from "@/lib/actions/admin-ops";
 import { Plus, Edit2, Star, EyeOff, Eye, AlertCircle } from "lucide-react";
 
 export function HotelsView() {
-  const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
+  const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
   const [hotels, setHotels] = useState<HotelAdmin[]>(() => AdminService.getHotels());
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<HotelAdmin>>({});
@@ -16,6 +17,10 @@ export function HotelsView() {
   const canWrite = hasPermission("catalog_write");
 
   const refresh = () => setHotels(AdminService.getHotels());
+
+  useEffect(() => {
+    return AdminService.subscribe(refresh);
+  }, []);
 
   const handleToggleActive = (hotel: HotelAdmin) => {
     if (!canWrite) {
@@ -28,10 +33,19 @@ export function HotelsView() {
       `${nextVal ? "Restore" : "Disable"} hotel ${hotel.name}. ${
         !nextVal ? "Existing drafts will remove it on next visit; confirmed bookings are unaffected." : ""
       }`,
-      (reason) => {
+      async (reason) => {
         AdminService.updateHotel(currentAdmin, hotel.id, { is_active: nextVal }, reason);
+        await adminUpsertHotelAction({
+          id: hotel.id,
+          destinationId: hotel.destination_id,
+          name: hotel.name,
+          pricePerNight: hotel.price_per_night,
+          isActive: nextVal,
+          reason,
+        });
         toast(`Hotel ${hotel.name} is now ${nextVal ? "active" : "disabled"}.`, "success");
         refresh();
+        await refreshOperationalData();
       }
     );
   };
@@ -49,7 +63,22 @@ export function HotelsView() {
     requestReasonModal(
       formData.id ? "Update Hotel" : "Add Hotel",
       `Save modifications to hotel ${formData.name}. Price edits affect new bookings only.`,
-      (reason) => {
+      async (reason) => {
+        await adminUpsertHotelAction({
+          id: formData.id,
+          destinationId: formData.destination_id!,
+          name: formData.name!,
+          rating: Number(formData.rating) || 4.8,
+          neighborhood: formData.neighborhood || "",
+          distanceText: formData.distance_text || "",
+          pricePerNight: Number(formData.price_per_night) || 3500,
+          amenities: formData.amenities || ["Free Wi-Fi", "Swimming Pool"],
+          imageUrl: formData.image_url || "/images/placeholder.jpg",
+          badge: formData.badge || null,
+          isActive: formData.is_active ?? true,
+          reason,
+        });
+
         if (formData.id) {
           AdminService.updateHotel(currentAdmin, formData.id, formData, reason);
           toast(`Updated hotel ${formData.name}`, "success");
@@ -75,6 +104,7 @@ export function HotelsView() {
         }
         setIsEditing(false);
         refresh();
+        await refreshOperationalData();
       }
     );
   };

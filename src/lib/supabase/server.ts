@@ -1,9 +1,16 @@
+import dns from "node:dns";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
 
 import { getSupabaseEnv } from "./env";
+
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch {
+  // Ignore
+}
 
 /**
  * Server Supabase client

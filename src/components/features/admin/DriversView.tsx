@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { DriverAdmin } from "@/lib/admin/types";
+import { adminUpsertDriverAction } from "@/lib/actions/admin-ops";
 import { Plus, Edit2, Star, EyeOff, Eye, Lock } from "lucide-react";
 
 export function DriversView() {
-  const { currentAdmin, currentRole, hasPermission, requestReasonModal, toast } = useAdmin();
+  const { currentAdmin, currentRole, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
   const [drivers, setDrivers] = useState<DriverAdmin[]>(() => AdminService.getDrivers());
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<DriverAdmin>>({});
@@ -16,6 +17,10 @@ export function DriversView() {
   const isOpsOrSuper = currentRole === "ops_manager" || currentRole === "super_admin";
 
   const refresh = () => setDrivers(AdminService.getDrivers());
+
+  useEffect(() => {
+    return AdminService.subscribe(refresh);
+  }, []);
 
   const maskPhone = (phone: string) => {
     if (isOpsOrSuper) return phone;
@@ -32,10 +37,20 @@ export function DriversView() {
     requestReasonModal(
       nextVal ? "Activate Driver" : "Deactivate Driver",
       `${nextVal ? "Re-enable" : "Deactivate"} driver ${drv.name} for fleet assignment.`,
-      (reason) => {
+      async (reason) => {
         AdminService.updateDriver(currentAdmin, drv.id, { is_active: nextVal }, reason);
+        await adminUpsertDriverAction({
+          id: drv.id,
+          name: drv.name,
+          phone: drv.phone,
+          licensePlate: drv.license_plate,
+          rating: drv.rating,
+          isActive: nextVal,
+          reason,
+        });
         toast(`Driver ${drv.name} is now ${nextVal ? "active" : "deactivated"}.`, "success");
         refresh();
+        await refreshOperationalData();
       }
     );
   };
@@ -50,7 +65,17 @@ export function DriversView() {
     requestReasonModal(
       formData.id ? "Update Driver" : "Register Driver",
       `Save modifications to driver profile ${formData.name}.`,
-      (reason) => {
+      async (reason) => {
+        await adminUpsertDriverAction({
+          id: formData.id,
+          name: formData.name!,
+          phone: formData.phone!,
+          licensePlate: formData.license_plate!.toUpperCase(),
+          rating: Number(formData.rating) || 4.9,
+          isActive: formData.is_active ?? true,
+          reason,
+        });
+
         if (formData.id) {
           AdminService.updateDriver(currentAdmin, formData.id, formData, reason);
           toast(`Updated driver ${formData.name}`, "success");
@@ -70,6 +95,7 @@ export function DriversView() {
         }
         setIsEditing(false);
         refresh();
+        await refreshOperationalData();
       }
     );
   };

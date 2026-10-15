@@ -211,6 +211,7 @@ export interface VehicleAdmin {
   type: "car" | "bike" | "bus";
   name: string;
   subtitle: string;
+  description?: string;
   capacity: number;
   luggage_capacity: number;
   features: string[];
@@ -416,11 +417,21 @@ export interface PaymentInvoiceRecord {
 export type AdminBooking = BookingAdmin;
 export type AdminTrip = CircuitAdmin;
 export type AdminApproval = CommercialApprovalItem;
+export type AdminVehicle = VehicleAdmin;
+export type AdminDriver = DriverAdmin;
+export type AdminHotel = HotelAdmin;
+export type AdminStop = StopAdmin;
+export type AdminDestination = DestinationAdmin;
 
 export interface AdminOperationalSnapshot {
   bookings: BookingAdmin[];
   approvals: CommercialApprovalItem[];
   circuits: CircuitAdmin[];
+  destinations?: DestinationAdmin[];
+  vehicles?: VehicleAdmin[];
+  drivers?: DriverAdmin[];
+  hotels?: HotelAdmin[];
+  stops?: StopAdmin[];
   metrics: {
     totalRevenue: number;
     pendingApprovalsCount: number;

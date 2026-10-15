@@ -1069,11 +1069,110 @@ export interface Database {
           bookings: Json;
           approvals: Json;
           circuits: Json;
+          destinations?: Json;
+          vehicles?: Json;
+          drivers?: Json;
+          hotels?: Json;
+          stops?: Json;
           metrics: {
             totalRevenue: number;
             pendingApprovalsCount: number;
             cancelledBookings: number;
           };
+        };
+      };
+      admin_get_catalog_snapshot: {
+        Args: Record<string, never>;
+        Returns: Json;
+      };
+      admin_upsert_circuit: {
+        Args: {
+          p_circuit: Json;
+        };
+        Returns: {
+          ok: boolean;
+          data?: Json;
+          error?: string;
+        };
+      };
+      admin_toggle_circuit_status: {
+        Args: {
+          p_circuit_id: string;
+          p_is_active: boolean;
+        };
+        Returns: {
+          ok: boolean;
+          circuit_id: string;
+          is_active: boolean;
+        };
+      };
+      admin_control_active_trip: {
+        Args: {
+          p_trip_id: string;
+          p_updates: Json;
+        };
+        Returns: {
+          ok: boolean;
+          trip_id: string;
+        };
+      };
+      admin_upsert_vehicle: {
+        Args: {
+          p_vehicle: Json;
+        };
+        Returns: {
+          ok: boolean;
+          data?: Json;
+          error?: string;
+        };
+      };
+      admin_delete_vehicle: {
+        Args: {
+          p_vehicle_id: string;
+        };
+        Returns: {
+          ok: boolean;
+          vehicle_id: string;
+        };
+      };
+      admin_upsert_driver: {
+        Args: {
+          p_driver: Json;
+        };
+        Returns: {
+          ok: boolean;
+          data?: Json;
+          error?: string;
+        };
+      };
+      admin_upsert_hotel: {
+        Args: {
+          p_hotel: Json;
+        };
+        Returns: {
+          ok: boolean;
+          data?: Json;
+          error?: string;
+        };
+      };
+      admin_upsert_stop: {
+        Args: {
+          p_stop: Json;
+        };
+        Returns: {
+          ok: boolean;
+          data?: Json;
+          error?: string;
+        };
+      };
+      admin_upsert_destination: {
+        Args: {
+          p_destination: Json;
+        };
+        Returns: {
+          ok: boolean;
+          data?: Json;
+          error?: string;
         };
       };
       admin_update_booking_status: {
