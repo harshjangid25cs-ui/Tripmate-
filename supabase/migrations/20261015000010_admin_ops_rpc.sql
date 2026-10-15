@@ -44,9 +44,9 @@ BEGIN
         RETURN true;
       END IF;
 
-      -- Email domain allowlist (@tripmate.in)
+      -- Email domain allowlist (@tripmate.in) or explicit admin email
       v_email := lower(coalesce(v_jwt ->> 'email', ''));
-      IF v_email LIKE '%@tripmate.in' THEN
+      IF v_email LIKE '%@tripmate.in' OR v_email = 'tripmateoffical007@gmail.com' THEN
         RETURN true;
       END IF;
     END IF;

@@ -8,6 +8,7 @@ import type { AdminRole } from "./types";
 export const ADMIN_SESSION_COOKIE = "tripmate_admin_session";
 
 export const DEFAULT_ADMIN_EMAILS = [
+  "tripmateoffical007@gmail.com",
   "superadmin@tripmate.in",
   "catalog@tripmate.in",
   "ops@tripmate.in",
