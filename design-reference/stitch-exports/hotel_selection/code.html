@@ -1,0 +1,259 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_stack" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#FAF9F7;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "outline-variant": "#e6bdb9", "on-surface-variant": "#5d3f3d", "surface-container-low": "#f4f3f1", "surface-container-high": "#e9e8e6", "error-container": "#ffdad6", "on-surface": "#1a1c1b", "surface-container-highest": "#e3e2e0", "inverse-surface": "#2f3130", "on-background": "#1a1c1b", "secondary": "#5e5e64", "background": "#faf9f7", "on-primary-fixed": "#410004", "on-error-container": "#93000a", "success-green": "#16A34A", "inverse-on-surface": "#f1f1ef", "on-secondary-container": "#64646a", "on-error": "#ffffff", "surface-container-lowest": "#ffffff", "on-tertiary": "#ffffff", "surface-dark": "#14151A", "on-tertiary-fixed-variant": "#653e00", "card-surface": "#FFFFFF", "primary-fixed-dim": "#ffb3ae", "on-tertiary-container": "#fff9f5", "primary-fixed": "#ffdad7", "surface-variant": "#e3e2e0", "surface-bright": "#faf9f7", "on-secondary-fixed": "#1a1b20", "on-tertiary-fixed": "#2a1700", "tertiary-fixed": "#ffddb8", "border-hairline": "#E5E3DF", "surface-tint": "#c0001f", "surface-light": "#FAF9F7", "surface": "#faf9f7", "primary": "#b8001d", "on-primary-container": "#fff8f7", "tertiary-container": "#a16600", "secondary-container": "#e3e1e9", "tertiary-fixed-dim": "#ffb95f", "on-secondary": "#ffffff", "urgency-amber": "#F59E0B", "text-primary": "#14151A", "inverse-primary": "#ffb3ae", "on-primary-fixed-variant": "#930015", "on-secondary-fixed-variant": "#46464c", "surface-container": "#efeeec", "outline": "#916f6c", "text-secondary": "#6B7280", "primary-container": "#e11d2e", "error": "#ba1a1a", "secondary-fixed": "#e3e1e9", "secondary-fixed-dim": "#c7c6cd", "on-primary": "#ffffff", "tertiary": "#805000", "surface-dim": "#dadad8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-2xl": "3rem", "space-xl": "2rem", "space-xs": "0.25rem", "gutter": "1rem", "margin": "1.5rem", "gutter-mobile": "0.75rem", "space-sm": "0.5rem", "margin-mobile": "1rem", "space-lg": "1.5rem", "space-md": "1rem" }, fontFamily: { "headline-lg": ["Inter"], "display-lg": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "title-md": ["Inter"], "numeral-price": ["Inter"], "body-md": ["Inter"], "display-lg-mobile": ["Inter"], "headline-md": ["Inter"], "label-md": ["Inter"], "headline-sm": ["Inter"], "label-badge": ["Inter"], "label-lg": ["Inter"] }, fontSize: { "headline-lg": ["28px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "700" }], "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.03em", fontWeight: "800" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "title-md": ["16px", { lineHeight: "22px", letterSpacing: "-0.01em", fontWeight: "600" }], "numeral-price": ["20px", { lineHeight: "24px", letterSpacing: "-0.02em", fontWeight: "700" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "display-lg-mobile": ["32px", { lineHeight: "38px", letterSpacing: "-0.025em", fontWeight: "800" }], "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "700" }], "label-badge": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "700" }], "label-lg": ["14px", { lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-white"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)]"><div class="h-16 px-margin-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Go Back" class="w-11 h-11 -ml-2 rounded-full flex items-center justify-center text-text-primary hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img src="https://lh3.googleusercontent.com/aida/AEtjO1WMM2X_Fz3yRyiicHkb1v2rIA_qIb-fZwChuir0vNJs4KdNgR_xeFol8iXslFW9fDIoJvegR_Iz5LIF9IMx2XY88biaWxSTMlaUWyIV82rmFb3_m6OwhRMYt4o4kpVF3Ig22768igKMZOMpmSwKRZl132VXKYq4OcsQi4fPcGJ73v9zFp_qd5ZSfgf18VwWy9IuEX8YQy690-kW0kjv8lfaKBaQgxx2VMENydtXbxhI5TYH9L75079OC3El" alt="Tripmate" class="h-7 w-auto object-contain"><h1 class="font-headline-sm text-headline-sm text-text-primary tracking-tight truncate max-w-[170px]">Hotel Selection</h1></div><div class="flex items-center gap-space-sm"><button aria-label="Trip Info" class="w-11 h-11 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[22px]">info</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 w-full bg-surface pt-16 pb-safe"><div class="flex flex-col w-full pb-32">
+<div class="px-margin-mobile pt-space-sm pb-space-md flex flex-col gap-1">
+<div class="flex items-center gap-space-xs text-text-secondary">
+<span class="material-symbols-outlined text-[16px] text-primary-container">location_on</span>
+<p class="font-label-md text-label-md text-text-secondary tracking-normal uppercase">Step 2 of 4: Stay</p>
+</div>
+<p class="font-headline-sm text-headline-sm text-text-primary tracking-tight">Jaipur Stays</p>
+<p class="font-body-sm text-body-sm text-text-secondary">Nov 14 – Nov 18 (4 Days, 3 Nights) • 2 Guests</p>
+</div>
+<div class="w-full overflow-x-auto no-scrollbar px-margin-mobile pb-space-md flex items-center gap-space-sm">
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md bg-surface-dark text-card-surface transition-colors shadow-sm" data-filter="all">
+      Recommended
+    </button>
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary shadow-sm hover:bg-surface-container transition-colors" data-filter="price">
+      Price: Low to High
+    </button>
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary shadow-sm hover:bg-surface-container transition-colors" data-filter="rating">
+      Rating: 4.5+
+    </button>
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary shadow-sm hover:bg-surface-container transition-colors" data-filter="haveli">
+      Heritage Haveli
+    </button>
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary shadow-sm hover:bg-surface-container transition-colors" data-filter="pool">
+      Swimming Pool
+    </button>
+<button class="filter-pill whitespace-nowrap px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary shadow-sm hover:bg-surface-container transition-colors" data-filter="budget">
+      Under ₹5,000
+    </button>
+</div>
+<div class="px-margin-mobile flex flex-col gap-space-lg">
+<div class="hotel-card bg-card-surface rounded-2xl shadow-sm flex flex-col overflow-hidden transition-all duration-200 shadow-md" data-hotel-id="1" data-hotel-name="Shahpura Haveli &amp; Heritage Suites" data-price="4200">
+<div class="relative w-full aspect-[4/3] bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Exquisite royal Indian haveli courtyard swimming pool in Jaipur, Rajasthan with warm pink sandstone arches, sunlit turquoise water, traditional brass lanterns, and lush bougainvillea reflecting peaceful regal luxury." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArKo4JfqsVtZX9SQjwB4LHU1PTlAq3mLo9TgePqBObNcZnZB5-4bKPbUKAN2EylTheoo-9SiumJ8Qy4AjYBdCDiEHtY55fSRQYl64lmQltr8x8F3wGnzGWXEH3qaY8cZx6D7YcHa0NE5TNA9Wa0LeFGSV_fopqzpyOgvEq2_zaWT9LYHbvoAY8Mr18U4LLHRWabzTkkUOHVI05DB0tDlr1JZjiCH3EvPFNL-p7cbDk12ZXF2Jpz-sVAw">
+<div class="absolute top-3 left-3 bg-urgency-amber text-card-surface px-3 py-1 rounded-full font-label-badge text-label-badge tracking-wider uppercase flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[13px]">hourglass_top</span>
+<span class="">Only 2 rooms left</span>
+</div>
+<button aria-label="Save to Wishlist" class="wishlist-btn absolute top-3 right-3 w-9 h-9 rounded-full bg-surface-dark/50 backdrop-blur-md flex items-center justify-center text-card-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">favorite_border</span>
+</button>
+</div>
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center justify-between gap-space-sm">
+<h3 class="font-headline-sm text-headline-sm text-text-primary leading-snug">Shahpura Haveli &amp; Heritage Suites</h3>
+</div>
+<div class="flex items-center gap-1.5 text-text-secondary mt-1">
+<span class="inline-flex items-center gap-0.5 bg-surface-dark text-card-surface px-1.5 py-0.5 rounded font-label-badge text-label-badge">
+<span class="material-symbols-outlined text-[12px] text-urgency-amber" style="font-variation-settings: 'FILL' 1;">star</span>
+              4.8
+            </span>
+<span class="font-body-sm text-body-sm text-text-secondary">(840 reviews)</span>
+<span class="text-text-secondary">•</span>
+<span class="font-body-sm text-body-sm text-text-secondary truncate">Bani Park (1.8 km from center)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs flex-wrap py-1">
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Free Breakfast</span>
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Heritage Courtyard</span>
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Free WiFi</span>
+</div>
+<div class="pt-space-xs mt-1 flex items-end justify-between">
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-primary-container">₹4,200</span>
+<span class="font-body-sm text-body-sm text-text-secondary">/ night</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary">₹12,600 for 3 nights • incl. taxes</span>
+</div>
+<button class="select-room-btn px-5 py-2.5 rounded-xl font-label-lg text-label-lg hover:bg-black active:scale-95 transition-all text-card-surface bg-primary-container"><span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check</span>Selected</span></button>
+</div>
+</div>
+</div>
+<div class="hotel-card bg-card-surface rounded-2xl shadow-sm flex flex-col overflow-hidden transition-all duration-200" data-hotel-id="2" data-hotel-name="Diggi Palace Heritage Hotel" data-price="3499">
+<div class="relative w-full aspect-[4/3] bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Historic palace garden estate in Jaipur with spreading banyan trees, manicured emerald lawns, vintage white wrought iron outdoor furniture, and ornate Rajasthani stone facade under golden hour sunlight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCaWvtFBEPg95MnNWLJho2kp3zzwq34tZ_lcHE09GsrwwPUJAaIuic-1pQsxtN13mH9FD5O7NLIDxFcTXh6GkXEwmMsoi3u4J7ZQqFOdCQP8cZCmQjHRHkr_3ew1e_kLIeMCKFL0ICeTpg8sFjR9_l6nQ8EP2CNr4CcPr_6HCycR1YQDLuiKXzJxcFYflUmVkX5Cxl_ovhiVfHT6z0hFqGgWMpwBbOsdQODUd2L9NRyv4PTUiDaFCkpDQ">
+<div class="absolute top-3 left-3 bg-urgency-amber text-card-surface px-3 py-1 rounded-full font-label-badge text-label-badge tracking-wider uppercase flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[13px]">trending_up</span>
+<span class="">Selling fast for Nov</span>
+</div>
+<button aria-label="Save to Wishlist" class="wishlist-btn absolute top-3 right-3 w-9 h-9 rounded-full bg-surface-dark/50 backdrop-blur-md flex items-center justify-center text-card-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">favorite_border</span>
+</button>
+</div>
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex flex-col gap-0.5">
+<h3 class="font-headline-sm text-headline-sm text-text-primary leading-snug">Diggi Palace Heritage Hotel</h3>
+<div class="flex items-center gap-1.5 text-text-secondary mt-1">
+<span class="inline-flex items-center gap-0.5 bg-surface-dark text-card-surface px-1.5 py-0.5 rounded font-label-badge text-label-badge">
+<span class="material-symbols-outlined text-[12px] text-urgency-amber" style="font-variation-settings: 'FILL' 1;">star</span>
+              4.7
+            </span>
+<span class="font-body-sm text-body-sm text-text-secondary">(1,210 reviews)</span>
+<span class="text-text-secondary">•</span>
+<span class="font-body-sm text-body-sm text-text-secondary truncate">C-Scheme, Jaipur</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs flex-wrap py-1">
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Palace Gardens</span>
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Outdoor Pool</span>
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Bar &amp; Lounge</span>
+</div>
+<div class="pt-space-xs mt-1 flex items-end justify-between">
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-primary-container">₹3,499</span>
+<span class="font-body-sm text-body-sm text-text-secondary">/ night</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary">₹10,497 for 3 nights • incl. taxes</span>
+</div>
+<button class="select-room-btn px-5 py-2.5 rounded-xl font-label-lg text-label-lg bg-surface-dark hover:bg-black active:scale-95 transition-all text-card-surface">Select Room</button>
+</div>
+</div>
+</div>
+<div class="hotel-card bg-card-surface rounded-2xl shadow-sm flex flex-col overflow-hidden transition-all duration-200" data-hotel-id="3" data-hotel-name="Alsisar Haveli" data-price="5800">
+<div class="relative w-full aspect-[4/3] bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Opulent heritage suite room at Alsisar Haveli featuring intricately carved multi-foil arches, royal fresco murals in red and gold leaf, stained glass windows, and four-poster antique bed with plush velvet textiles." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCR8TvMS8uf8dFh8XMWQTikBGKy6wSFfaqpa38paiRnB1omJE2yxgN0xJegOPWdgxi3oPuAAv0i6EZnLvPEF-gApqJDedMuZyQY47WdrtiQ5_lV72VMGXjzc9v-zIzIE7tzZrDFMrZoFdreq7qn0KFXTVnA8wk9QclMDkmxk7dmRy8L-E31pcxVKue0EVbmKDGzgxBymkQNz9XiFQiLA_cmthYNAwD0W0CYhPyTrwybWUokiVqG_KyogA">
+<div class="absolute top-3 left-3 bg-surface-dark/70 backdrop-blur-md text-card-surface px-3 py-1 rounded-full font-label-badge text-label-badge tracking-wider uppercase flex items-center gap-1 shadow-sm">
+<span class="material-symbols-outlined text-[13px] text-urgency-amber" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+<span class="">Top Rated Haveli</span>
+</div>
+<button aria-label="Save to Wishlist" class="wishlist-btn absolute top-3 right-3 w-9 h-9 rounded-full bg-surface-dark/50 backdrop-blur-md flex items-center justify-center text-card-surface active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">favorite_border</span>
+</button>
+</div>
+<div class="p-space-md flex flex-col gap-space-sm">
+<div class="flex flex-col gap-0.5">
+<h3 class="font-headline-sm text-headline-sm text-text-primary leading-snug">Alsisar Haveli</h3>
+<div class="flex items-center gap-1.5 text-text-secondary mt-1">
+<span class="inline-flex items-center gap-0.5 bg-surface-dark text-card-surface px-1.5 py-0.5 rounded font-label-badge text-label-badge">
+<span class="material-symbols-outlined text-[12px] text-urgency-amber" style="font-variation-settings: 'FILL' 1;">star</span>
+              4.9
+            </span>
+<span class="font-body-sm text-body-sm text-text-secondary">(620 reviews)</span>
+<span class="text-text-secondary">•</span>
+<span class="font-body-sm text-body-sm text-text-secondary truncate">Sansar Chandra Road</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs flex-wrap py-1">
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Rooftop Dining</span>
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Royal Courtyard</span>
+<span class="bg-surface-container px-2.5 py-1 rounded-md font-body-sm text-body-sm text-text-secondary">Spa &amp; Wellness</span>
+</div>
+<div class="pt-space-xs mt-1 flex items-end justify-between">
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-primary-container">₹5,800</span>
+<span class="font-body-sm text-body-sm text-text-secondary">/ night</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary">₹17,400 for 3 nights • incl. taxes</span>
+</div>
+<button class="select-room-btn px-5 py-2.5 rounded-xl font-label-lg text-label-lg bg-surface-dark hover:bg-black active:scale-95 transition-all text-card-surface">Select Room</button>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 z-40 bg-card-surface/90 backdrop-blur-xl px-margin-mobile py-space-md shadow-[0_-4px_20px_rgba(20,21,26,0.06)] pb-safe">
+<div class="max-w-md mx-auto flex items-center justify-between gap-space-md">
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-success-green animate-pulse"></span>
+<span class="font-title-md text-title-md text-text-primary truncate" id="selected-count-label">1 Hotel Selected</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary truncate" id="selected-hotel-name">Shahpura Haveli &amp; Heritage Suites</span>
+</div>
+<button class="shrink-0 bg-primary-container text-card-surface px-6 py-3.5 rounded-xl font-label-lg text-label-lg uppercase tracking-wider flex items-center gap-1.5 shadow-md active:bg-primary transition-all">
+<span class="">Next: Transport</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  (function () {
+    const cards = document.querySelectorAll('.hotel-card');
+    const selectButtons = document.querySelectorAll('.select-room-btn');
+    const selectedCountLabel = document.getElementById('selected-count-label');
+    const selectedHotelName = document.getElementById('selected-hotel-name');
+    const filterPills = document.querySelectorAll('.filter-pill');
+    const wishlistBtns = document.querySelectorAll('.wishlist-btn');
+
+    let currentSelectedId = '1';
+
+    function updateSelection(card) {
+      cards.forEach(c => {
+        const btn = c.querySelector('.select-room-btn');
+        c.classList.remove('ring-2', 'ring-primary-container', 'shadow-md');
+        btn.classList.remove('bg-primary-container', 'text-card-surface');
+        btn.classList.add('bg-surface-dark', 'text-card-surface');
+        btn.textContent = 'Select Room';
+      });
+
+      card.classList.add('shadow-md');
+      const activeBtn = card.querySelector('.select-room-btn');
+      activeBtn.classList.remove('bg-surface-dark');
+      activeBtn.classList.add('bg-primary-container', 'text-card-surface');
+      activeBtn.innerHTML = '<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[16px]">check</span>Selected</span>';
+
+      currentSelectedId = card.getAttribute('data-hotel-id');
+      const name = card.getAttribute('data-hotel-name');
+      selectedHotelName.textContent = name;
+      selectedCountLabel.textContent = '1 Hotel Selected';
+    }
+
+    if (cards.length > 0) {
+      updateSelection(cards[0]);
+    }
+
+    selectButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const card = btn.closest('.hotel-card');
+        updateSelection(card);
+      });
+    });
+
+    cards.forEach(card => {
+      card.addEventListener('click', () => {
+        updateSelection(card);
+      });
+    });
+
+    filterPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        filterPills.forEach(p => {
+          p.classList.remove('bg-surface-dark', 'text-card-surface');
+          p.classList.add('bg-card-surface', 'text-text-primary');
+        });
+        pill.classList.remove('bg-card-surface', 'text-text-primary');
+        pill.classList.add('bg-surface-dark', 'text-card-surface');
+      });
+    });
+
+    wishlistBtns.forEach(wbtn => {
+      wbtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const icon = wbtn.querySelector('.material-symbols-outlined');
+        if (icon.textContent === 'favorite_border') {
+          icon.textContent = 'favorite';
+          icon.style.fontVariationSettings = "'FILL' 1";
+          icon.classList.add('text-primary-container');
+        } else {
+          icon.textContent = 'favorite_border';
+          icon.style.fontVariationSettings = "'FILL' 0";
+          icon.classList.remove('text-primary-container');
+        }
+      });
+    });
+  })();
+</script></main>
+
+</body></html>

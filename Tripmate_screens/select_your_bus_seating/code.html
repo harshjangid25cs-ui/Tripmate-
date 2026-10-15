@@ -1,0 +1,315 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_stack" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#FAF9F7;}body{overscroll-behavior:none;color:#14151A;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-container": "#e11d2e", "surface-container-highest": "#e3e2e0", "on-error": "#ffffff", "on-primary-fixed": "#410004", "success-green": "#16A34A", "surface-tint": "#c0001f", "tertiary": "#805000", "card-surface": "#FFFFFF", "inverse-primary": "#ffb3ae", "tertiary-container": "#a16600", "secondary-fixed": "#e3e1e9", "border-hairline": "#E5E3DF", "on-secondary": "#ffffff", "surface-container-low": "#f4f3f1", "on-primary-container": "#fff8f7", "on-surface": "#1a1c1b", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#ffb95f", "on-secondary-fixed-variant": "#46464c", "on-surface-variant": "#5d3f3d", "error-container": "#ffdad6", "text-primary": "#14151A", "background": "#faf9f7", "surface-dark": "#14151A", "on-error-container": "#93000a", "on-background": "#1a1c1b", "on-primary": "#ffffff", "surface-bright": "#faf9f7", "on-secondary-container": "#64646a", "on-tertiary-container": "#fff9f5", "outline": "#916f6c", "secondary-fixed-dim": "#c7c6cd", "tertiary-fixed": "#ffddb8", "on-tertiary-fixed-variant": "#653e00", "urgency-amber": "#F59E0B", "surface-variant": "#e3e2e0", "surface-dim": "#dadad8", "inverse-on-surface": "#f1f1ef", "primary": "#b8001d", "primary-fixed-dim": "#ffb3ae", "surface-container-lowest": "#ffffff", "surface-container-high": "#e9e8e6", "on-primary-fixed-variant": "#930015", "primary-fixed": "#ffdad7", "surface-light": "#FAF9F7", "secondary": "#5e5e64", "secondary-container": "#e3e1e9", "surface-container": "#efeeec", "on-tertiary-fixed": "#2a1700", "inverse-surface": "#2f3130", "error": "#ba1a1a", "on-secondary-fixed": "#1a1b20", "surface": "#faf9f7", "outline-variant": "#e6bdb9", "text-secondary": "#6B7280" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin": "1.5rem", "gutter-mobile": "0.75rem", "margin-mobile": "1rem", "space-lg": "1.5rem", "space-2xl": "3rem", "space-md": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "gutter": "1rem", "space-xs": "0.25rem" }, "fontFamily": { "display-lg-mobile": ["Inter"], "headline-sm": ["Inter"], "numeral-price": ["Inter"], "label-lg": ["Inter"], "body-lg": ["Inter"], "headline-lg": ["Inter"], "headline-md": ["Inter"], "body-sm": ["Inter"], "display-lg": ["Inter"], "title-md": ["Inter"], "body-md": ["Inter"], "label-badge": ["Inter"], "label-md": ["Inter"] }, "fontSize": { "display-lg-mobile": ["32px", {"lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "800"}], "headline-sm": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "700"}], "numeral-price": ["20px", {"lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "label-lg": ["14px", {"lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "600"}], "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}], "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700"}], "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}], "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "800"}], "title-md": ["16px", {"lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600"}], "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}], "label-badge": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "700"}], "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-text-primary flex flex-col min-h-screen"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-margin-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-xs"><button aria-label="Go back" class="w-11 h-11 -ml-space-xs flex items-center justify-center text-text-primary hover:text-primary transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="Tripmate brand logo lockup: red rounded squircle badge with crisp white M monogram paired with bold black Tripmate text" class="h-8 w-auto object-contain hidden sm:block" src="https://lh3.googleusercontent.com/aida/AEtjO1URGG5QwQDEvcJ9glM8lWvGU6-eW112-7ZrLzy4olJYQ_IWglnOOEDrniIPFfhatu9YEaJ42RytT5b1BsgUlkR2wi-Iz3LCghBfd8GByaqgA0Jbl-2tUc8myLVpbFoYJzRYT3peL9N2jff9SVWfXx7nISnWMAfYVVmWw_9soUzj8pHq89a-0X53LzjPmc7r3cg0wCjnAQPQeCw6mJ8XxKEY8dnTpso8mXeLRQPKUisVjqYUT_kd4nL4T0Ye"></div><div class="flex-1 flex items-center justify-center gap-space-xs min-w-0 px-space-xs text-center"><h1 class="font-headline-sm text-headline-sm text-text-primary truncate tracking-tight">Fleet &amp; Vehicle Selection</h1><span class="inline-flex items-center px-space-xs py-0.5 rounded-full bg-surface-container font-label-badge text-label-badge text-secondary font-semibold shrink-0 uppercase tracking-wider">B2B</span></div><div class="flex items-center shrink-0"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex flex-col relative w-full pt-16 pb-safe bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Progress & Context Strip -->
+<div class="px-margin-mobile py-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary-container text-on-primary font-label-badge text-label-badge">2</span>
+<span class="font-label-badge text-label-badge text-primary-container tracking-wider uppercase font-bold">Step 2 of 3</span>
+</div>
+<div aria-label="Step progress indicator" class="flex items-center gap-1.5">
+<span class="w-6 h-1.5 rounded-full bg-primary-container"></span>
+<span class="w-6 h-1.5 rounded-full bg-primary-container"></span>
+<span class="w-6 h-1.5 rounded-full bg-surface-container-highest"></span>
+</div>
+</div>
+<!-- Bus Catalog Selection Stack -->
+<div class="px-margin-mobile flex flex-col gap-space-sm mb-space-xl">
+<div class="flex items-baseline justify-between mb-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Corporate Fleet Inventory</h2>
+<span class="font-label-md text-label-md text-text-secondary">3 Options Available</span>
+</div>
+<!-- Bus Card 1: Selected State -->
+<div class="w-full bg-card-surface rounded-xl p-space-md shadow-sm relative overflow-hidden flex flex-col gap-space-sm" id="bus-card-1">
+<div class="absolute inset-0 pointer-events-none rounded-xl" style="box-shadow: inset 0 0 0 2px #E11D2E;"></div>
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex-1 min-w-0">
+<div class="inline-flex items-center gap-1 px-space-xs py-0.5 rounded-full bg-primary-container text-on-primary font-label-badge text-label-badge mb-1.5">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span>SELECTED VEHICLE</span>
+</div>
+<h3 class="font-title-md text-title-md text-text-primary truncate">Volvo 9600 Multi-Axle Luxury Coach</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">45 Seater AC Semi-Sleeper • BS6 Phase 2</p>
+</div>
+<div class="w-20 h-14 rounded-lg bg-surface-container-high overflow-hidden shrink-0 flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Modern gleaming white luxury executive Volvo 9600 multi-axle commercial tour bus coach parked in corporate business park driveway under bright daylight, sleek aerodynamic design, tinted panoramic side windows with subtle dark branding decal" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2DBjRrVNj6U-FkCaASlhgISjGtLcQMca3dN14nnl4n4lRVJSBeK6TgLru3sjwQW3yN1ZKjOEyA-bIQ--sry18YUfWggNeC7-hKRDZvHr9OoCdPkOgTaabahinSmwck-TTCEQvSlWUUidLjmUrO_hypgmCRDzwIqSWKY_gKndTstE7ZEYP9wgJplwqQj6_AX4WW3laX32EvuY4n1ghJj7kpMuryfKd0IWPxqyYPdV9">
+</div>
+</div>
+<!-- Fleet Amenities Tags -->
+<div class="flex flex-wrap gap-1.5">
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-low font-body-sm text-body-sm text-text-primary">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">wifi</span> High-Speed Wi-Fi
+        </span>
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-low font-body-sm text-body-sm text-text-primary">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">power</span> 220V Outlets
+        </span>
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-low font-body-sm text-body-sm text-text-primary">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">airline_seat_recline_extra</span> 135° Recline
+        </span>
+<span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-surface-container-low font-body-sm text-body-sm text-text-primary">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">air</span> Air Suspension
+        </span>
+</div>
+<!-- Pricing and Active CTA Row -->
+<div class="flex items-center justify-between pt-space-xs mt-0.5">
+<div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Charter Rate</span>
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-primary-container">₹38,500</span>
+<span class="font-body-sm text-body-sm text-text-secondary">/ day</span>
+</div>
+</div>
+<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-label-lg text-label-lg shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span>Configured</span>
+</div>
+</div>
+</div>
+<!-- Bus Card 2: Unselected State -->
+<div class="w-full bg-card-surface rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm" id="bus-card-2">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex-1 min-w-0">
+<span class="inline-flex items-center px-space-xs py-0.5 rounded-full bg-surface-container-high font-label-badge text-label-badge text-secondary mb-1.5">STANDBY AVAILABLE</span>
+<h3 class="font-title-md text-title-md text-text-primary truncate">BharatBenz Executive Glider</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">32 Seater AC Pushback • Ergonomic Cabin</p>
+</div>
+<div class="w-20 h-14 rounded-lg bg-surface-container-high overflow-hidden shrink-0 flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Contemporary commercial medium luxury touring coach BharatBenz white body with streamlined corporate livery parked in outdoor paved lot, sleek headlights, premium glass windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCnFHfKzedLPxxDxCTux68ZSD8SUY0F4FlMxKDBhk9IxhhukF_8jrKGVpFwW4i7TnZk07GMzmDEP0N3qoXKs_PxUtu_WQAhytk9znSJW9eF27lgYWpKUdKp0b7kNjTHm8WXc7P3JYU3DAS7tHkFc1E5EKJWeJsEEjebGLmLQWZEQVABWl59W9rpJXU5b9UOP_q9fxh24pg6wwzsLIIeP-WDng3NjNg5teT4emTrg3Ah">
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Charter Rate</span>
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-text-primary">₹28,000</span>
+<span class="font-body-sm text-body-sm text-text-secondary">/ day</span>
+</div>
+</div>
+<button class="px-4 py-2 rounded-lg bg-surface-container-low text-text-primary font-label-lg text-label-lg hover:bg-surface-container-high transition-colors" type="button">
+          Select Fleet
+        </button>
+</div>
+</div>
+<!-- Bus Card 3: Unselected State -->
+<div class="w-full bg-card-surface rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm" id="bus-card-3">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex-1 min-w-0">
+<span class="inline-flex items-center px-space-xs py-0.5 rounded-full bg-surface-container-high font-label-badge text-label-badge text-secondary mb-1.5">FAST TRANSIT</span>
+<h3 class="font-title-md text-title-md text-text-primary truncate">Force Urbania Executive Cruiser</h3>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">17 Seater Luxury Mini-Coach • Captain Chairs</p>
+</div>
+<div class="w-20 h-14 rounded-lg bg-surface-container-high overflow-hidden shrink-0 flex items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Modern luxury executive shuttle van Force Urbania white metallic exterior parked in tech park entrance, clear sky reflection on tinted side glass panels" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgaDYt4zli_c4rc8W0RpAbpP47jQRHVYnLzlHkJ5PZ8O1LdJJxwE7sAcMZO_O7SVlH97AaLF7gUxwlrNlboMP0rW-mvOxPINeh1jTN-JOOEF-KqHgmBrjqom5u45L3ypLZjOLLP3bslpehCBUed6T09aRQI-F5VvnAlUvV6J_LXDeCvNpC8Hyu0lYi6DXJyUw5D2hejUZs5VD8_Xh7B-W_TZDptInUZDeF04D76pef">
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Charter Rate</span>
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-text-primary">₹18,500</span>
+<span class="font-body-sm text-body-sm text-text-secondary">/ day</span>
+</div>
+</div>
+<button class="px-4 py-2 rounded-lg bg-surface-container-low text-text-primary font-label-lg text-label-lg hover:bg-surface-container-high transition-colors" type="button">
+          Select Fleet
+        </button>
+</div>
+</div>
+</div>
+<!-- Interactive Seat Selection & Passenger Assignment Section -->
+<div class="px-margin-mobile flex flex-col gap-space-md mb-space-2xl">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary tracking-tight">Select Seats &amp; Assign Travellers</h2>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">Assigning seats for 5 designated travelers (3 of 5 assigned)</p>
+</div>
+<!-- Seat Legend Indicator -->
+<div class="flex items-center justify-between px-space-md py-space-sm bg-card-surface rounded-xl shadow-sm">
+<div class="flex items-center gap-2">
+<span class="w-4 h-4 rounded-md bg-card-surface shadow-inner ring-1 ring-border-hairline"></span>
+<span class="font-label-md text-label-md text-text-secondary">Available</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-4 h-4 rounded-md bg-primary-container"></span>
+<span class="font-label-md text-label-md text-text-primary font-semibold">Selected</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-4 h-4 rounded-md bg-surface-container-highest"></span>
+<span class="font-label-md text-label-md text-text-secondary">Occupied</span>
+</div>
+</div>
+<!-- Bus Cabin Visualization Layout -->
+<div class="bg-card-surface rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm relative">
+<!-- Front Cockpit Indicator -->
+<div class="flex items-center justify-between px-space-sm pb-space-sm bg-surface-container-low rounded-lg py-2">
+<div class="flex items-center gap-1.5 text-text-secondary">
+<span class="material-symbols-outlined text-[18px]">meeting_room</span>
+<span class="font-label-badge text-label-badge tracking-wider font-semibold uppercase">Front Entrance</span>
+</div>
+<div class="flex items-center gap-1.5 text-text-secondary">
+<span class="material-symbols-outlined text-[20px]">airline_seat_recline_normal</span>
+<span class="font-label-badge text-label-badge tracking-wider font-semibold uppercase">Driver Cockpit</span>
+</div>
+</div>
+<!-- Seat Grid (2x2 with central aisle) -->
+<div class="flex flex-col gap-2.5 pt-space-xs">
+<!-- Row 1 (Occupied) -->
+<div class="grid grid-cols-5 items-center gap-2">
+<button aria-label="Seat 1A Occupied" class="h-10 rounded-lg bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center cursor-not-allowed" disabled="" type="button">1A</button>
+<button aria-label="Seat 1B Occupied" class="h-10 rounded-lg bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center cursor-not-allowed" disabled="" type="button">1B</button>
+<div class="flex items-center justify-center font-label-badge text-label-badge text-text-secondary select-none">R1</div>
+<button aria-label="Seat 1C Occupied" class="h-10 rounded-lg bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center cursor-not-allowed" disabled="" type="button">1C</button>
+<button aria-label="Seat 1D Occupied" class="h-10 rounded-lg bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center cursor-not-allowed" disabled="" type="button">1D</button>
+</div>
+<!-- Row 2 (Selected & Available) -->
+<div class="grid grid-cols-5 items-center gap-2">
+<button aria-label="Seat 2A Selected" class="h-10 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md flex items-center justify-center shadow-sm font-bold ring-2 ring-primary-container/20" type="button">2A</button>
+<button aria-label="Seat 2B Selected" class="h-10 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md flex items-center justify-center shadow-sm font-bold ring-2 ring-primary-container/20" type="button">2B</button>
+<div class="flex items-center justify-center font-label-badge text-label-badge text-text-secondary select-none">R2</div>
+<button aria-label="Seat 2C Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">2C</button>
+<button aria-label="Seat 2D Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">2D</button>
+</div>
+<!-- Row 3 (Selected & Available) -->
+<div class="grid grid-cols-5 items-center gap-2">
+<button aria-label="Seat 3A Selected" class="h-10 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md flex items-center justify-center shadow-sm font-bold ring-2 ring-primary-container/20" type="button">3A</button>
+<button aria-label="Seat 3B Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">3B</button>
+<div class="flex items-center justify-center font-label-badge text-label-badge text-text-secondary select-none">R3</div>
+<button aria-label="Seat 3C Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">3C</button>
+<button aria-label="Seat 3D Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">3D</button>
+</div>
+<!-- Row 4 (Available) -->
+<div class="grid grid-cols-5 items-center gap-2">
+<button aria-label="Seat 4A Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">4A</button>
+<button aria-label="Seat 4B Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">4B</button>
+<div class="flex items-center justify-center font-label-badge text-label-badge text-text-secondary select-none">R4</div>
+<button aria-label="Seat 4C Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">4C</button>
+<button aria-label="Seat 4D Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">4D</button>
+</div>
+<!-- Row 5 (Occupied) -->
+<div class="grid grid-cols-5 items-center gap-2">
+<button aria-label="Seat 5A Occupied" class="h-10 rounded-lg bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center cursor-not-allowed" disabled="" type="button">5A</button>
+<button aria-label="Seat 5B Occupied" class="h-10 rounded-lg bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center cursor-not-allowed" disabled="" type="button">5B</button>
+<div class="flex items-center justify-center font-label-badge text-label-badge text-text-secondary select-none">R5</div>
+<button aria-label="Seat 5C Occupied" class="h-10 rounded-lg bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center cursor-not-allowed" disabled="" type="button">5C</button>
+<button aria-label="Seat 5D Occupied" class="h-10 rounded-lg bg-surface-container-highest text-secondary font-label-md text-label-md flex items-center justify-center cursor-not-allowed" disabled="" type="button">5D</button>
+</div>
+<!-- Row 6 (Available) -->
+<div class="grid grid-cols-5 items-center gap-2">
+<button aria-label="Seat 6A Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">6A</button>
+<button aria-label="Seat 6B Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">6B</button>
+<div class="flex items-center justify-center font-label-badge text-label-badge text-text-secondary select-none">R6</div>
+<button aria-label="Seat 6C Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">6C</button>
+<button aria-label="Seat 6D Available" class="h-10 rounded-lg bg-card-surface shadow-sm text-text-primary font-label-md text-label-md flex items-center justify-center hover:bg-surface-container transition-colors" type="button">6D</button>
+</div>
+</div>
+<div class="flex items-center justify-center pt-space-xs text-text-secondary gap-1">
+<span class="material-symbols-outlined text-[16px]">touch_app</span>
+<span class="font-body-sm text-body-sm">Tap unassigned seat to replace or add travellers</span>
+</div>
+</div>
+<!-- Assigned Passenger Cards Stack -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between mb-1">
+<h3 class="font-title-md text-title-md text-text-primary">Corporate Roster Assignments</h3>
+<span class="font-label-badge text-label-badge text-success-green font-bold uppercase tracking-wider">3 Synced</span>
+</div>
+<!-- Traveller 1 (Seat 2A) -->
+<div class="p-space-sm bg-card-surface rounded-xl shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-headline-sm text-headline-sm shrink-0">
+            2A
+          </div>
+<div class="min-w-0">
+<div class="font-label-lg text-label-lg text-text-primary truncate font-semibold">Aarav Sharma</div>
+<div class="font-body-sm text-body-sm text-text-secondary truncate">VP Engineering • Employee #0412</div>
+</div>
+</div>
+<div class="flex items-center gap-1 text-success-green shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Traveller 2 (Seat 2B) -->
+<div class="p-space-sm bg-card-surface rounded-xl shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-headline-sm text-headline-sm shrink-0">
+            2B
+          </div>
+<div class="min-w-0">
+<div class="font-label-lg text-label-lg text-text-primary truncate font-semibold">Priya Nair</div>
+<div class="font-body-sm text-body-sm text-text-secondary truncate">Lead Architect • Employee #0789</div>
+</div>
+</div>
+<div class="flex items-center gap-1 text-success-green shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Traveller 3 (Seat 3A) -->
+<div class="p-space-sm bg-card-surface rounded-xl shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-headline-sm text-headline-sm shrink-0">
+            3A
+          </div>
+<div class="min-w-0">
+<div class="font-label-lg text-label-lg text-text-primary truncate font-semibold">Rohan Verma</div>
+<div class="font-body-sm text-body-sm text-text-secondary truncate">Product Director • Employee #0104</div>
+</div>
+</div>
+<div class="flex items-center gap-1 text-success-green shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Unassigned Traveller Prompt Card -->
+<div class="p-space-md bg-surface-container-low rounded-xl flex items-center justify-between gap-space-sm cursor-pointer hover:bg-surface-container transition-colors" role="button" tabindex="0">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-card-surface text-secondary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[22px]">person_add</span>
+</div>
+<div>
+<div class="font-label-lg text-label-lg text-text-primary font-semibold">+ Assign Travellers 4 &amp; 5</div>
+<div class="font-body-sm text-body-sm text-text-secondary">Tap available seats 3B, 4A, or pick from directory</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary text-[20px]">chevron_right</span>
+</div>
+</div>
+</div>
+<!-- Sticky Confirmation Action Surface -->
+<div class="px-margin-mobile pb-space-lg flex flex-col gap-space-sm">
+<div class="flex items-center justify-between px-space-xs text-text-secondary font-body-sm text-body-sm">
+<span>Total Estimated Charter (3 Days)</span>
+<span class="font-numeral-price text-numeral-price text-text-primary">₹1,15,500</span>
+</div>
+<button class="w-full h-14 bg-primary-container hover:bg-surface-tint active:scale-[0.99] text-on-primary rounded-xl font-label-lg text-label-lg font-bold flex items-center justify-center gap-space-xs shadow-md transition-all" type="button">
+<span>Continue to Review &amp; Confirm</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<div class="flex items-center justify-center gap-1.5 text-center px-space-md">
+<span class="material-symbols-outlined text-text-secondary text-[16px]">info</span>
+<p class="font-body-sm text-body-sm text-text-secondary">
+        Seat assignments can be adjusted up to 12 hours prior to departure
+      </p>
+</div>
+</div>
+</div>
+<script>
+  // Micro-interaction for fleet card selection toggle
+  document.addEventListener('DOMContentLoaded', () => {
+    const cards = [
+      document.getElementById('bus-card-1'),
+      document.getElementById('bus-card-2'),
+      document.getElementById('bus-card-3')
+    ];
+
+    cards.forEach((card, index) => {
+      if (!card) return;
+      card.addEventListener('click', (e) => {
+        if (e.target.tagName === 'BUTTON' || card.id === 'bus-card-1') {
+          // Keep active or handle selection transition feedback
+        }
+      });
+    });
+  });
+</script></main></body></html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_stack" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#FAF9F7;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "outline-variant": "#e6bdb9", "on-surface-variant": "#5d3f3d", "surface-container-low": "#f4f3f1", "surface-container-high": "#e9e8e6", "error-container": "#ffdad6", "on-surface": "#1a1c1b", "surface-container-highest": "#e3e2e0", "inverse-surface": "#2f3130", "on-background": "#1a1c1b", "secondary": "#5e5e64", "background": "#faf9f7", "on-primary-fixed": "#410004", "on-error-container": "#93000a", "success-green": "#16A34A", "inverse-on-surface": "#f1f1ef", "on-secondary-container": "#64646a", "on-error": "#ffffff", "surface-container-lowest": "#ffffff", "on-tertiary": "#ffffff", "surface-dark": "#14151A", "on-tertiary-fixed-variant": "#653e00", "card-surface": "#FFFFFF", "primary-fixed-dim": "#ffb3ae", "on-tertiary-container": "#fff9f5", "primary-fixed": "#ffdad7", "surface-variant": "#e3e2e0", "surface-bright": "#faf9f7", "on-secondary-fixed": "#1a1b20", "on-tertiary-fixed": "#2a1700", "tertiary-fixed": "#ffddb8", "border-hairline": "#E5E3DF", "surface-tint": "#c0001f", "surface-light": "#FAF9F7", "surface": "#faf9f7", "primary": "#b8001d", "on-primary-container": "#fff8f7", "tertiary-container": "#a16600", "secondary-container": "#e3e1e9", "tertiary-fixed-dim": "#ffb95f", "on-secondary": "#ffffff", "urgency-amber": "#F59E0B", "text-primary": "#14151A", "inverse-primary": "#ffb3ae", "on-primary-fixed-variant": "#930015", "on-secondary-fixed-variant": "#46464c", "surface-container": "#efeeec", "outline": "#916f6c", "text-secondary": "#6B7280", "primary-container": "#e11d2e", "error": "#ba1a1a", "secondary-fixed": "#e3e1e9", "secondary-fixed-dim": "#c7c6cd", "on-primary": "#ffffff", "tertiary": "#805000", "surface-dim": "#dadad8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-2xl": "3rem", "space-xl": "2rem", "space-xs": "0.25rem", "gutter": "1rem", "margin": "1.5rem", "gutter-mobile": "0.75rem", "space-sm": "0.5rem", "margin-mobile": "1rem", "space-lg": "1.5rem", "space-md": "1rem" }, fontFamily: { "headline-lg": ["Inter"], "display-lg": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "title-md": ["Inter"], "numeral-price": ["Inter"], "body-md": ["Inter"], "display-lg-mobile": ["Inter"], "headline-md": ["Inter"], "label-md": ["Inter"], "headline-sm": ["Inter"], "label-badge": ["Inter"], "label-lg": ["Inter"] }, fontSize: { "headline-lg": ["28px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "700" }], "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.03em", fontWeight: "800" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "title-md": ["16px", { lineHeight: "22px", letterSpacing: "-0.01em", fontWeight: "600" }], "numeral-price": ["20px", { lineHeight: "24px", letterSpacing: "-0.02em", fontWeight: "700" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "display-lg-mobile": ["32px", { lineHeight: "38px", letterSpacing: "-0.025em", fontWeight: "800" }], "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "700" }], "label-badge": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "700" }], "label-lg": ["14px", { lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-white"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)]"><div class="h-16 px-margin-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Go Back" class="w-11 h-11 -ml-2 rounded-full flex items-center justify-center text-text-primary hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="Tripmate" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WMM2X_Fz3yRyiicHkb1v2rIA_qIb-fZwChuir0vNJs4KdNgR_xeFol8iXslFW9fDIoJvegR_Iz5LIF9IMx2XY88biaWxSTMlaUWyIV82rmFb3_m6OwhRMYt4o4kpVF3Ig22768igKMZOMpmSwKRZl132VXKYq4OcsQi4fPcGJ73v9zFp_qd5ZSfgf18VwWy9IuEX8YQy690-kW0kjv8lfaKBaQgxx2VMENydtXbxhI5TYH9L75079OC3El"><h1 class="font-headline-sm text-headline-sm text-text-primary tracking-tight truncate max-w-[170px]">Login</h1></div><div class="flex items-center gap-space-sm"><button aria-label="Trip Info" class="w-11 h-11 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[22px]">info</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 w-full bg-surface pt-16 pb-safe"><div class="flex flex-col w-full px-margin-mobile py-space-lg max-w-md mx-auto">
+<!-- Interactive Segmented Mode Switcher -->
+<div class="flex items-center justify-center p-1 bg-surface-container rounded-xl mb-space-lg shadow-sm">
+<button class="flex-1 py-2 text-center font-label-md text-label-md rounded-lg bg-card-surface text-text-primary transition-all duration-200 shadow-sm" id="tab-login" onclick="setAuthMode('login')">
+      Log In
+    </button>
+<button class="flex-1 py-2 text-center font-label-md text-label-md rounded-lg text-text-secondary hover:text-text-primary transition-all duration-200" id="tab-signup" onclick="setAuthMode('signup')">
+      Sign Up
+    </button>
+</div>
+<!-- Main Card Surface -->
+<div class="bg-card-surface rounded-[16px] p-7 shadow-sm flex flex-col items-center">
+<!-- Tripmate Brand Emblem -->
+<div class="mb-space-md flex flex-col items-center">
+<div class="w-14 h-14 rounded-2xl bg-primary-container flex items-center justify-center shadow-sm">
+<span class="font-display-lg-mobile text-display-lg-mobile text-on-primary leading-none select-none font-extrabold tracking-tighter">M</span>
+</div>
+<div class="mt-2 flex items-center gap-1.5">
+<span class="font-headline-sm text-headline-sm text-text-primary tracking-tight font-extrabold">Tripmate</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full bg-primary-fixed text-on-primary-fixed font-label-badge text-label-badge">TRIP OS</span>
+</div>
+</div>
+<!-- Header Copy -->
+<div class="text-center mb-space-lg">
+<h2 class="font-headline-md text-headline-md text-text-primary tracking-tight" id="auth-heading">
+        Welcome to Tripmate
+      </h2>
+<p class="font-body-md text-body-md text-text-secondary mt-1" id="auth-subheading">
+        Plan hotels, rides &amp; rest stops in one go
+      </p>
+</div>
+<!-- Input Form -->
+<form class="w-full flex flex-col gap-space-md" onsubmit="event.preventDefault(); triggerSubmit();">
+<!-- Input Wrapper -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-text-primary text-left" for="identifier">
+          Phone number or Email
+        </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-[20px] text-text-secondary pointer-events-none">
+            alternate_email
+          </span>
+<input class="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-lowest text-text-primary placeholder:text-text-secondary font-body-md text-body-md focus:outline-none focus:bg-surface-container-low transition-colors" id="identifier" placeholder="Enter mobile or email" type="text">
+</div>
+</div>
+<!-- Additional dynamic field for Sign Up -->
+<div class="flex flex-col gap-1.5 hidden" id="signup-extra-field">
+<label class="font-label-md text-label-md text-text-primary text-left" for="full-name">
+          Full Name
+        </label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3.5 text-[20px] text-text-secondary pointer-events-none">
+            badge
+          </span>
+<input class="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-lowest text-text-primary placeholder:text-text-secondary font-body-md text-body-md focus:outline-none focus:bg-surface-container-low transition-colors" id="full-name" placeholder="e.g. Maya Chen" type="text">
+</div>
+</div>
+<!-- Primary Action CTA -->
+<button class="w-full h-12 mt-1 rounded-xl bg-primary-container text-on-primary font-label-lg text-label-lg uppercase tracking-wider flex items-center justify-center gap-2 active:bg-primary transition-colors" id="submit-cta" type="submit">
+<span class="">Continue</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</form>
+<!-- Divider -->
+<div class="w-full flex items-center my-space-lg">
+<div class="flex-1 h-px bg-surface-container-highest"></div>
+<span class="px-3 font-body-sm text-body-sm text-text-secondary uppercase tracking-wider">
+        or connect with
+      </span>
+<div class="flex-1 h-px bg-surface-container-highest"></div>
+</div>
+<!-- Social Authentication Options -->
+<div class="w-full flex flex-col gap-2.5">
+<!-- WhatsApp Instant OTP -->
+<button class="w-full h-11 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container text-text-primary flex items-center justify-between transition-colors" onclick="simulateSocialLogin('WhatsApp')" type="button">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[20px] text-success-green">
+            chat
+          </span>
+<span class="font-label-md text-label-md text-text-primary">Instant OTP via WhatsApp</span>
+</div>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-label-badge text-label-badge uppercase">Fast</span>
+</button>
+<!-- Google Log In -->
+<button class="w-full h-11 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container text-text-primary flex items-center justify-between transition-colors" onclick="simulateSocialLogin('Google')" type="button">
+<div class="flex items-center gap-3">
+<!-- Geometric Google Icon Vector -->
+<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"></path>
+</svg>
+<span class="font-label-md text-label-md text-text-primary">Continue with Google</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-text-secondary">chevron_right</span>
+</button>
+<!-- Apple Log In -->
+<button class="w-full h-11 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container text-text-primary flex items-center justify-between transition-colors" onclick="simulateSocialLogin('Apple')" type="button">
+<div class="flex items-center gap-3">
+<svg class="w-4 h-4 fill-text-primary" viewBox="0 0 170 170">
+<path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.69-7.85-12.01-14.42-6.3-9.67-11.45-20.76-15.46-33.27-4-12.5-6.01-24.16-6.01-34.98 0-14.47 3.59-26.69 10.77-36.65 7.18-9.97 16.32-15.08 27.42-15.34 4.57 0 9.73 1.25 15.48 3.75 5.75 2.5 9.77 3.8 12.07 3.91 1.96 0 6.13-1.41 12.51-4.22 6.38-2.81 11.83-4.04 16.36-3.7 12.5.86 22.45 5.78 29.83 14.77-10.97 6.64-16.34 15.76-16.12 27.35.22 9.02 3.63 16.63 10.23 22.83 6.6 6.19 14.43 9.78 23.49 10.76-2.28 6.84-5.06 13.57-8.34 20.19zm-31.54-106.6c.11-3.48 1.43-7.1 3.96-10.86 2.53-3.76 5.86-6.84 9.99-9.24 4.13-2.4 8.21-3.72 12.24-3.95.22 3.48-1.03 7.04-3.75 10.68-2.72 3.64-6.17 6.77-10.35 9.39-4.18 2.62-8.21 3.95-12.09 3.98z"></path>
+</svg>
+<span class="font-label-md text-label-md text-text-primary">Continue with Apple</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-text-secondary">chevron_right</span>
+</button>
+</div>
+<!-- Mode Toggle Text -->
+<div class="mt-space-lg text-center">
+<p class="font-body-md text-body-md text-text-secondary" id="toggle-helper-text">
+        New here? 
+        <button class="font-label-lg text-label-lg text-primary-container font-bold hover:underline ml-1" onclick="setAuthMode('signup')" type="button">
+          Sign up
+        </button>
+</p>
+</div>
+</div>
+<!-- Trust & Security Micro-banner -->
+<div class="mt-space-md p-3 rounded-xl bg-surface-container flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-success-green select-none">
+      verified_user
+    </span>
+<span class="font-body-sm text-body-sm text-text-secondary font-medium">
+      100% verified &amp; secure booking
+    </span>
+</div>
+<!-- Interactive Feedback Pill (Hidden by default) -->
+<div class="mt-3 text-center transition-all opacity-0 pointer-events-none" id="feedback-pill">
+<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-surface-dark text-on-error font-body-sm text-body-sm shadow-md" id="feedback-text">
+<span class="material-symbols-outlined text-[16px] text-primary-fixed">info</span>
+      Connecting to security gateway...
+    </span>
+</div>
+</div>
+<script>
+  let currentAuthMode = 'login';
+
+  function setAuthMode(mode) {
+    currentAuthMode = mode;
+    const tabLogin = document.getElementById('tab-login');
+    const tabSignup = document.getElementById('tab-signup');
+    const heading = document.getElementById('auth-heading');
+    const subheading = document.getElementById('auth-subheading');
+    const extraField = document.getElementById('signup-extra-field');
+    const toggleHelper = document.getElementById('toggle-helper-text');
+    const ctaText = document.querySelector('#submit-cta span:first-child');
+
+    if (mode === 'signup') {
+      tabSignup.className = "flex-1 py-2 text-center font-label-md text-label-md rounded-lg bg-card-surface text-text-primary transition-all duration-200 shadow-sm";
+      tabLogin.className = "flex-1 py-2 text-center font-label-md text-label-md rounded-lg text-text-secondary hover:text-text-primary transition-all duration-200";
+      heading.textContent = 'Create Tripmate Account';
+      subheading.textContent = 'Unlock group trip sync & shared road books';
+      extraField.classList.remove('hidden');
+      ctaText.textContent = 'Join Tripmate';
+      toggleHelper.innerHTML = 'Already have an account? <button type="button" onclick="setAuthMode(\'login\')" class="font-label-lg text-label-lg text-primary-container font-bold hover:underline ml-1">Log in</button>';
+    } else {
+      tabLogin.className = "flex-1 py-2 text-center font-label-md text-label-md rounded-lg bg-card-surface text-text-primary transition-all duration-200 shadow-sm";
+      tabSignup.className = "flex-1 py-2 text-center font-label-md text-label-md rounded-lg text-text-secondary hover:text-text-primary transition-all duration-200";
+      heading.textContent = 'Welcome to Tripmate';
+      subheading.textContent = 'Plan hotels, rides & rest stops in one go';
+      extraField.classList.add('hidden');
+      ctaText.textContent = 'Continue';
+      toggleHelper.innerHTML = 'New here? <button type="button" onclick="setAuthMode(\'signup\')" class="font-label-lg text-label-lg text-primary-container font-bold hover:underline ml-1">Sign up</button>';
+    }
+  }
+
+  function showPill(msg) {
+    const pill = document.getElementById('feedback-pill');
+    const txt = document.getElementById('feedback-text');
+    txt.innerHTML = '<span class="material-symbols-outlined text-[16px] text-primary-fixed">lock_clock</span> ' + msg;
+    pill.classList.remove('opacity-0');
+    setTimeout(() => {
+      pill.classList.add('opacity-0');
+    }, 2500);
+  }
+
+  function simulateSocialLogin(provider) {
+    showPill('Authenticating with ' + provider + '...');
+  }
+
+  function triggerSubmit() {
+    const input = document.getElementById('identifier');
+    if (!input.value.trim()) {
+      showPill('Please enter your mobile or email');
+      input.focus();
+      return;
+    }
+    showPill('Preparing verification code for ' + input.value.trim() + '...');
+  }
+</script></main>
+
+</body></html>

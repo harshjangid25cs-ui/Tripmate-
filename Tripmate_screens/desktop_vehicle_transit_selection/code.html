@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_standard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-primary-fixed-variant":"#930015","on-error-container":"#93000a","surface-container-low":"#f4f3f1","text-secondary":"#6B7280","tertiary":"#805000","card-surface":"#FFFFFF","on-surface-variant":"#5d3f3d","primary-container":"#e11d2e","surface-container":"#efeeec","on-tertiary-container":"#fff9f5","on-primary-fixed":"#410004","success-green":"#16A34A","primary-fixed":"#ffdad7","on-secondary-fixed":"#1a1b20","on-tertiary-fixed-variant":"#653e00","surface-light":"#FAF9F7","secondary-fixed-dim":"#c7c6cd","surface-container-lowest":"#ffffff","surface-container-highest":"#e3e2e0","on-primary":"#ffffff","on-error":"#ffffff","tertiary-container":"#a16600","primary-fixed-dim":"#ffb3ae","text-primary":"#14151A","on-tertiary-fixed":"#2a1700","on-secondary":"#ffffff","error-container":"#ffdad6","primary":"#b8001d","surface-tint":"#c0001f","inverse-on-surface":"#f1f1ef","inverse-surface":"#2f3130","surface-variant":"#e3e2e0","outline":"#916f6c","on-primary-container":"#fff8f7","tertiary-fixed-dim":"#ffb95f","surface-bright":"#faf9f7","on-background":"#1a1c1b","urgency-amber":"#F59E0B","surface-container-high":"#e9e8e6","error":"#ba1a1a","secondary":"#5e5e64","background":"#faf9f7","tertiary-fixed":"#ffddb8","secondary-container":"#e3e1e9","on-surface":"#1a1c1b","surface-dark":"#14151A","surface":"#faf9f7","on-secondary-fixed-variant":"#46464c","outline-variant":"#e6bdb9","surface-dim":"#dadad8","on-tertiary":"#ffffff","secondary-fixed":"#e3e1e9","on-secondary-container":"#64646a","border-hairline":"#E5E3DF","inverse-primary":"#ffb3ae"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-xs":"0.25rem","space-xl":"2rem","space-sm":"0.5rem","margin":"1.5rem","gutter-mobile":"0.75rem","space-2xl":"3rem","space-lg":"1.5rem","gutter":"1rem","space-md":"1rem","margin-mobile":"1rem"},"fontFamily":{"display-lg":["Inter"],"display-lg-mobile":["Inter"],"numeral-price":["Inter"],"title-md":["Inter"],"label-badge":["Inter"],"body-md":["Inter"],"label-md":["Inter"],"headline-sm":["Inter"],"headline-md":["Inter"],"body-lg":["Inter"],"body-sm":["Inter"],"headline-lg":["Inter"],"label-lg":["Inter"]},"fontSize":{"display-lg":["40px",{"lineHeight":"48px","letterSpacing":"-0.03em","fontWeight":"800"}],"display-lg-mobile":["32px",{"lineHeight":"38px","letterSpacing":"-0.025em","fontWeight":"800"}],"numeral-price":["20px",{"lineHeight":"24px","letterSpacing":"-0.02em","fontWeight":"700"}],"title-md":["16px",{"lineHeight":"22px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-badge":["11px",{"lineHeight":"14px","letterSpacing":"0.02em","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"label-md":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","letterSpacing":"-0.01em","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.015em","fontWeight":"700"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"headline-lg":["28px",{"lineHeight":"34px","letterSpacing":"-0.02em","fontWeight":"700"}],"label-lg":["14px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"600"}]}}}}</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 w-full z-50 bg-card-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)]"><div class="h-20 max-w-[1280px] mx-auto px-margin flex items-center justify-between gap-gutter"><div class="flex items-center gap-space-lg flex-shrink-0"><a class="flex items-center gap-space-sm group" href="#"><div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary-container font-headline-md font-bold text-headline-md shadow-sm">M</div><span class="font-headline-md text-headline-md tracking-tight text-text-primary">Tripmate</span></a></div><nav class="hidden xl:flex items-center gap-space-md" data-active-classes="text-primary-container font-label-lg font-bold"><a class="font-label-lg text-label-lg text-text-secondary hover:text-text-primary transition-colors py-space-xs" data-path="desktop-search-filtered-catalog" href="#">Discover Destinations</a><a class="font-label-lg text-label-lg text-text-secondary hover:text-text-primary transition-colors py-space-xs" data-path="stays-hotels" href="#">Stays &amp; Hotels</a><a class="font-label-lg text-label-lg text-text-secondary hover:text-text-primary transition-colors py-space-xs" data-path="desktop-vehicle-transit-selection" href="#">Vehicles</a><a class="font-label-lg text-label-lg text-text-secondary hover:text-text-primary transition-colors py-space-xs" data-path="desktop-mid-journey-rest-stop-selection" href="#">Rest Stops</a><a class="font-label-lg text-label-lg text-text-secondary hover:text-text-primary transition-colors py-space-xs" data-path="desktop-trip-duration-date-horizon-selector" href="#">My Trips</a><a class="font-label-lg text-label-lg text-text-secondary hover:text-text-primary transition-colors py-space-xs" data-path="b2b-commercial" href="#">B2B Commercial</a><a class="font-label-lg text-label-lg text-text-secondary hover:text-text-primary transition-colors py-space-xs" data-path="support" href="#">Support</a></nav><div class="flex items-center gap-space-sm flex-shrink-0"><div class="relative hidden lg:flex items-center w-56 bg-card-surface rounded-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)] px-space-sm py-2"><span class="material-symbols-outlined text-text-secondary text-[20px] mr-2">search</span><input class="w-full bg-transparent font-body-sm text-body-sm text-text-primary placeholder-text-secondary focus:outline-none" placeholder="Search routes, stays..." type="text"/></div><div class="flex items-center bg-surface-container-low rounded-xl p-1 gap-1"><button class="px-2.5 py-1 rounded-lg bg-card-surface font-label-badge text-label-badge text-text-primary shadow-[0_1px_8px_rgba(20,21,26,0.04)]" type="button">USD</button><button class="px-2.5 py-1 rounded-lg font-label-badge text-label-badge text-text-secondary hover:text-text-primary transition-colors" type="button">INR</button></div><a class="flex items-center pl-space-xs" data-path="profile" href="#"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></a></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full">
+<div class="w-full bg-surface-container-low py-space-md">
+<div class="max-w-[1280px] mx-auto px-margin">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-7 h-7 rounded-full bg-surface-dark text-on-secondary flex items-center justify-center font-label-badge text-label-badge font-bold">
+            03
+          </div>
+<div>
+<p class="font-label-md text-label-md uppercase tracking-wider text-text-secondary">Booking Progression • Stage 3 of 4</p>
+<h1 class="font-headline-md text-headline-md text-text-primary">Jaipur Royal Heritage Trail</h1>
+</div>
+</div>
+<div class="flex items-center gap-space-sm bg-card-surface px-space-md py-2 rounded-xl shadow-sm">
+<span class="material-symbols-outlined text-primary text-[20px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+<span class="font-body-sm text-body-sm text-text-primary font-semibold">Government Certified Fleet &amp; Chauffeurs</span>
+<span class="font-label-badge text-label-badge bg-surface-container-high px-2 py-0.5 rounded-full text-text-secondary">4D / 3N</span>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-2 pt-space-xs">
+<div class="h-1.5 rounded-full bg-surface-dark"></div>
+<div class="h-1.5 rounded-full bg-surface-dark"></div>
+<div class="h-1.5 rounded-full bg-primary-container"></div>
+<div class="h-1.5 rounded-full bg-surface-container-highest"></div>
+</div>
+</div>
+</div>
+<div class="max-w-[1280px] mx-auto px-margin py-space-lg w-full">
+<div class="flex items-center justify-between mb-space-md flex-wrap gap-space-sm">
+<div class="flex items-center gap-2 overflow-x-auto pb-1" id="filter-bar">
+<button class="vehicle-filter-btn px-4 py-2 rounded-full font-label-md text-label-md bg-surface-dark text-on-secondary shadow-sm transition-all" data-filter="all">
+          All Vehicles
+        </button>
+<button class="vehicle-filter-btn px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary hover:bg-surface-container shadow-sm transition-all" data-filter="sedan">
+          Dedicated Sedan (Included)
+        </button>
+<button class="vehicle-filter-btn px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary hover:bg-surface-container shadow-sm transition-all" data-filter="thar">
+          Luxury 4x4 Thar (+₹4,200)
+        </button>
+<button class="vehicle-filter-btn px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary hover:bg-surface-container shadow-sm transition-all" data-filter="innova">
+          Premium SUV Innova (+₹6,500)
+        </button>
+<button class="vehicle-filter-btn px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary hover:bg-surface-container shadow-sm transition-all" data-filter="tempo">
+          Tempo Traveller (+₹11,000)
+        </button>
+</div>
+<div class="flex items-center gap-2 text-text-secondary font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[18px]">local_gas_station</span>
+<span>All rates include toll, state taxes, parking &amp; fuel</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<div class="lg:col-span-8 space-y-space-md">
+<div class="vehicle-card group bg-card-surface rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden" data-cost="0" data-id="sedan" data-label="Included in Plan" data-name="Maruti Dzire / Toyota Etios Sedan">
+<div class="grid grid-cols-1 md:grid-cols-12">
+<div class="md:col-span-5 relative aspect-[4/3] md:aspect-auto">
+<img class="w-full h-full object-cover" data-alt="Chauffeur driven pristine white executive sedan parked in a sunlit palace driveway in Jaipur Rajasthan, crisp daylight, reflections on polished clean car body, luxury travel aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkBKKO6B9J4PzJ5vcORm49LF70m4FfWkDyjduozR0lGIAGxAYna8ffJ_DCtQ2_7PwbSjUhANfg-7TsJFCOwP5GVdQoaGbTF7yAQ-ClCADi9-R81pdjfm0TVig7qTXuUlkWwUtWFKx3by3SRU5PhVzbN7h-3yKRiZh1JNhVopdanMKRV4UosC5MJMV5SFS38iH1QVttchvZ-6VtvZXi9CL51Fysvg6PhLMe4PcX-QPY97HMac2kGCXUUg"/>
+<span class="absolute top-3 left-3 bg-surface-dark/80 backdrop-blur-md text-on-secondary px-3 py-1 rounded-full font-label-badge text-label-badge tracking-wider uppercase">
+                Circuit Base Default
+              </span>
+<div class="absolute bottom-3 left-3 bg-card-surface/90 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-urgency-amber text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-badge text-label-badge text-text-primary font-bold">4.87</span>
+<span class="font-body-sm text-body-sm text-text-secondary">(318 trips)</span>
+</div>
+</div>
+<div class="md:col-span-7 p-space-md flex flex-col justify-between space-y-space-sm">
+<div>
+<div class="flex items-start justify-between gap-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Maruti Dzire / Toyota Etios Dedicated Sedan</h2>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">Smooth city touring, tight old-city alleys &amp; express transit</p>
+</div>
+<span class="selected-indicator hidden items-center gap-1 font-label-badge text-label-badge text-success-green bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Active Choice
+                  </span>
+</div>
+<div class="grid grid-cols-2 gap-y-2 gap-x-4 mt-space-sm bg-surface-container-low p-space-sm rounded-xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">airline_seat_recline_normal</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">4 Passenger Seats</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">luggage</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">2 Large Luggage</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">ac_unit</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">Dual-Zone Chilled A/C</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">badge</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">Chauffeur: 9+ Yrs Exp.</span>
+</div>
+</div>
+<div class="mt-space-sm flex items-center gap-space-sm text-text-secondary font-body-sm text-body-sm">
+<span class="flex items-center gap-1 text-success-green font-semibold">
+<span class="material-symbols-outlined text-[16px]">format_image_left</span> Sanitized Daily
+                  </span>
+<span>•</span>
+<span>Bilingual: Hindi &amp; English</span>
+<span>•</span>
+<span>Complimentary Mineral Water</span>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<div>
+<span class="font-label-badge text-label-badge text-text-secondary uppercase">Transit Fare Differential</span>
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-text-primary">Included</span>
+<span class="font-body-sm text-body-sm text-text-secondary">in your base quote</span>
+</div>
+</div>
+<button class="select-btn px-6 py-3 rounded-xl font-label-lg text-label-lg transition-all bg-surface-dark text-on-secondary" onclick="selectVehicle('sedan', 'Maruti Dzire / Toyota Etios Sedan', 0)">
+                  Retain Sedan (Base)
+                </button>
+</div>
+</div>
+</div>
+</div>
+<div class="vehicle-card group bg-card-surface rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden relative" data-cost="4200" data-id="thar" data-label="+₹4,200 Upgrade" data-name="Mahindra Thar 4x4 Luxury Adventure">
+<div class="grid grid-cols-1 md:grid-cols-12">
+<div class="md:col-span-5 relative aspect-[4/3] md:aspect-auto">
+<img class="w-full h-full object-cover" data-alt="Deep black matte Mahindra Thar four by four parked on the rocky crest of Nahargarh Fort hills Jaipur overlooking panoramic Aravalli valley, golden hour sunset glow, warm dust, high aesthetic luxury outdoor adventure" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxdcYnJxvSG4AfkmoCWWQqU2fJHqdHgD4E2v66M0wyPmoGr-Tj2Yw4Puep_9eKH9uS4lP89AVxlCHhZDPxDdc_RJsPDAAhvaKLYIghRyyjjJwE_KEfInmDTQJODb_en8lgZnCb9szNVtCcN2g0Gs-HJF-I8W1cdvkvqver3gqBxSk4J49MdtWmsNa9UVppntZ2UMih5qXfB7ec5OTeXZcGYuqd67RRPdwLdWrml92mmsSivML6CUJxpg"/>
+<span class="absolute top-3 left-3 bg-urgency-amber text-on-secondary px-3 py-1 rounded-full font-label-badge text-label-badge tracking-wider uppercase font-bold shadow-sm">
+                Popular for Aravalli Trails
+              </span>
+<div class="absolute bottom-3 left-3 bg-card-surface/90 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-urgency-amber text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-badge text-label-badge text-text-primary font-bold">4.96</span>
+<span class="font-body-sm text-body-sm text-text-secondary">(142 trips)</span>
+</div>
+</div>
+<div class="md:col-span-7 p-space-md flex flex-col justify-between space-y-space-sm">
+<div>
+<div class="flex items-start justify-between gap-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Mahindra Thar 4x4 Luxury Adventure</h2>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">Engineered for Nahargarh hill curves, Amer ramparts &amp; safari off-roads</p>
+</div>
+<span class="selected-indicator hidden items-center gap-1 font-label-badge text-label-badge text-success-green bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Active Choice
+                  </span>
+</div>
+<div class="grid grid-cols-2 gap-y-2 gap-x-4 mt-space-sm bg-surface-container-low p-space-sm rounded-xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">terrain</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">4x4 Terrain Capability</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">roofing</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">Convertible / Open Top</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">airline_seat_recline_normal</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">4 Captain Style Seats</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">surround_sound</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">Harman Audio + Subwoofer</span>
+</div>
+</div>
+<div class="mt-space-sm flex items-center gap-space-sm text-text-secondary font-body-sm text-body-sm">
+<span class="flex items-center gap-1 text-urgency-amber font-semibold">
+<span class="material-symbols-outlined text-[16px]">local_fire_department</span> High Demand on Circuit
+                  </span>
+<span>•</span>
+<span>Trail Certified Master Pilot</span>
+<span>•</span>
+<span>Action Camera Mount Ready</span>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<div>
+<span class="font-label-badge text-label-badge text-text-secondary uppercase">Complete 4-Day Surcharge</span>
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-primary-container">+₹4,200</span>
+<span class="font-body-sm text-body-sm text-text-secondary">total for party</span>
+</div>
+</div>
+<button class="select-btn px-6 py-3 rounded-xl font-label-lg text-label-lg bg-surface-container-high text-text-primary hover:bg-surface-dark hover:text-on-secondary transition-all" onclick="selectVehicle('thar', 'Mahindra Thar 4x4 Luxury Adventure', 4200)">
+                  Upgrade to Thar 4x4
+                </button>
+</div>
+</div>
+</div>
+</div>
+<div class="vehicle-card group bg-card-surface rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden" data-cost="6500" data-id="innova" data-label="+₹6,500 Upgrade" data-name="Toyota Innova Hycross Hybrid">
+<div class="grid grid-cols-1 md:grid-cols-12">
+<div class="md:col-span-5 relative aspect-[4/3] md:aspect-auto">
+<img class="w-full h-full object-cover" data-alt="Sophisticated bronze Toyota Innova Hycross Hybrid parked in courtyard of royal heritage palace hotel, spotless exterior, plush ambient cabin lighting visible through privacy tinted windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZX1RDeoybsPAjo-fglJxmdm4iC2Iviyzq1YHmETDflIW4d5WKYIslXhWJGW4RJvEwrstlPJSRGNn5DLLO0e-LbsjDewNYv_8rcu4RXihxEtpzmw3muAsNfhT11QJtgBK7rREsF02H06kAOKr3tBwHjRI3huNiFf7Jp0CAjfXl0zy-ZEtjHgV4X0ZXsd2shnJKjtAponSPpwC6m5mMAotJSr5fQQmmGo0Bc7yrv84fvdsgxv6M4iyOlA"/>
+<span class="absolute top-3 left-3 bg-surface-dark/80 backdrop-blur-md text-on-secondary px-3 py-1 rounded-full font-label-badge text-label-badge tracking-wider uppercase">
+                Executive Comfort
+              </span>
+<div class="absolute bottom-3 left-3 bg-card-surface/90 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-urgency-amber text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-badge text-label-badge text-text-primary font-bold">4.98</span>
+<span class="font-body-sm text-body-sm text-text-secondary">(520 trips)</span>
+</div>
+</div>
+<div class="md:col-span-7 p-space-md flex flex-col justify-between space-y-space-sm">
+<div>
+<div class="flex items-start justify-between gap-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Toyota Innova Hycross Hybrid (Top Tier)</h2>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">Whisper-quiet hybrid drive with lounge-grade legroom &amp; executive recline</p>
+</div>
+<span class="selected-indicator hidden items-center gap-1 font-label-badge text-label-badge text-success-green bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Active Choice
+                  </span>
+</div>
+<div class="grid grid-cols-2 gap-y-2 gap-x-4 mt-space-sm bg-surface-container-low p-space-sm rounded-xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">airline_seat_flat</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">Recliner Ottomans (6 Seats)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">wifi</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">High Speed On-Board 5G</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">luggage</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">4 Large Bags + Stroller</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">battery_charging_full</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">USB-C PD Fast Charging</span>
+</div>
+</div>
+<div class="mt-space-sm flex items-center gap-space-sm text-text-secondary font-body-sm text-body-sm">
+<span class="flex items-center gap-1 text-primary-container font-semibold">
+<span class="material-symbols-outlined text-[16px]">bolt</span> Ultra-Quiet Ride
+                  </span>
+<span>•</span>
+<span>Rear Panoramic Sunroof</span>
+<span>•</span>
+<span>Uniformed Concierge Chauffeur</span>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<div>
+<span class="font-label-badge text-label-badge text-text-secondary uppercase">Complete 4-Day Surcharge</span>
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-primary-container">+₹6,500</span>
+<span class="font-body-sm text-body-sm text-text-secondary">total for party</span>
+</div>
+</div>
+<button class="select-btn px-6 py-3 rounded-xl font-label-lg text-label-lg bg-surface-container-high text-text-primary hover:bg-surface-dark hover:text-on-secondary transition-all" onclick="selectVehicle('innova', 'Toyota Innova Hycross Hybrid', 6500)">
+                  Upgrade to Innova Hycross
+                </button>
+</div>
+</div>
+</div>
+</div>
+<div class="vehicle-card group bg-card-surface rounded-2xl shadow-sm hover:shadow-md transition-all overflow-hidden" data-cost="11000" data-id="tempo" data-label="+₹11,000 Upgrade" data-name="Urban Luxury Tempo Traveller (9-Seater)">
+<div class="grid grid-cols-1 md:grid-cols-12">
+<div class="md:col-span-5 relative aspect-[4/3] md:aspect-auto">
+<img class="w-full h-full object-cover" data-alt="Modern high roof custom luxury executive tempo van with tinted windows and LED exterior illumination parked in front of a majestic red sandstone monument in Rajasthan" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBTokywA7A9IoIIrtP4l2GiUjVqGb7dZr25eo5PA5k1ozmAJFsLEJh5BXqdcanoNoK7QLpkQSMjEkh6iyB2OcS8OTDg_teQzy5jARaMhl9yi5JG_aEyBWyfiaei6cNq8FVeR-UT-yaaSaTl2Xug9d4phnKxCNML6pAMHgFgKxfNl_1qQ-gSqLcnzPB8_pGgcS4ALCzJy7lixRIv32jjIlIs6fB3w43tG0H2oAdK2F0coPY-O3346qBNzw"/>
+<span class="absolute top-3 left-3 bg-surface-dark/80 backdrop-blur-md text-on-secondary px-3 py-1 rounded-full font-label-badge text-label-badge tracking-wider uppercase">
+                Grand Group Lounge
+              </span>
+<div class="absolute bottom-3 left-3 bg-card-surface/90 backdrop-blur-md px-2.5 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+<span class="material-symbols-outlined text-urgency-amber text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-badge text-label-badge text-text-primary font-bold">4.91</span>
+<span class="font-body-sm text-body-sm text-text-secondary">(94 trips)</span>
+</div>
+</div>
+<div class="md:col-span-7 p-space-md flex flex-col justify-between space-y-space-sm">
+<div>
+<div class="flex items-start justify-between gap-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Urban Luxury Tempo Traveller (9-Seater)</h2>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">First-class aisle configuration with individual AC ducts and entertainment</p>
+</div>
+<span class="selected-indicator hidden items-center gap-1 font-label-badge text-label-badge text-success-green bg-surface-container px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Active Choice
+                  </span>
+</div>
+<div class="grid grid-cols-2 gap-y-2 gap-x-4 mt-space-sm bg-surface-container-low p-space-sm rounded-xl">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">groups</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">9 Plush Leather Recliners</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">tv</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">24" Smart LED Entertainment</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">luggage</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">Expansive Rear Trunk (8+ Bags)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">kitchen</span>
+<span class="font-body-sm text-body-sm text-text-primary font-medium">Onboard Mini Cooler</span>
+</div>
+</div>
+<div class="mt-space-sm flex items-center gap-space-sm text-text-secondary font-body-sm text-body-sm">
+<span class="flex items-center gap-1 text-success-green font-semibold">
+<span class="material-symbols-outlined text-[16px]">airline_seat_legroom_extra</span> Extra High Ceiling
+                  </span>
+<span>•</span>
+<span>Senior Citizen Friendly Step</span>
+<span>•</span>
+<span>Dedicated Porter Service</span>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<div>
+<span class="font-label-badge text-label-badge text-text-secondary uppercase">Complete 4-Day Surcharge</span>
+<div class="flex items-baseline gap-1">
+<span class="font-numeral-price text-numeral-price text-primary-container">+₹11,000</span>
+<span class="font-body-sm text-body-sm text-text-secondary">total for party</span>
+</div>
+</div>
+<button class="select-btn px-6 py-3 rounded-xl font-label-lg text-label-lg bg-surface-container-high text-text-primary hover:bg-surface-dark hover:text-on-secondary transition-all" onclick="selectVehicle('tempo', 'Urban Luxury Tempo Traveller (9-Seater)', 11000)">
+                  Upgrade to Tempo
+                </button>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-card-surface rounded-2xl p-space-md shadow-sm">
+<div class="flex items-start gap-space-sm">
+<div class="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center flex-shrink-0 text-text-primary">
+<span class="material-symbols-outlined text-[24px]">contact_support</span>
+</div>
+<div>
+<h3 class="font-title-md text-title-md text-text-primary">Chauffeur Conduct &amp; Transit Guarantee</h3>
+<p class="font-body-md text-body-md text-text-secondary mt-1">
+                Every Tripmate vehicle is mapped with GPS real-time route optimization. Your chauffeur will report at your pickup point 20 minutes ahead of the agreed schedule every morning. Free cancellations and vehicle model alterations are supported up to 18 hours before day one.
+              </p>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-4 sticky top-24 space-y-space-md">
+<div class="bg-card-surface rounded-2xl p-space-md shadow-md">
+<div class="flex items-center justify-between pb-space-sm">
+<div>
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-text-secondary font-bold">Active Itinerary</span>
+<h3 class="font-headline-sm text-headline-sm text-text-primary">Trip Blueprint</h3>
+</div>
+<span class="material-symbols-outlined text-text-secondary text-[20px]">map</span>
+</div>
+<div class="space-y-space-sm pt-space-xs">
+<div class="p-space-sm bg-surface-container-low rounded-xl">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge uppercase text-text-secondary">Circuit &amp; Duration</span>
+<span class="font-label-badge text-label-badge bg-card-surface px-2 py-0.5 rounded-full text-text-primary font-bold">4D / 3N</span>
+</div>
+<p class="font-title-md text-title-md text-text-primary mt-1">Jaipur Royal Heritage Trail</p>
+<div class="flex items-center gap-space-xs text-text-secondary font-body-sm text-body-sm mt-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>Nov 14 – Nov 18, 2025</span>
+</div>
+</div>
+<div class="p-space-sm bg-surface-container-low rounded-xl">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge uppercase text-text-secondary">Accommodations</span>
+<span class="font-label-badge text-label-badge text-success-green font-bold">Confirmed</span>
+</div>
+<p class="font-title-md text-title-md text-text-primary mt-1">Shahpura Haveli, Jaipur</p>
+<div class="flex items-center gap-space-xs text-text-secondary font-body-sm text-body-sm mt-1">
+<span class="material-symbols-outlined text-[16px]">hotel</span>
+<span>Royal Heritage Suite • 2 Guests</span>
+</div>
+</div>
+<div class="p-space-sm bg-surface-container rounded-xl">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge uppercase text-text-secondary font-bold">Chauffeur &amp; Vehicle</span>
+<span class="font-label-badge text-label-badge bg-primary-container text-on-primary-container px-2 py-0.5 rounded-full font-bold" id="selected-badge">Standard</span>
+</div>
+<p class="font-title-md text-title-md text-text-primary mt-1" id="summary-vehicle-name">Maruti Dzire / Toyota Etios Sedan</p>
+<div class="flex items-center gap-space-xs text-text-secondary font-body-sm text-body-sm mt-1">
+<span class="material-symbols-outlined text-[16px]">person</span>
+<span>Chauffeur allocated 24h prior</span>
+</div>
+</div>
+</div>
+<div class="pt-space-md space-y-2">
+<div class="flex justify-between font-body-sm text-body-sm text-text-secondary">
+<span>Base Circuit (Stays + Guide + Permits)</span>
+<span class="font-semibold text-text-primary">₹38,500</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-text-secondary">
+<span>Dedicated Chauffeur (4 Days)</span>
+<span class="text-success-green font-semibold">Included</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-text-secondary">
+<span>Vehicle Upgrade Premium</span>
+<span class="font-semibold text-text-primary" id="summary-upgrade-cost">₹0</span>
+</div>
+<div class="flex justify-between font-body-sm text-body-sm text-text-secondary">
+<span>Applicable GST &amp; Highway Tolls</span>
+<span class="font-semibold text-text-primary">₹1,925</span>
+</div>
+<div class="pt-space-sm mt-space-sm bg-surface-container-low p-space-sm rounded-xl flex items-center justify-between">
+<div>
+<span class="font-label-badge text-label-badge text-text-secondary uppercase">Total Payable</span>
+<div class="font-headline-md text-headline-md text-text-primary font-bold" id="summary-total">
+                  ₹40,425
+                </div>
+</div>
+<div class="text-right">
+<span class="font-label-badge text-label-badge bg-surface-container text-text-secondary px-2 py-1 rounded">₹20,213 / person</span>
+</div>
+</div>
+</div>
+<div class="pt-space-md">
+<button class="w-full bg-primary-container hover:bg-on-primary-fixed-variant text-on-primary font-label-lg text-label-lg py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-sm transition-colors">
+<span>Confirm Vehicle &amp; Proceed to Review</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+<p class="font-body-sm text-body-sm text-text-secondary text-center mt-2 flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock</span>
+              Free modification window till 24 hrs prior
+            </p>
+</div>
+</div>
+<div class="bg-card-surface rounded-2xl p-space-md shadow-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-urgency-amber text-[24px]">verified_user</span>
+<div>
+<p class="font-title-md text-title-md text-text-primary">Safe Journey Guarantee</p>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">Zero surge fees, 24x7 roadside assist &amp; live vehicle tracking shared with family.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+    let activeVehicle = {
+      id: 'sedan',
+      name: 'Maruti Dzire / Toyota Etios Sedan',
+      cost: 0
+    };
+
+    const baseCircuitTotal = 38500;
+    const baseGstTolls = 1925;
+
+    function selectVehicle(id, name, cost) {
+      activeVehicle = { id, name, cost };
+
+      // Update UI cards
+      document.querySelectorAll('.vehicle-card').forEach(card => {
+        const cardId = card.getAttribute('data-id');
+        const selectBtn = card.querySelector('.select-btn');
+        const indicator = card.querySelector('.selected-indicator');
+
+        if (cardId === id) {
+          card.classList.add('bg-surface-container-lowest', 'shadow-md');
+          indicator.classList.remove('hidden');
+          indicator.classList.add('flex');
+          selectBtn.textContent = 'Selected Vehicle';
+          selectBtn.className = 'select-btn px-6 py-3 rounded-xl font-label-lg text-label-lg bg-surface-dark text-on-secondary transition-all';
+        } else {
+          card.classList.remove('bg-surface-container-lowest', 'shadow-md');
+          indicator.classList.add('hidden');
+          indicator.classList.remove('flex');
+          if (cardId === 'sedan') {
+            selectBtn.textContent = 'Retain Sedan (Base)';
+            selectBtn.className = 'select-btn px-6 py-3 rounded-xl font-label-lg text-label-lg bg-surface-container-high text-text-primary hover:bg-surface-dark hover:text-on-secondary transition-all';
+          } else {
+            selectBtn.textContent = 'Select This Vehicle';
+            selectBtn.className = 'select-btn px-6 py-3 rounded-xl font-label-lg text-label-lg bg-surface-container-high text-text-primary hover:bg-surface-dark hover:text-on-secondary transition-all';
+          }
+        }
+      });
+
+      // Update Trip Blueprint Sidebar
+      document.getElementById('summary-vehicle-name').textContent = name;
+      const upgradeEl = document.getElementById('summary-upgrade-cost');
+      const badgeEl = document.getElementById('selected-badge');
+      
+      if (cost === 0) {
+        upgradeEl.textContent = '₹0';
+        badgeEl.textContent = 'Standard';
+        badgeEl.className = 'font-label-badge text-label-badge bg-surface-container-high text-text-primary px-2 py-0.5 rounded-full font-bold';
+      } else {
+        upgradeEl.textContent = '+₹' + cost.toLocaleString('en-IN');
+        badgeEl.textContent = 'Upgraded';
+        badgeEl.className = 'font-label-badge text-label-badge bg-primary-container text-on-primary px-2 py-0.5 rounded-full font-bold';
+      }
+
+      const totalVal = baseCircuitTotal + cost + baseGstTolls;
+      document.getElementById('summary-total').textContent = '₹' + totalVal.toLocaleString('en-IN');
+    }
+
+    // Filter bar functionality
+    document.querySelectorAll('.vehicle-filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.vehicle-filter-btn').forEach(b => {
+          b.className = 'vehicle-filter-btn px-4 py-2 rounded-full font-label-md text-label-md bg-card-surface text-text-primary hover:bg-surface-container shadow-sm transition-all';
+        });
+        btn.className = 'vehicle-filter-btn px-4 py-2 rounded-full font-label-md text-label-md bg-surface-dark text-on-secondary shadow-sm transition-all';
+
+        const filter = btn.getAttribute('data-filter');
+        document.querySelectorAll('.vehicle-card').forEach(card => {
+          if (filter === 'all' || card.getAttribute('data-id') === filter) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+
+    // Initialize default selection
+    selectVehicle('sedan', 'Maruti Dzire / Toyota Etios Sedan', 0);
+  </script>
+</div></main><footer class="w-full bg-surface-container-low py-space-2xl shadow-[0_1px_8px_rgba(20,21,26,0.02)]"><div class="max-w-[1280px] mx-auto px-margin"><div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 gap-space-xl pb-space-2xl"><div class="lg:col-span-2 space-y-space-md"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container font-headline-sm font-bold text-headline-sm">M</div><span class="font-headline-md text-headline-md tracking-tight text-text-primary">Tripmate</span></div><p class="font-body-md text-body-md text-text-secondary max-w-sm">High-velocity travel orchestration for contemporary nomads, highway touring, and bespoke multimodal journeys across continents.</p><div class="flex items-center gap-space-sm pt-space-xs"><span class="font-label-badge text-label-badge bg-card-surface text-text-secondary px-3 py-1 rounded-full shadow-[0_1px_8px_rgba(20,21,26,0.04)]">Verified Fleet Network</span><span class="font-label-badge text-label-badge bg-card-surface text-success-green px-3 py-1 rounded-full shadow-[0_1px_8px_rgba(20,21,26,0.04)]">99.98% Trip Reliability</span></div></div><div class="space-y-space-sm"><p class="font-label-lg text-label-lg text-text-primary uppercase tracking-wider">Curated Platform</p><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Verified Highway Rest Stops</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Luxury &amp; Boutique Stays</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Private Chauffeur Fleets</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Dynamic Itinerary Engine</li></ul></div><div class="space-y-space-sm"><p class="font-label-lg text-label-lg text-text-primary uppercase tracking-wider">Enterprise &amp; Fleet</p><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">B2B Fleet Operator Portal</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Commercial Billing API</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Highway Dispatch Logistics</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Partner Network Onboarding</li></ul></div><div class="space-y-space-sm"><p class="font-label-lg text-label-lg text-text-primary uppercase tracking-wider">Trust &amp; Governance</p><ul class="space-y-space-xs"><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Passenger Safety Protocols</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Instant Cancellation Policy</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Terms of Service</li><li class="font-body-sm text-body-sm text-text-secondary hover:text-text-primary cursor-pointer transition-colors">Privacy &amp; Telemetry Policy</li></ul></div></div><div class="pt-space-lg flex flex-col sm:flex-row items-center justify-between gap-space-sm font-body-sm text-body-sm text-text-secondary"><p>© 2025 Tripmate Technologies Inc. All rights reserved.</p><div class="flex items-center gap-space-md"><span class="hover:text-text-primary cursor-pointer transition-colors">Security Audits</span><span class="hover:text-text-primary cursor-pointer transition-colors">System Status</span><span class="hover:text-text-primary cursor-pointer transition-colors">Cookie Preferences</span></div></div></div></footer></body></html>

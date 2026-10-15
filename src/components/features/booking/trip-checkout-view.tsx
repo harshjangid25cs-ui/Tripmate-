@@ -1,0 +1,688 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
+import { processTripPayment } from "@/lib/actions/trips";
+import { formatCurrency } from "@/lib/format";
+
+interface TripCheckoutViewProps {
+  tripData: ValidatedDraftTrip;
+}
+
+export function TripCheckoutView({ tripData }: TripCheckoutViewProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { trip, hotel, vehicle, stops, destination } = tripData;
+
+  // Payment method selection
+  const [paymentMethod, setPaymentMethod] = React.useState<"upi" | "card" | "netbanking" | "emi">("upi");
+  const [upiId, setUpiId] = React.useState("traveler@okhdfcbank");
+  const [upiVerified, setUpiVerified] = React.useState(true);
+  const [isVerifyingUpi, setIsVerifyingUpi] = React.useState(false);
+
+  // Card demo fields
+  const [cardNumber, setCardNumber] = React.useState("4532 •••• •••• 8829");
+  const [cardExpiry, setCardExpiry] = React.useState("08/29");
+  const [cardCvv, setCardCvv] = React.useState("•••");
+  const [cardName, setCardName] = React.useState("HARSH KUMAR");
+
+  // Net banking selection
+  const [selectedBank, setSelectedBank] = React.useState("HDFC Bank");
+
+  // Simulation controls
+  const initialSimulateFailure = searchParams.get("simulate") === "failure";
+  const [simulateFailure, setSimulateFailure] = React.useState(initialSimulateFailure);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  // Price lock countdown (15 minutes) persisted across refreshes
+  const [secondsRemaining, setSecondsRemaining] = React.useState<number>(900);
+  React.useEffect(() => {
+    const storageKey = `tripmate_checkout_lock_${trip.id}`;
+    const LOCK_DURATION_MS = 15 * 60 * 1000;
+    let expiryTime = 0;
+
+    try {
+      const stored = sessionStorage.getItem(storageKey);
+      if (stored) {
+        expiryTime = parseInt(stored, 10);
+      }
+      if (!expiryTime || isNaN(expiryTime) || expiryTime <= Date.now()) {
+        expiryTime = Date.now() + LOCK_DURATION_MS;
+        sessionStorage.setItem(storageKey, String(expiryTime));
+      }
+    } catch {
+      expiryTime = Date.now() + LOCK_DURATION_MS;
+    }
+
+    const calculateRemaining = () => {
+      const remainingMs = expiryTime - Date.now();
+      return Math.max(0, Math.floor(remainingMs / 1000));
+    };
+
+    setSecondsRemaining(calculateRemaining());
+
+    const timer = setInterval(() => {
+      const remaining = calculateRemaining();
+      setSecondsRemaining(remaining);
+      if (remaining <= 0) {
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [trip.id]);
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  };
+
+  const handleVerifyUpi = () => {
+    if (!upiId.trim() || !upiId.includes("@")) {
+      setErrorMsg("Please enter a valid UPI ID (e.g. username@upi)");
+      return;
+    }
+    setIsVerifyingUpi(true);
+    setErrorMsg(null);
+    setTimeout(() => {
+      setIsVerifyingUpi(false);
+      setUpiVerified(true);
+    }, 600);
+  };
+
+  const handlePayment = async () => {
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await processTripPayment({
+        tripId: trip.id,
+        method: paymentMethod,
+        simulate: simulateFailure ? "failure" : "success",
+      });
+
+      if (!res.ok) {
+        setErrorMsg(res.error ?? "Payment failed. Your draft trip remains saved.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Success path navigates to confirmation screen
+      router.push(`/book/${trip.id}/confirmed`);
+    } catch {
+      setErrorMsg("Network error processing payment. Please retry.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const totalDays = trip.total_days || 4;
+  const nights = Math.max(1, totalDays - 1);
+  const destinationName = destination?.name || "Jaipur";
+  const hotelName = hotel?.hotel?.name || "Shahpura Haveli & Heritage Suites";
+  const vehicleName = vehicle?.vehicle?.name || "Maruti Suzuki Dzire";
+  const hotelSubtotal = hotel?.subtotal ?? 12600;
+  const vehicleSubtotal = vehicle?.subtotal ?? 7596;
+  const stopsSubtotal = stops.reduce((acc, s) => acc + Number(s.subtotal || 0), 0);
+
+  return (
+    <div className="bg-surface font-body-md text-text-primary min-h-screen flex flex-col antialiased">
+      {/* Top App Bar */}
+      <header className="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)]">
+        <div className="h-16 px-margin-mobile flex items-center justify-between gap-space-sm max-w-md mx-auto">
+          <div className="flex items-center gap-space-sm">
+            <Link
+              href={`/book/${trip.id}/travellers`}
+              className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-text-primary hover:bg-surface-container active:scale-95 transition-colors"
+              aria-label="Back to Traveller Details"
+            >
+              <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+            </Link>
+            <div>
+              <h1 className="font-title-md text-title-md font-semibold text-text-primary leading-tight">
+                Checkout &amp; Payment
+              </h1>
+              <p className="font-label-sm text-[11px] text-text-secondary">
+                Step 7 of 7 • Final Confirmation
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="px-2 py-0.5 rounded-full bg-secondary-container text-on-secondary font-label-badge text-label-badge font-bold uppercase tracking-wider">
+              DEMO
+            </span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 max-w-md mx-auto w-full px-margin-mobile pt-24 pb-36">
+        <div className="flex flex-col gap-space-md">
+          {/* Top Status Indicators */}
+          <div className="flex items-center justify-between gap-2 bg-surface-container-low p-2.5 rounded-xl border border-border-hairline">
+            <div className="flex items-center gap-1.5 text-text-secondary">
+              <span className="material-symbols-outlined text-[18px] text-primary-container">
+                confirmation_number
+              </span>
+              <span className="font-label-sm text-xs font-medium">
+                Ref: #{trip.booking_ref}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-warning-orange font-semibold">
+              <span className="material-symbols-outlined text-[18px]">lock_clock</span>
+              <span className="font-label-sm text-xs">
+                Price locked {formatTimer(secondsRemaining)}
+              </span>
+            </div>
+          </div>
+
+          {/* Prominent Demo Notice Banner (DECISIONS D5) */}
+          <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3.5 flex items-start gap-3">
+            <span className="material-symbols-outlined text-amber-600 text-[22px] shrink-0 mt-0.5">
+              info
+            </span>
+            <div className="flex-1">
+              <h2 className="font-label-md text-xs font-bold text-amber-900">
+                DEMO MODE — No real money is charged
+              </h2>
+              <p className="font-body-sm text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                This is a fully simulated payment sandbox for test orders. You can test both successful booking confirmation and simulated payment failure below.
+              </p>
+            </div>
+          </div>
+
+          {/* Error Banner (if simulated or actual failure occurred) */}
+          {errorMsg && (
+            <div className="bg-error/10 border border-error/30 rounded-xl p-3.5 flex items-start gap-3 animate-in fade-in duration-200">
+              <span className="material-symbols-outlined text-error text-[22px] shrink-0 mt-0.5">
+                error
+              </span>
+              <div className="flex-1">
+                <h3 className="font-label-md text-xs font-bold text-error">
+                  Payment Failed
+                </h3>
+                <p className="font-body-sm text-[11px] text-text-secondary mt-0.5">
+                  {errorMsg}
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setErrorMsg(null)}
+                    className="text-xs font-bold text-error hover:underline"
+                  >
+                    Dismiss &amp; Retry
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Trip Summary Card */}
+          <section className="bg-card-surface rounded-xl p-space-md border border-border-hairline shadow-sm">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline/80">
+              <div>
+                <h2 className="font-title-md text-title-md font-bold text-text-primary">
+                  Trip Summary
+                </h2>
+                <p className="font-body-sm text-xs text-text-secondary mt-0.5">
+                  {destinationName} • {totalDays}D / {nights}N • {trip.traveler_count} {trip.traveler_count === 1 ? "Traveler" : "Travelers"}
+                </p>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-label-badge text-[10px] font-bold uppercase tracking-wider">
+                {trip.group_type ? `${trip.group_type} Trip` : "Custom Plan"}
+              </span>
+            </div>
+
+            {/* Itemized Line Items */}
+            <div className="py-3 flex flex-col gap-2.5 text-xs">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <span className="font-semibold text-text-primary block">
+                    Stay: {hotelName}
+                  </span>
+                  <span className="text-text-secondary text-[11px]">
+                    {nights} Nights, {hotel?.rooms ?? 1} Room(s)
+                  </span>
+                </div>
+                <span className="font-semibold text-text-primary">
+                  {formatCurrency(hotelSubtotal)}
+                </span>
+              </div>
+
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <span className="font-semibold text-text-primary block">
+                    Transport: {vehicleName}
+                  </span>
+                  <span className="text-text-secondary text-[11px]">
+                    {totalDays} Days • Dedicated Chauffeur &amp; Fuel incl.
+                  </span>
+                </div>
+                <span className="font-semibold text-text-primary">
+                  {formatCurrency(vehicleSubtotal)}
+                </span>
+              </div>
+
+              {stops.length > 0 && (
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1">
+                    <span className="font-semibold text-text-primary block">
+                      Rest Stop: {stops[0]?.stop?.name || "Mid-journey Rest Stop"}
+                    </span>
+                    <span className="text-text-secondary text-[11px]">
+                      Access passes for {trip.traveler_count} guest(s)
+                    </span>
+                  </div>
+                  <span className="font-semibold text-text-primary">
+                    {formatCurrency(stopsSubtotal)}
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-start justify-between gap-2 pt-1 border-t border-border-hairline/60">
+                <span className="text-text-secondary">Subtotal</span>
+                <span className="font-medium text-text-primary">
+                  {formatCurrency(trip.subtotal_amount)}
+                </span>
+              </div>
+
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-1 text-text-secondary">
+                  <span>TripMate Service Fee</span>
+                  <span className="material-symbols-outlined text-[13px] text-text-secondary/70">
+                    help_outline
+                  </span>
+                </div>
+                <span className="font-medium text-text-primary">
+                  {formatCurrency(trip.service_fee)}
+                </span>
+              </div>
+
+              <div className="flex items-start justify-between gap-2">
+                <span className="text-text-secondary">GST Taxes (18%)</span>
+                <span className="font-medium text-text-primary">
+                  {formatCurrency(trip.tax_amount)}
+                </span>
+              </div>
+
+              {trip.discount_amount > 0 && (
+                <div className="flex items-start justify-between gap-2 text-success-green">
+                  <div className="flex items-center gap-1">
+                    <span>Coupon ({trip.coupon_code || "TM-FIRST"})</span>
+                    <span className="px-1.5 py-0.2 bg-success-green/10 text-success-green font-bold text-[9px] rounded">
+                      APPLIED
+                    </span>
+                  </div>
+                  <span className="font-semibold">
+                    -{formatCurrency(trip.discount_amount)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Grand Total Strip */}
+            <div className="pt-3 border-t border-border-hairline flex items-center justify-between">
+              <div>
+                <span className="font-title-md text-title-md font-bold text-text-primary block">
+                  Grand Total
+                </span>
+                <span className="font-body-sm text-[11px] text-text-secondary">
+                  Inclusive of all taxes, highway toll &amp; concierge fees
+                </span>
+              </div>
+              <span className="font-headline-sm text-headline-sm font-bold text-primary-container">
+                {formatCurrency(trip.total_amount)}
+              </span>
+            </div>
+          </section>
+
+          {/* Payment Method Selector */}
+          <section className="bg-card-surface rounded-xl p-space-md border border-border-hairline shadow-sm">
+            <h2 className="font-title-md text-title-md font-bold text-text-primary mb-3">
+              Select Payment Method
+            </h2>
+
+            <div className="flex flex-col gap-2.5">
+              {/* Option 1: UPI */}
+              <div
+                onClick={() => setPaymentMethod("upi")}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  paymentMethod === "upi"
+                    ? "border-primary-container bg-primary-container/5"
+                    : "border-border-hairline hover:bg-surface-container"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      aria-label="UPI Payment Option"
+                      checked={paymentMethod === "upi"}
+                      onChange={() => setPaymentMethod("upi")}
+                      className="w-4 h-4 text-primary-container accent-primary-container"
+                    />
+                    <div>
+                      <span className="font-label-md text-xs font-bold text-text-primary block">
+                        UPI (Instant &amp; Zero Fee)
+                      </span>
+                      <span className="font-body-sm text-[11px] text-text-secondary">
+                        Google Pay, PhonePe, Paytm, BHIM or any UPI ID
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="px-1.5 py-0.5 rounded bg-surface-container font-label-badge text-[9px] font-bold text-text-secondary">
+                      GPay
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-surface-container font-label-badge text-[9px] font-bold text-text-secondary">
+                      PhonePe
+                    </span>
+                  </div>
+                </div>
+
+                {paymentMethod === "upi" && (
+                  <div className="mt-3 pt-3 border-t border-border-hairline/60 flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={upiId}
+                        aria-label="Enter Virtual Payment Address (UPI ID)"
+                        onChange={(e) => {
+                          setUpiId(e.target.value);
+                          setUpiVerified(false);
+                        }}
+                        placeholder="yourname@bank"
+                        className="flex-1 bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono text-text-primary focus:outline-none focus:border-primary-container"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyUpi}
+                        disabled={isVerifyingUpi}
+                        className="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-semibold text-text-primary active:scale-95 transition-all"
+                      >
+                        {isVerifyingUpi ? "Checking..." : upiVerified ? "Verified ✓" : "Verify"}
+                      </button>
+                    </div>
+                    {upiVerified && (
+                      <p className="text-[11px] text-success-green flex items-center gap-1">
+                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                        Verified: Harsh Kumar (Demo VPA)
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Option 2: Credit / Debit Card */}
+              <div
+                onClick={() => setPaymentMethod("card")}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  paymentMethod === "card"
+                    ? "border-primary-container bg-primary-container/5"
+                    : "border-border-hairline hover:bg-surface-container"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      aria-label="Credit or Debit Card Payment Option"
+                      checked={paymentMethod === "card"}
+                      onChange={() => setPaymentMethod("card")}
+                      className="w-4 h-4 text-primary-container accent-primary-container"
+                    />
+                    <div>
+                      <span className="font-label-md text-xs font-bold text-text-primary block">
+                        Credit / Debit Card
+                      </span>
+                      <span className="font-body-sm text-[11px] text-text-secondary">
+                        Visa, MasterCard, RuPay with 256-bit SSL
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="px-1.5 py-0.5 rounded bg-surface-container font-label-badge text-[9px] font-bold text-text-secondary">
+                      VISA
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded bg-surface-container font-label-badge text-[9px] font-bold text-text-secondary">
+                      MC
+                    </span>
+                  </div>
+                </div>
+
+                {paymentMethod === "card" && (
+                  <div className="mt-3 pt-3 border-t border-border-hairline/60 flex flex-col gap-2.5">
+                    <div>
+                      <label className="font-label-sm text-[10px] text-text-secondary block mb-1">
+                        Card Number
+                      </label>
+                      <input
+                        type="text"
+                        aria-label="16-digit Card Number"
+                        value={cardNumber}
+                        onChange={(e) => setCardNumber(e.target.value)}
+                        className="w-full bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono text-text-primary focus:outline-none focus:border-primary-container"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="font-label-sm text-[10px] text-text-secondary block mb-1">
+                          Expiry
+                        </label>
+                        <input
+                          type="text"
+                          aria-label="Card Expiry Month and Year"
+                          value={cardExpiry}
+                          onChange={(e) => setCardExpiry(e.target.value)}
+                          className="w-full bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono text-text-primary focus:outline-none focus:border-primary-container"
+                        />
+                      </div>
+                      <div>
+                        <label className="font-label-sm text-[10px] text-text-secondary block mb-1">
+                          CVV
+                        </label>
+                        <input
+                          type="text"
+                          aria-label="Card CVV Security Code"
+                          value={cardCvv}
+                          onChange={(e) => setCardCvv(e.target.value)}
+                          className="w-full bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono text-text-primary focus:outline-none focus:border-primary-container"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="font-label-sm text-[10px] text-text-secondary block mb-1">
+                        Name on Card
+                      </label>
+                      <input
+                        type="text"
+                        aria-label="Cardholder Full Name"
+                        value={cardName}
+                        onChange={(e) => setCardName(e.target.value)}
+                        className="w-full bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono text-text-primary uppercase focus:outline-none focus:border-primary-container"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Option 3: Net Banking */}
+              <div
+                onClick={() => setPaymentMethod("netbanking")}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  paymentMethod === "netbanking"
+                    ? "border-primary-container bg-primary-container/5"
+                    : "border-border-hairline hover:bg-surface-container"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      aria-label="Net Banking Payment Option"
+                      checked={paymentMethod === "netbanking"}
+                      onChange={() => setPaymentMethod("netbanking")}
+                      className="w-4 h-4 text-primary-container accent-primary-container"
+                    />
+                    <div>
+                      <span className="font-label-md text-xs font-bold text-text-primary block">
+                        Net Banking
+                      </span>
+                      <span className="font-body-sm text-[11px] text-text-secondary">
+                        All major Indian banks supported
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {paymentMethod === "netbanking" && (
+                  <div className="mt-3 pt-3 border-t border-border-hairline/60 flex flex-wrap gap-2">
+                    {["HDFC Bank", "ICICI Bank", "SBI", "Axis Bank", "Kotak"].map((bank) => (
+                      <button
+                        key={bank}
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedBank(bank);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          selectedBank === bank
+                            ? "bg-primary-container text-on-primary font-bold shadow-sm"
+                            : "bg-surface border border-border-hairline text-text-secondary hover:bg-surface-container"
+                        }`}
+                      >
+                        {bank}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Option 4: EMI / Pay Later */}
+              <div
+                onClick={() => setPaymentMethod("emi")}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  paymentMethod === "emi"
+                    ? "border-primary-container bg-primary-container/5"
+                    : "border-border-hairline hover:bg-surface-container"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="payment_method"
+                      aria-label="Equated Monthly Installment (EMI) or Pay Later Option"
+                      checked={paymentMethod === "emi"}
+                      onChange={() => setPaymentMethod("emi")}
+                      className="w-4 h-4 text-primary-container accent-primary-container"
+                    />
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-label-md text-xs font-bold text-text-primary">
+                          EMI / Pay Later
+                        </span>
+                        <span className="px-1.5 py-0.2 rounded bg-success-green/10 text-success-green font-label-badge text-[9px] font-bold">
+                          0% EMI
+                        </span>
+                      </div>
+                      <span className="font-body-sm text-[11px] text-text-secondary">
+                        Starting from ₹{Math.round(trip.total_amount / 12)}/month
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Dev Test Sandbox Switch: Simulate Payment Failure */}
+          <section className="bg-surface-container-low rounded-xl p-3 border border-border-hairline flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[20px] text-text-secondary">
+                science
+              </span>
+              <div>
+                <span className="font-label-sm text-xs font-semibold text-text-primary block">
+                  Simulate Payment Failure
+                </span>
+                <span className="font-body-sm text-[10px] text-text-secondary">
+                  Tests `?simulate=failure` state; leaves draft untouched per M5
+                </span>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={simulateFailure}
+                onChange={(e) => setSimulateFailure(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-error"></div>
+            </label>
+          </section>
+
+          {/* Security & Cancellation Policy Strip */}
+          <div className="p-3 bg-surface-container rounded-xl flex items-center gap-2.5 text-xs text-text-secondary">
+            <span className="material-symbols-outlined text-success-green text-[20px] shrink-0">
+              verified_user
+            </span>
+            <p className="text-[11px] leading-relaxed">
+              <strong>Bank Grade Encryption</strong> • 100% Refundable if cancelled up to 48 hours prior to trip start.
+            </p>
+          </div>
+        </div>
+      </main>
+
+      {/* Sticky Bottom Shelf */}
+      <footer className="fixed bottom-0 w-full z-40 bg-surface/95 backdrop-blur-xl border-t border-border-hairline shadow-[0_-4px_16px_rgba(20,21,26,0.06)] pb-safe">
+        <div className="max-w-md mx-auto px-margin-mobile py-space-sm flex items-center justify-between gap-4">
+          <div className="flex flex-col">
+            <span className="font-label-sm text-[11px] text-text-secondary uppercase tracking-wider">
+              Amount Due
+            </span>
+            <span className="font-headline-sm text-headline-sm font-bold text-text-primary">
+              {formatCurrency(trip.total_amount)}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            disabled={isSubmitting}
+            onClick={handlePayment}
+            className={`flex-1 py-3.5 px-6 rounded-[12px] font-label-lg text-label-lg font-semibold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.98] ${
+              simulateFailure
+                ? "bg-error text-white hover:bg-error/90"
+                : "bg-primary-container text-on-primary hover:bg-primary"
+            } ${isSubmitting ? "opacity-70 cursor-not-allowed" : ""}`}
+          >
+            {isSubmitting ? (
+              <>
+                <span className="material-symbols-outlined text-[18px] animate-spin">
+                  progress_activity
+                </span>
+                <span>Processing Demo...</span>
+              </>
+            ) : simulateFailure ? (
+              <>
+                <span className="material-symbols-outlined text-[18px]">gpp_maybe</span>
+                <span>Simulate Failure</span>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-[18px]">lock</span>
+                <span>Confirm &amp; Pay {formatCurrency(trip.total_amount)}</span>
+              </>
+            )}
+          </button>
+        </div>
+      </footer>
+    </div>
+  );
+}

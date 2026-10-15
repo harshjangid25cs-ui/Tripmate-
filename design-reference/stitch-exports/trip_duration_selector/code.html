@@ -1,0 +1,317 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_stack" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#FAF9F7;}body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "outline-variant": "#e6bdb9", "on-surface-variant": "#5d3f3d", "surface-container-low": "#f4f3f1", "surface-container-high": "#e9e8e6", "error-container": "#ffdad6", "on-surface": "#1a1c1b", "surface-container-highest": "#e3e2e0", "inverse-surface": "#2f3130", "on-background": "#1a1c1b", "secondary": "#5e5e64", "background": "#faf9f7", "on-primary-fixed": "#410004", "on-error-container": "#93000a", "success-green": "#16A34A", "inverse-on-surface": "#f1f1ef", "on-secondary-container": "#64646a", "on-error": "#ffffff", "surface-container-lowest": "#ffffff", "on-tertiary": "#ffffff", "surface-dark": "#14151A", "on-tertiary-fixed-variant": "#653e00", "card-surface": "#FFFFFF", "primary-fixed-dim": "#ffb3ae", "on-tertiary-container": "#fff9f5", "primary-fixed": "#ffdad7", "surface-variant": "#e3e2e0", "surface-bright": "#faf9f7", "on-secondary-fixed": "#1a1b20", "on-tertiary-fixed": "#2a1700", "tertiary-fixed": "#ffddb8", "border-hairline": "#E5E3DF", "surface-tint": "#c0001f", "surface-light": "#FAF9F7", "surface": "#faf9f7", "primary": "#b8001d", "on-primary-container": "#fff8f7", "tertiary-container": "#a16600", "secondary-container": "#e3e1e9", "tertiary-fixed-dim": "#ffb95f", "on-secondary": "#ffffff", "urgency-amber": "#F59E0B", "text-primary": "#14151A", "inverse-primary": "#ffb3ae", "on-primary-fixed-variant": "#930015", "on-secondary-fixed-variant": "#46464c", "surface-container": "#efeeec", "outline": "#916f6c", "text-secondary": "#6B7280", "primary-container": "#e11d2e", "error": "#ba1a1a", "secondary-fixed": "#e3e1e9", "secondary-fixed-dim": "#c7c6cd", "on-primary": "#ffffff", "tertiary": "#805000", "surface-dim": "#dadad8" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-2xl": "3rem", "space-xl": "2rem", "space-xs": "0.25rem", "gutter": "1rem", "margin": "1.5rem", "gutter-mobile": "0.75rem", "space-sm": "0.5rem", "margin-mobile": "1rem", "space-lg": "1.5rem", "space-md": "1rem" }, fontFamily: { "headline-lg": ["Inter"], "display-lg": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "title-md": ["Inter"], "numeral-price": ["Inter"], "body-md": ["Inter"], "display-lg-mobile": ["Inter"], "headline-md": ["Inter"], "label-md": ["Inter"], "headline-sm": ["Inter"], "label-badge": ["Inter"], "label-lg": ["Inter"] }, fontSize: { "headline-lg": ["28px", { lineHeight: "34px", letterSpacing: "-0.02em", fontWeight: "700" }], "display-lg": ["40px", { lineHeight: "48px", letterSpacing: "-0.03em", fontWeight: "800" }], "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }], "body-sm": ["12px", { lineHeight: "16px", fontWeight: "400" }], "title-md": ["16px", { lineHeight: "22px", letterSpacing: "-0.01em", fontWeight: "600" }], "numeral-price": ["20px", { lineHeight: "24px", letterSpacing: "-0.02em", fontWeight: "700" }], "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }], "display-lg-mobile": ["32px", { lineHeight: "38px", letterSpacing: "-0.025em", fontWeight: "800" }], "headline-md": ["22px", { lineHeight: "28px", letterSpacing: "-0.015em", fontWeight: "700" }], "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.02em", fontWeight: "600" }], "headline-sm": ["18px", { lineHeight: "24px", letterSpacing: "-0.01em", fontWeight: "700" }], "label-badge": ["11px", { lineHeight: "14px", letterSpacing: "0.02em", fontWeight: "700" }], "label-lg": ["14px", { lineHeight: "18px", letterSpacing: "0.01em", fontWeight: "600" }] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-text-primary min-h-screen flex flex-col antialiased selection:bg-primary-container selection:text-white"><header class="fixed top-0 w-full z-50 pt-safe bg-surface/80 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)]"><div class="h-16 px-margin-mobile flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Go Back" class="w-11 h-11 -ml-2 rounded-full flex items-center justify-center text-text-primary hover:bg-surface-container transition-colors" onclick="history.back()"><span class="material-symbols-outlined text-[24px]">arrow_back</span></button><img alt="Tripmate" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1WMM2X_Fz3yRyiicHkb1v2rIA_qIb-fZwChuir0vNJs4KdNgR_xeFol8iXslFW9fDIoJvegR_Iz5LIF9IMx2XY88biaWxSTMlaUWyIV82rmFb3_m6OwhRMYt4o4kpVF3Ig22768igKMZOMpmSwKRZl132VXKYq4OcsQi4fPcGJ73v9zFp_qd5ZSfgf18VwWy9IuEX8YQy690-kW0kjv8lfaKBaQgxx2VMENydtXbxhI5TYH9L75079OC3El"><h1 class="font-headline-sm text-headline-sm text-text-primary tracking-tight truncate max-w-[170px]">Trip Duration</h1></div><div class="flex items-center gap-space-sm"><button aria-label="Trip Info" class="w-11 h-11 rounded-full flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-container transition-colors"><span class="material-symbols-outlined text-[22px]">info</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="flex-1 w-full bg-surface pt-16 pb-safe"><div class="flex flex-col w-full">
+<!-- Top Context Header -->
+<div class="px-margin-mobile pt-space-md pb-space-sm">
+<div class="flex items-center gap-space-xs text-text-secondary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px] text-primary-container">location_on</span>
+<span class="truncate">Customizing trip to <strong class="text-text-primary font-semibold">Jaipur, Rajasthan</strong></span>
+</div>
+</div>
+<!-- Step & Title Section -->
+<div class="px-margin-mobile pt-space-xs pb-space-md">
+<div class="flex items-center gap-space-xs mb-space-xs">
+<span class="bg-surface-container-high text-text-secondary px-2 py-0.5 rounded-full font-label-badge text-label-badge uppercase tracking-wider">Step 1 of 4</span>
+<span class="text-text-secondary font-body-sm text-body-sm">• Itinerary Horizon</span>
+</div>
+<h2 class="font-display-lg-mobile text-display-lg-mobile text-text-primary tracking-tight">How many days is your trip?</h2>
+<p class="font-body-md text-body-md text-text-secondary mt-1">We recommend 3–5 days to explore Jaipur comfortably without rushing.</p>
+</div>
+<!-- Hero Visual Destination Snippet with Scarcity Badge -->
+<div class="px-margin-mobile pb-space-lg">
+<div class="relative w-full h-36 rounded-xl overflow-hidden bg-surface-container shadow-sm">
+<img class="w-full h-full object-cover" data-alt="Panoramic architectural view of Hawa Mahal and Amber Fort in Jaipur Rajasthan, bathed in warm golden morning light with terracotta stone facades, clean geometric palace arches, deep navy shadows, and an ultra clear sky with authentic minimal editorial photography style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuq2eHOCTAa6HdNFZhx2Puv8g-OCIfRETwCPn_xf4J7Hl2W7Ps4L2Kw7tGmewAphWy3F_figvG8vnPBA3Sdbv-MJxX9gp9u_JncIcEYrqpWGvgfjDlNDZ3iwZoMFVV31Dk6tPtF5jeitgyYd9aFlMKKh9Vu9nydP7sfHHEvstPvtsSn4rbdPf_q5z_1y9EFHzr6GPL0ywksrQwyDnp_qkJpJRrrr4FhJdYUXoGXnRClRh_4UJ5GqYRkA">
+<div class="absolute inset-0 bg-surface-dark/20"></div>
+<div class="absolute top-3 left-3 flex items-center gap-1.5 bg-urgency-amber text-white font-label-badge text-label-badge px-2.5 py-1 rounded-full shadow-sm">
+<span class="material-symbols-outlined text-[13px]">local_fire_department</span>
+<span class="">High Season: 78% of heritage stays booked</span>
+</div>
+<div class="absolute bottom-3 left-3 right-3 flex justify-between items-end text-white">
+<div>
+<span class="font-label-badge text-label-badge uppercase tracking-widest opacity-90 block">Featured Circuit</span>
+<span class="font-headline-sm text-headline-sm text-white">Pink City Heritage &amp; Forts</span>
+</div>
+<div class="bg-surface-dark/75 backdrop-blur-md px-2.5 py-1 rounded-lg text-right">
+<span class="font-label-badge text-label-badge text-zinc-300 block">Ideal Pace</span>
+<span class="font-title-md text-title-md text-white">4 Full Days</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Day Selector Horizontal Chips -->
+<div class="px-margin-mobile mb-space-md">
+<label class="font-label-lg text-label-lg text-text-primary block mb-2">Select Duration</label>
+<div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar" id="daysChipGroup">
+<button class="day-chip flex-shrink-0 px-4 py-2.5 rounded-full font-label-md text-label-md transition-all bg-card-surface text-text-primary shadow-sm hover:bg-surface-container" data-days="2" type="button">2 Days</button>
+<button class="day-chip flex-shrink-0 px-4 py-2.5 rounded-full font-label-md text-label-md transition-all bg-card-surface text-text-primary shadow-sm hover:bg-surface-container" data-days="3" type="button">3 Days</button>
+<button class="day-chip flex-shrink-0 px-4 py-2.5 rounded-full font-label-md text-label-md transition-all bg-primary-container text-white shadow-sm font-bold" data-days="4" type="button">4 Days</button>
+<button class="day-chip flex-shrink-0 px-4 py-2.5 rounded-full font-label-md text-label-md transition-all bg-card-surface text-text-primary shadow-sm hover:bg-surface-container" data-days="5" type="button">5 Days</button>
+<button class="day-chip flex-shrink-0 px-4 py-2.5 rounded-full font-label-md text-label-md transition-all bg-card-surface text-text-primary shadow-sm hover:bg-surface-container" data-days="6" type="button">6+ Days</button>
+</div>
+</div>
+<!-- Precision Stepper Module -->
+<div class="px-margin-mobile mb-space-lg">
+<div class="bg-card-surface rounded-xl p-space-md flex items-center justify-between shadow-sm">
+<div class="flex flex-col">
+<span class="font-title-md text-title-md text-text-primary">Fine-tune Duration</span>
+<span class="font-body-sm text-body-sm text-text-secondary" id="stepperSubtext">3 Nights accommodation needed</span>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-low px-2 py-1.5 rounded-lg">
+<button aria-label="Decrease day count" class="w-9 h-9 rounded-md bg-card-surface text-text-primary flex items-center justify-center font-title-md shadow-sm active:scale-95 transition-transform hover:bg-surface-container" id="decrementBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<span class="font-headline-sm text-headline-sm text-text-primary min-w-[65px] text-center" id="counterDisplay">4 Days</span>
+<button aria-label="Increase day count" class="w-9 h-9 rounded-md bg-card-surface text-text-primary flex items-center justify-center font-title-md shadow-sm active:scale-95 transition-transform hover:bg-surface-container" id="incrementBtn" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Interactive Calendar Visualizer (November 2025) -->
+<div class="px-margin-mobile mb-space-lg">
+<div class="bg-card-surface rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div>
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-text-secondary block">Select Travel Dates</span>
+<h3 class="font-headline-sm text-headline-sm text-text-primary" id="calendarMonthHeader">November 2025</h3>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Previous month" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button aria-label="Next month" class="w-8 h-8 rounded-full flex items-center justify-center text-text-secondary hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Calendar Day Initials -->
+<div class="grid grid-cols-7 text-center font-label-badge text-label-badge text-text-secondary pb-2">
+<span class="">S</span><span class="">M</span><span class="">T</span><span class="">W</span><span class="">T</span><span class="">F</span><span class="">S</span>
+</div>
+<!-- Calendar Dates Grid -->
+<div class="grid grid-cols-7 gap-y-1.5 text-center font-body-md text-body-md" id="calendarDaysGrid">
+<!-- Week 1 -->
+<span class="py-2 text-surface-dim select-none font-body-sm">26</span>
+<span class="py-2 text-surface-dim select-none font-body-sm">27</span>
+<span class="py-2 text-surface-dim select-none font-body-sm">28</span>
+<span class="py-2 text-surface-dim select-none font-body-sm">29</span>
+<span class="py-2 text-surface-dim select-none font-body-sm">30</span>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">1</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">2</button>
+<!-- Week 2 -->
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">3</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">4</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">5</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">6</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">7</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">8</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">9</button>
+<!-- Week 3 -->
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">10</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">11</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">12</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">13</button>
+<!-- Range Start: Nov 14 (Fri) -->
+<div class="relative py-1 flex items-center justify-center bg-primary-fixed rounded-l-lg">
+<button class="w-8 h-8 rounded-full bg-primary-container text-white font-title-md text-title-md flex items-center justify-center z-10 shadow-sm" type="button">14</button>
+</div>
+<!-- In Range: Nov 15 -->
+<div class="py-1 flex items-center justify-center bg-primary-fixed text-text-primary font-title-md text-title-md">15</div>
+<!-- In Range: Nov 16 -->
+<div class="py-1 flex items-center justify-center bg-primary-fixed text-text-primary font-title-md text-title-md">16</div>
+<!-- In Range: Nov 17 -->
+<div class="py-1 flex items-center justify-center bg-primary-fixed text-text-primary font-title-md text-title-md">17</div>
+<!-- Range End: Nov 18 (Tue) -->
+<div class="relative py-1 flex items-center justify-center bg-primary-fixed rounded-r-lg">
+<button class="w-8 h-8 rounded-full bg-primary-container text-white font-title-md text-title-md flex items-center justify-center z-10 shadow-sm" type="button">18</button>
+</div>
+<!-- Remaining Nov Days -->
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">19</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">20</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">21</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">22</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">23</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">24</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">25</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">26</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">27</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">28</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">29</button>
+<button class="py-2 rounded-lg text-text-secondary hover:bg-surface-container-high" type="button">30</button>
+</div>
+<!-- Quick Check In / Check Out Tag Callout -->
+<div class="mt-space-md pt-3 flex items-center justify-between bg-surface-container-low p-2.5 rounded-lg">
+<div class="flex items-center gap-2">
+<div class="w-2.5 h-2.5 rounded-full bg-primary-container"></div>
+<div>
+<span class="font-label-badge text-label-badge text-text-secondary block uppercase">Check-in</span>
+<span class="font-title-md text-title-md text-text-primary" id="checkinTag">Nov 14, 2025</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-[18px] text-text-secondary">arrow_forward</span>
+<div class="flex items-center gap-2 text-right">
+<div>
+<span class="font-label-badge text-label-badge text-text-secondary block uppercase">Check-out</span>
+<span class="font-title-md text-title-md text-text-primary" id="checkoutTag">Nov 18, 2025</span>
+</div>
+<div class="w-2.5 h-2.5 rounded-full bg-primary-container"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Updating Date Summary Card -->
+<div class="px-margin-mobile mb-space-md">
+<div class="bg-card-surface rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-sm bg-surface-container-low/50 -mx-4 -mt-4 px-4 pt-4 rounded-t-xl">
+<span class="font-headline-sm text-headline-sm text-text-primary">Trip Itinerary Estimate</span>
+<span class="font-label-badge text-label-badge px-2 py-0.5 rounded-full bg-success-green/10 text-success-green flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[13px]">bolt</span> Best Value
+        </span>
+</div>
+<div class="flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-text-secondary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">date_range</span>
+            Trip Window:
+          </span>
+<span class="font-title-md text-title-md text-text-primary" id="summaryWindow">Fri, Nov 14 – Tue, Nov 18</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-text-secondary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">schedule</span>
+            Duration:
+          </span>
+<span class="font-title-md text-title-md text-text-primary" id="summaryDuration">4 Days / 3 Nights</span>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-body-md text-body-md text-text-secondary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">payments</span>
+            Estimated Base Package:
+          </span>
+<div class="text-right">
+<span class="font-numeral-price text-numeral-price text-primary-container" id="summaryPrice">₹12,499</span>
+<span class="font-body-sm text-body-sm text-text-secondary block -mt-1">/ person</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Trust Pill Badge -->
+<div class="px-margin-mobile mb-space-xl">
+<div class="bg-surface-container-low px-space-md py-2.5 rounded-full flex items-center justify-center gap-2 text-center shadow-none">
+<span class="material-symbols-outlined text-[18px] text-success-green" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-label-badge text-label-badge text-text-primary">
+        Tripmate Guarantee: Free date changes up to 48 hrs before departure
+      </span>
+</div>
+</div>
+<!-- Sticky Bottom Bar CTA -->
+<div class="sticky bottom-0 w-full bg-card-surface/90 backdrop-blur-xl p-space-md shadow-lg flex flex-col gap-2 z-40">
+<div class="flex items-center justify-between px-1 text-text-secondary font-label-md text-label-md">
+<span class="">Base price lock expires in <strong class="text-urgency-amber">14:59</strong></span>
+<span class="text-primary-container font-semibold">Taxes included</span>
+</div>
+<button class="w-full bg-primary-container hover:bg-primary text-white font-title-md text-title-md py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-md active:scale-[0.99] transition-all" id="continueBtn" type="button">
+<span class="">Continue to Hotels</span>
+<span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<script>
+  (function () {
+    let currentDays = 4;
+    const baseRatesPerDay = {
+      2: 7499,
+      3: 9899,
+      4: 12499,
+      5: 15299,
+      6: 18499,
+      7: 21999
+    };
+
+    const counterDisplay = document.getElementById('counterDisplay');
+    const stepperSubtext = document.getElementById('stepperSubtext');
+    const summaryDuration = document.getElementById('summaryDuration');
+    const summaryWindow = document.getElementById('summaryWindow');
+    const summaryPrice = document.getElementById('summaryPrice');
+    const checkinTag = document.getElementById('checkinTag');
+    const checkoutTag = document.getElementById('checkoutTag');
+    const decrementBtn = document.getElementById('decrementBtn');
+    const incrementBtn = document.getElementById('incrementBtn');
+    const chips = document.querySelectorAll('.day-chip');
+    const continueBtn = document.getElementById('continueBtn');
+
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    function updateState(days) {
+      if (days < 2) days = 2;
+      if (days > 7) days = 7;
+      currentDays = days;
+
+      // Update text displays
+      counterDisplay.textContent = days + (days >= 6 ? ' Days' : ' Days');
+      const nights = days - 1;
+      stepperSubtext.textContent = nights + ' Nights accommodation needed';
+      summaryDuration.textContent = days + ' Days / ' + nights + ' Nights';
+
+      // Calculate checkout date from Nov 14, 2025
+      const startDate = new Date(2025, 10, 14); // Nov 14, 2025 (Month index 10)
+      const endDate = new Date(2025, 10, 14 + (days - 1));
+
+      const startFmt = dayNames[startDate.getDay()] + ', ' + monthNames[startDate.getMonth()] + ' ' + startDate.getDate();
+      const endFmt = dayNames[endDate.getDay()] + ', ' + monthNames[endDate.getMonth()] + ' ' + endDate.getDate();
+
+      summaryWindow.textContent = startFmt + ' – ' + endFmt;
+      checkinTag.textContent = 'Nov ' + startDate.getDate() + ', 2025';
+      checkoutTag.textContent = 'Nov ' + endDate.getDate() + ', 2025';
+
+      // Update price calculation
+      const price = baseRatesPerDay[days] || (12499 + (days - 4) * 2800);
+      summaryPrice.textContent = '₹' + price.toLocaleString('en-IN');
+
+      // Update pill chips visual state
+      chips.forEach(chip => {
+        const val = parseInt(chip.getAttribute('data-days'), 10);
+        if ((val === days) || (val === 6 && days >= 6)) {
+          chip.className = 'day-chip flex-shrink-0 px-4 py-2.5 rounded-full font-label-md text-label-md transition-all bg-primary-container text-white shadow-sm font-bold';
+        } else {
+          chip.className = 'day-chip flex-shrink-0 px-4 py-2.5 rounded-full font-label-md text-label-md transition-all bg-card-surface text-text-primary shadow-sm hover:bg-surface-container';
+        }
+      });
+    }
+
+    // Stepper listeners
+    decrementBtn.addEventListener('click', function () {
+      updateState(currentDays - 1);
+    });
+
+    incrementBtn.addEventListener('click', function () {
+      updateState(currentDays + 1);
+    });
+
+    // Chip listeners
+    chips.forEach(chip => {
+      chip.addEventListener('click', function () {
+        const d = parseInt(this.getAttribute('data-days'), 10);
+        updateState(d);
+      });
+    });
+
+    // CTA interaction feedback
+    continueBtn.addEventListener('click', function () {
+      this.classList.add('opacity-90');
+      this.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> Finding Best Stays...';
+      setTimeout(() => {
+        this.innerHTML = 'Stays Located! Redirecting... <span class="material-symbols-outlined text-[20px]">check</span>';
+      }, 700);
+    });
+  })();
+</script></main>
+
+</body></html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="fullscreen_clean" name="shell-type"><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { colors: { "text-secondary": "#6B7280", "on-tertiary-fixed-variant": "#653e00", "on-primary": "#ffffff", "background": "#faf9f7", "error-container": "#ffdad6", "on-surface": "#1a1c1b", "on-secondary-fixed": "#1a1b20", "surface-container-lowest": "#ffffff", "tertiary-container": "#a16600", "surface-variant": "#e3e2e0", "surface-container-low": "#f4f3f1", "on-secondary": "#ffffff", "on-primary-container": "#fff8f7", "inverse-primary": "#ffb3ae", "surface-bright": "#faf9f7", "inverse-on-surface": "#f1f1ef", "on-primary-fixed": "#410004", "on-surface-variant": "#5d3f3d", "primary-fixed-dim": "#ffb3ae", "on-error-container": "#93000a", "surface-container": "#efeeec", "border-hairline": "#E5E3DF", "on-secondary-container": "#64646a", "outline-variant": "#e6bdb9", "urgency-amber": "#F59E0B", "primary-container": "#e11d2e", "on-tertiary-container": "#fff9f5", "error": "#ba1a1a", "surface-dim": "#dadad8", "surface": "#faf9f7", "secondary-container": "#e3e1e9", "secondary-fixed-dim": "#c7c6cd", "surface-light": "#FAF9F7", "on-tertiary": "#ffffff", "inverse-surface": "#2f3130", "on-background": "#1a1c1b", "tertiary-fixed": "#ffddb8", "surface-container-highest": "#e3e2e0", "tertiary-fixed-dim": "#ffb95f", "secondary": "#5e5e64", "outline": "#916f6c", "surface-dark": "#14151A", "on-primary-fixed-variant": "#930015", "on-error": "#ffffff", "on-secondary-fixed-variant": "#46464c", "text-primary": "#14151A", "secondary-fixed": "#e3e1e9", "tertiary": "#805000", "card-surface": "#FFFFFF", "surface-container-high": "#e9e8e6", "on-tertiary-fixed": "#2a1700", "primary-fixed": "#ffdad7", "success-green": "#16A34A", "surface-tint": "#c0001f", "primary": "#b8001d" }, borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, spacing: { "space-xs": "0.25rem", "margin": "1.5rem", "space-2xl": "3rem", "gutter": "1rem", "space-md": "1rem", "space-xl": "2rem", "gutter-mobile": "0.75rem", "space-lg": "1.5rem", "margin-mobile": "1rem", "space-sm": "0.5rem" }, fontFamily: { "label-lg": ["Inter"], "numeral-price": ["Inter"], "headline-sm": ["Inter"], "headline-md": ["Inter"], "label-badge": ["Inter"], "body-md": ["Inter"], "body-sm": ["Inter"], "display-lg": ["Inter"], "title-md": ["Inter"], "label-md": ["Inter"], "headline-lg": ["Inter"], "body-lg": ["Inter"], "display-lg-mobile": ["Inter"] }, fontSize: { "label-lg": ["14px", {"lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "600"}], "numeral-price": ["20px", {"lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "headline-sm": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "700"}], "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700"}], "label-badge": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "700"}], "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}], "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}], "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "800"}], "title-md": ["16px", {"lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600"}], "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}], "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}], "display-lg-mobile": ["32px", {"lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "800"}] } } } };</script><style>@layer base{html,body{width:100%;min-height:100%;margin:0;padding:0;}body{-webkit-font-smoothing:antialiased;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}}::-webkit-scrollbar{display:none;}</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-body-md text-text-primary min-h-screen flex flex-col items-center justify-center relative overflow-hidden"><main class="w-[390px] h-[884px] max-w-[390px] max-h-[884px] bg-surface flex flex-col relative overflow-hidden mx-auto shadow-2xl"><div class="flex flex-col w-full h-full relative overflow-hidden select-none" id="onboarding-root">
+<!-- Slide 1 Background -->
+<div class="slide-bg absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-700 opacity-100 scale-100" data-alt="Cinematic aerial photograph of a serene winding mountain highway in Ladakh and Spiti valley surrounded by dramatic rugged peaks and crisp high altitude turquoise lake under pristine golden hour sunlight, hyper realistic travel photography, sharp focus, vibrant natural earthy tones" id="slide-bg-0" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuCE2wW1gBvSN4bniWkbHtZMfRVm0in9WPZ3sM0E8Z17MXt04DRhg6OZklHOIpYe6mBnS6TI8rikB2f_6_6TDK3OC6rt68-cA0KRYsr_sT1-ssqVRzz3fJlvFPxohWF_HprXPWdvNYVWViKfhFNhHlWMimnllUBQ9ZruDtNjAf_UIcoTE8UFog-crURCbPf_rN1GXIT0ooYJ84EPAKvhuovgmfZbjOZU392bEuQ9GWCSkTGXynkHgsxxCA&quot;);">
+<div class="absolute inset-0 bg-surface-dark/40"></div>
+</div>
+<!-- Slide 2 Background -->
+<div class="slide-bg absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-700 opacity-0 pointer-events-none" data-alt="Breathtaking architectural view of a boutique heritage desert palace hotel in Rajasthan with warm sandstone courtyard, tranquil water reflection pool, luxury safari vehicle parked outside under twilight sky, high-end travel aesthetics, warm amber illumination" id="slide-bg-1" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuBJ8Pn4e7CARpIV3WfYXWu492iSHQVXDdQCuzCxUYfG4nCveD6EXPldvMkN1bHofDGKiNNu3itjNDIK0NpuSwQMeomUY12-z12fNga2JwCdPc3VWaiQSmF2LUozq4P87duW2SJlHjMPFyMA-lccao2HIHjx29_f06zgtmp0V9gd5mnWvL5TUqm-vJn9F1nwjPRmHE3MkPzPKr_wv3JCsS7HBFNO53aaz6YWrq7gqwZJdeSCjU-VlkEzVA&quot;);">
+<div class="absolute inset-0 bg-surface-dark/40"></div>
+</div>
+<!-- Slide 3 Background -->
+<div class="slide-bg absolute inset-0 w-full h-full bg-cover bg-center transition-opacity duration-700 opacity-0 pointer-events-none" data-alt="Expansive scenic coastal cliff road in South India with a traveler overlooking the deep sapphire ocean and lush tropical coconut groves during early sunrise mist, inspiring road-trip journey, pristine morning lighting with high clarity" id="slide-bg-2" style="background-image: url(&quot;https://lh3.googleusercontent.com/aida-public/AB6AXuAJopFr3ayyM_hBFv-NF9d8oAJFfuNWq4MF-qpIJ59b58o6rduM1leWG5dwF4ASDpj6kSdUugG6ojcJenM9i8ebUer4mJZwxaYpp-J3FKtRKOZmkSx6C3z50lqCpoj0I90p2AwsOz94UEHH1C8a8QGFhk6DP_-SbrOHXZrzdBmRd0rQdweFKTBSqY-zcytMgOKOFYgjHvX7BLn8WpnaBEZWeyS6ApZKSgOx6oVGi1CN-l4ISVhA8z-WZQ&quot;);">
+<div class="absolute inset-0 bg-surface-dark/40"></div>
+</div>
+<!-- Content Container -->
+<div class="relative z-10 flex flex-col justify-between w-full h-full px-4 pt-6 pb-6 mx-auto">
+<!-- Top Bar with Dark Glass Pills -->
+<header class="flex items-center justify-between w-full">
+<!-- Tripmate Brand Mark Pill -->
+<div class="flex items-center gap-space-xs px-space-md py-space-xs rounded-full bg-surface-dark/60 backdrop-blur-md shadow-sm">
+<span class="material-symbols-outlined text-primary-container text-title-md font-bold" style="font-variation-settings: &quot;FILL&quot; 1;">explore</span>
+<span class="font-headline-sm text-title-md tracking-tight text-on-primary">Tripmate</span>
+</div>
+<!-- Skip Action Pill -->
+<button class="flex items-center px-space-md py-space-xs rounded-full bg-surface-dark/60 backdrop-blur-md text-on-primary hover:bg-surface-dark/80 transition-colors shadow-sm focus:outline-none" id="skip-btn" type="button">
+<span class="font-label-lg text-label-lg text-on-primary font-semibold">Skip</span>
+</button>
+</header>
+<!-- Slide Preview Quick Switchers (Interactive Top Indicator Pills) -->
+<div class="flex items-center justify-center gap-space-xs py-space-xs">
+<button class="tab-chip px-space-sm py-1 rounded-full bg-surface-dark/60 backdrop-blur-md text-on-primary/70 hover:text-on-primary transition-all text-label-badge font-label-badge flex items-center gap-1 shadow-sm" id="chip-0" onclick="setSlide(0)" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container inline-block" id="chip-dot-0"></span>
+<span class="">01 Discover</span>
+</button>
+<button class="tab-chip px-space-sm py-1 rounded-full bg-surface-dark/40 backdrop-blur-md text-on-primary/60 hover:text-on-primary transition-all text-label-badge font-label-badge flex items-center gap-1 shadow-sm" id="chip-1" onclick="setSlide(1)" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary/40 inline-block" id="chip-dot-1"></span>
+<span class="">02 Plan</span>
+</button>
+<button class="tab-chip px-space-sm py-1 rounded-full bg-surface-dark/40 backdrop-blur-md text-on-primary/60 hover:text-on-primary transition-all text-label-badge font-label-badge flex items-center gap-1 shadow-sm" id="chip-2" onclick="setSlide(2)" type="button">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary/40 inline-block" id="chip-dot-2"></span>
+<span class="">03 Journey</span>
+</button>
+</div>
+<!-- Bottom Presentation Area -->
+<div class="flex flex-col w-full gap-space-md">
+<!-- Dark Glass Card Specification: rgba(20,21,26,0.75), blur 16px, 20px radius -->
+<section class="w-full rounded-[20px] bg-surface-dark/75 backdrop-blur-xl p-space-lg shadow-xl relative overflow-hidden flex flex-col justify-between">
+<!-- Social Proof Pill inside Glass Surface -->
+<div class="flex items-center justify-between mb-space-sm">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-dark/80 text-on-primary">
+<span class="material-symbols-outlined text-urgency-amber text-body-sm" style="font-variation-settings: &quot;FILL&quot; 1;">verified</span>
+<span class="font-label-badge text-label-badge tracking-wider uppercase text-on-primary" id="slide-pill">Curated Travel</span>
+</div>
+<!-- Micro Step Counter -->
+<span class="font-label-badge text-label-badge text-text-secondary tracking-widest uppercase" id="slide-counter">01 / 03</span>
+</div>
+<!-- Slide Dynamic Text Content -->
+<div class="min-h-[140px] flex flex-col justify-center">
+<h2 class="font-headline-lg text-headline-lg text-on-primary tracking-tight transition-all duration-300" id="slide-heading">
+            Discover places worth finding
+          </h2>
+<p class="font-body-md text-body-md text-surface-container-highest mt-space-xs transition-all duration-300" id="slide-body">
+            Handpicked spots across India curated for road trippers and explorers.
+          </p>
+</div>
+<!-- Key Feature Tag Ribbon -->
+<div class="flex flex-wrap gap-space-xs mt-space-sm pt-space-xs" id="slide-tags">
+<span class="px-2 py-0.5 rounded-full bg-surface-dark/60 text-surface-variant font-label-badge text-label-badge">Uncharted Valleys</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-dark/60 text-surface-variant font-label-badge text-label-badge">Off-Grid Maps</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-dark/60 text-surface-variant font-label-badge text-label-badge">Scenic Highway Viewpoints</span>
+</div>
+<!-- Pagination Dots -->
+<div class="flex items-center justify-between w-full mt-space-lg pt-space-xs">
+<!-- 3 Indicator Dots -->
+<div aria-label="Slide indicators" class="flex items-center gap-2" role="tablist">
+<button aria-label="Go to Slide 1" class="h-2 rounded-full transition-all duration-300 w-8 bg-primary-container" id="dot-0" onclick="setSlide(0)" type="button"></button>
+<button aria-label="Go to Slide 2" class="h-2 rounded-full transition-all duration-300 w-2 bg-on-primary/40" id="dot-1" onclick="setSlide(1)" type="button"></button>
+<button aria-label="Go to Slide 3" class="h-2 rounded-full transition-all duration-300 w-2 bg-on-primary/40" id="dot-2" onclick="setSlide(2)" type="button"></button>
+</div>
+<!-- Micro Navigation Arrows -->
+<div class="flex items-center gap-space-xs">
+<button aria-label="Previous Slide" class="w-9 h-9 rounded-full bg-surface-dark/80 hover:bg-surface-dark text-on-primary flex items-center justify-center transition-colors shadow-sm" id="prev-btn" onclick="prevSlide()" type="button">
+<span class="material-symbols-outlined text-body-md">arrow_back</span>
+</button>
+<button aria-label="Next Slide" class="w-9 h-9 rounded-full bg-surface-dark/80 hover:bg-surface-dark text-on-primary flex items-center justify-center transition-colors shadow-sm" id="next-btn" onclick="nextSlide()" type="button">
+<span class="material-symbols-outlined text-body-md">arrow_forward</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Action Footer Stack -->
+<div class="flex flex-col w-full gap-space-sm items-center">
+<!-- Primary CTA: Confident Flat Red Button -->
+<button class="w-full py-3.5 px-space-lg rounded-xl bg-primary-container hover:bg-primary active:bg-surface-tint text-on-primary font-headline-sm text-headline-sm uppercase tracking-wide flex items-center justify-center gap-space-xs shadow-md transition-all" id="primary-cta-btn" onclick="handlePrimaryAction()" type="button">
+<span id="cta-label" class="">Explore Trips</span>
+<span class="material-symbols-outlined text-title-md">arrow_forward</span>
+</button>
+<!-- Secondary CTA Link -->
+<button class="w-full py-2 text-center text-on-primary/80 hover:text-on-primary font-label-lg text-label-lg transition-colors focus:outline-none" type="button">
+          Already have an account? <span class="font-bold text-on-primary underline underline-offset-4 decoration-primary-container">Log in</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    let currentSlide = 0;
+    const totalSlides = 3;
+
+    const slidesData = [
+      {
+        pill: "Curated Travel",
+        counter: "01 / 03",
+        heading: "Discover places worth finding",
+        body: "Handpicked spots across India curated for road trippers and explorers.",
+        cta: "Explore Trips",
+        tags: [
+          "Uncharted Valleys",
+          "Off-Grid Maps",
+          "Scenic Highway Viewpoints"
+        ]
+      },
+      {
+        pill: "Integrated Booking",
+        counter: "02 / 03",
+        heading: "Plan hotels, rides & rest stops in one go",
+        body: "Book boutique heritage stays, verified chauffeurs, and midway highway pauses in a single seamless itinerary.",
+        cta: "Preview Stays & Rides",
+        tags: [
+          "Heritage Haveli Stays",
+          "Chauffeur-Driven SUVs",
+          "Verified Food Stops"
+        ]
+      },
+      {
+        pill: "Assurance Guaranteed",
+        counter: "03 / 03",
+        heading: "Built for real trips, not just bookings",
+        body: "Live concierge support, guaranteed clean stops, and verified corporate or solo routes.",
+        cta: "Get Started",
+        tags: [
+          "24/7 Road Concierge",
+          "Clean Restroom Seal",
+          "Corporate-Ready Billing"
+        ]
+      }
+    ];
+
+    function updateSlideUI(index) {
+      currentSlide = index;
+
+      // Switch Backgrounds
+      for (let i = 0; i < totalSlides; i++) {
+        const bg = document.getElementById('slide-bg-' + i);
+        const dot = document.getElementById('dot-' + i);
+        const chip = document.getElementById('chip-' + i);
+        const chipDot = document.getElementById('chip-dot-' + i);
+
+        if (i === index) {
+          bg.classList.remove('opacity-0', 'pointer-events-none');
+          bg.classList.add('opacity-100');
+
+          // Active indicator dot (expanded flat red)
+          dot.className = 'h-2 rounded-full transition-all duration-300 w-8 bg-primary-container';
+
+          // Active tab chip
+          chip.className = 'tab-chip px-space-sm py-1 rounded-full bg-surface-dark/90 backdrop-blur-md text-on-primary transition-all text-label-badge font-label-badge flex items-center gap-1 shadow-sm';
+          chipDot.className = 'w-1.5 h-1.5 rounded-full bg-primary-container inline-block';
+        } else {
+          bg.classList.remove('opacity-100');
+          bg.classList.add('opacity-0', 'pointer-events-none');
+
+          // Inactive indicator dot
+          dot.className = 'h-2 rounded-full transition-all duration-300 w-2 bg-on-primary/40';
+
+          // Inactive tab chip
+          chip.className = 'tab-chip px-space-sm py-1 rounded-full bg-surface-dark/50 backdrop-blur-md text-on-primary/60 hover:text-on-primary transition-all text-label-badge font-label-badge flex items-center gap-1 shadow-sm';
+          chipDot.className = 'w-1.5 h-1.5 rounded-full bg-on-primary/40 inline-block';
+        }
+      }
+
+      // Update Card Copy with smooth swap
+      const data = slidesData[index];
+      const headingEl = document.getElementById('slide-heading');
+      const bodyEl = document.getElementById('slide-body');
+      const pillEl = document.getElementById('slide-pill');
+      const counterEl = document.getElementById('slide-counter');
+      const ctaLabel = document.getElementById('cta-label');
+      const tagsContainer = document.getElementById('slide-tags');
+
+      headingEl.style.opacity = '0';
+      bodyEl.style.opacity = '0';
+
+      setTimeout(function() {
+        headingEl.textContent = data.heading;
+        bodyEl.textContent = data.body;
+        pillEl.textContent = data.pill;
+        counterEl.textContent = data.counter;
+        ctaLabel.textContent = data.cta;
+
+        // Render tags
+        tagsContainer.innerHTML = '';
+        data.tags.forEach(function(tagText) {
+          const span = document.createElement('span');
+          span.className = 'px-2 py-0.5 rounded-full bg-surface-dark/60 text-surface-variant font-label-badge text-label-badge';
+          span.textContent = tagText;
+          tagsContainer.appendChild(span);
+        });
+
+        headingEl.style.opacity = '1';
+        bodyEl.style.opacity = '1';
+      }, 150);
+    }
+
+    window.setSlide = function(idx) {
+      if (idx >= 0 && idx < totalSlides) {
+        updateSlideUI(idx);
+      }
+    };
+
+    window.nextSlide = function() {
+      const nextIndex = (currentSlide + 1) % totalSlides;
+      updateSlideUI(nextIndex);
+    };
+
+    window.prevSlide = function() {
+      const prevIndex = (currentSlide - 1 + totalSlides) % totalSlides;
+      updateSlideUI(prevIndex);
+    };
+
+    window.handlePrimaryAction = function() {
+      if (currentSlide < totalSlides - 1) {
+        nextSlide();
+      } else {
+        // Slide 3 terminal CTA reached
+        alert('Welcome to Tripmate! Initializing your journey planner...');
+      }
+    };
+
+    // Skip directly to Slide 3 or final setup
+    const skipBtn = document.getElementById('skip-btn');
+    if (skipBtn) {
+      skipBtn.addEventListener('click', function() {
+        updateSlideUI(2);
+      });
+    }
+
+    // Touch swipe gesture support for mobile discovery
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const rootEl = document.getElementById('onboarding-root');
+
+    rootEl.addEventListener('touchstart', function(e) {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    rootEl.addEventListener('touchend', function(e) {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const diff = touchEndX - touchStartX;
+      if (Math.abs(diff) > 45) {
+        if (diff < 0) {
+          // Swipe Left -> Next
+          nextSlide();
+        } else {
+          // Swipe Right -> Prev
+          prevSlide();
+        }
+      }
+    }
+  })();
+</script></main>
+
+</body></html>

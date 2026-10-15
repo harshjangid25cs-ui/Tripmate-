@@ -1,0 +1,452 @@
+<!DOCTYPE html><html class="light" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><title>Tripmate</title><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-container": "#fff8f7", "inverse-on-surface": "#f1f1ef", "inverse-primary": "#ffb3ae", "surface-container-highest": "#e3e2e0", "surface-container-lowest": "#ffffff", "surface-container-high": "#e9e8e6", "on-tertiary-container": "#fff9f5", "on-primary-fixed-variant": "#930015", "primary": "#b8001d", "on-primary-fixed": "#410004", "primary-fixed": "#ffdad7", "error": "#ba1a1a", "surface": "#faf9f7", "on-tertiary-fixed-variant": "#653e00", "inverse-surface": "#2f3130", "card-surface": "#FFFFFF", "surface-dim": "#dadad8", "on-surface": "#1a1c1b", "secondary-fixed": "#e3e1e9", "on-secondary-fixed-variant": "#46464c", "surface-container": "#efeeec", "primary-container": "#e11d2e", "background": "#faf9f7", "outline": "#916f6c", "primary-fixed-dim": "#ffb3ae", "text-secondary": "#6B7280", "on-tertiary": "#ffffff", "surface-tint": "#c0001f", "text-primary": "#14151A", "error-container": "#ffdad6", "on-secondary-fixed": "#1a1b20", "success-green": "#16A34A", "secondary": "#5e5e64", "on-error": "#ffffff", "on-primary": "#ffffff", "surface-light": "#FAF9F7", "tertiary-fixed": "#ffddb8", "surface-bright": "#faf9f7", "tertiary-fixed-dim": "#ffb95f", "on-error-container": "#93000a", "secondary-fixed-dim": "#c7c6cd", "on-secondary-container": "#64646a", "border-hairline": "#E5E3DF", "surface-dark": "#14151A", "on-tertiary-fixed": "#2a1700", "on-background": "#1a1c1b", "surface-variant": "#e3e2e0", "urgency-amber": "#F59E0B", "tertiary-container": "#a16600", "on-surface-variant": "#5d3f3d", "tertiary": "#805000", "surface-container-low": "#f4f3f1", "on-secondary": "#ffffff", "outline-variant": "#e6bdb9", "secondary-container": "#e3e1e9" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "space-lg": "1.5rem", "space-2xl": "3rem", "margin-mobile": "1rem", "gutter-mobile": "0.75rem", "gutter": "1rem", "space-sm": "0.5rem", "margin": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem" }, "fontFamily": { "label-lg": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "body-md": ["Inter"], "label-md": ["Inter"], "display-lg": ["Inter"], "title-md": ["Inter"], "numeral-price": ["Inter"], "label-badge": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "headline-sm": ["Inter"], "display-lg-mobile": ["Inter"] }, "fontSize": { "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }], "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "title-md": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "numeral-price": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-badge": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "display-lg-mobile": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "800" }] } } } }</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-card-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)]"><div class="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-xl shrink-0"><a class="flex items-center gap-space-sm group" data-path="discover-destinations" href="#"><img alt="Tripmate" class="h-8 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1UiqyluXIZTu1lCjZtyRYkWLB4PsT8y97WJKZX6cbtYQ0Bg7pn0rsBrYgahSdGSWZN4eS--D_eA93snlWc1jVjJM_aJ_-1UxFDT96aWXdxkcEKISzjDtIxP658b_8EGXSWZnstUh76kM_UcITt5XqBiv2dX2lkrZSWqKBgYXiX0yKNsvqs36bX_cQqsYqGa3Tp5knIpaXeANaQsf_Xvr0niNMvS_bVtp85L6crfv06B2Td9_8TuV-hZl-4"></a><nav class="hidden xl:flex items-center gap-space-lg shrink-0" data-active-classes="text-primary font-bold"><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="discover-destinations" href="#"><img alt="Tripmate" class="h-8 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1UiqyluXIZTu1lCjZtyRYkWLB4PsT8y97WJKZX6cbtYQ0Bg7pn0rsBrYgahSdGSWZN4eS--D_eA93snlWc1jVjJM_aJ_-1UxFDT96aWXdxkcEKISzjDtIxP658b_8EGXSWZnstUh76kM_UcITt5XqBiv2dX2lkrZSWqKBgYXiX0yKNsvqs36bX_cQqsYqGa3Tp5knIpaXeANaQsf_Xvr0niNMvS_bVtp85L6crfv06B2Td9_8TuV-hZl-4"></a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="hotel-stay-selection" href="#">Stays &amp; Hotels</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="vehicle-transit-selection" href="#">Vehicles</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="mid-journey-rest-stop-selection" href="#">Rest Stops</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="recent-trips-my-trips-ledger" href="#">My Trips</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="b2b-commercial-overview" href="#">B2B Commercial</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="support" href="#">Support</a></nav></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center bg-surface-container-low rounded-xl px-space-md py-space-xs"><span class="material-symbols-outlined text-text-secondary text-[20px] mr-space-xs">search</span><input class="bg-transparent font-body-md text-body-md text-text-primary placeholder:text-text-secondary outline-none w-48 focus:w-60 transition-all" placeholder="Search routes, stays, fleet..." type="text"></div><button class="hidden lg:flex items-center gap-space-xs px-space-md py-space-xs rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors text-on-surface" type="button"><span class="material-symbols-outlined text-[18px] text-text-secondary">language</span><span class="font-label-md text-label-md text-on-surface">USD · EN</span></button><button aria-label="User profile account" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center" type="button"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></button></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto px-margin py-space-xl">
+<!-- Top Progress Breadcrumb & Status Indicator -->
+<div class="flex items-center justify-between mb-space-lg">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-text-secondary">
+<span class="text-success-green flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> 1. Selection
+        </span>
+<span class="">•</span>
+<span class="text-success-green flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> 2. Invoicing
+        </span>
+<span class="">•</span>
+<span class="text-text-primary flex items-center gap-1 font-bold">
+<span class="material-symbols-outlined text-[16px] text-primary">confirmation_number</span> 3. Confirmed Voucher
+        </span>
+</div>
+<div class="hidden sm:flex items-center gap-space-sm bg-surface-container-high px-space-md py-space-xs rounded-full">
+<span class="w-2 h-2 rounded-full bg-success-green"></span>
+<span class="font-label-md text-label-md text-text-primary">Dispatch Protocol: Synchronized &amp; Locked</span>
+</div>
+</div>
+<!-- Success Hero Confirmation Box -->
+<div class="bg-card-surface rounded-xl p-space-xl shadow-sm mb-space-xl relative overflow-hidden">
+<div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-success-green/5 pointer-events-none"></div>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg relative z-10">
+<div class="flex items-start sm:items-center gap-space-md">
+<div class="w-14 h-14 rounded-full bg-success-green/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-success-green text-[32px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="font-headline-lg text-headline-lg text-text-primary">Payment Successful &amp; Trip Confirmed!</span>
+<span class="bg-success-green text-on-primary px-space-sm py-0.5 rounded-full font-label-badge text-label-badge uppercase tracking-wider">Confirmed</span>
+</div>
+<p class="font-body-md text-body-md text-text-secondary mt-1">
+              Your comprehensive multi-leg reservation is active. Chauffeur allocation, suite keys, and express toll passes are confirmed.
+            </p>
+</div>
+</div>
+<!-- Booking Identifiers Block -->
+<div class="bg-surface-container-low rounded-lg p-space-md flex flex-wrap items-center gap-space-lg shrink-0">
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Booking Reference</span>
+<div class="flex items-center gap-space-xs mt-0.5">
+<span class="font-headline-sm text-headline-sm text-text-primary tracking-tight" id="bookingCode">#TM-JPR-9841</span>
+<button class="text-text-secondary hover:text-text-primary transition-colors" onclick="navigator.clipboard.writeText('TM-JPR-9841'); const t=document.getElementById('copyToast'); t.classList.remove('opacity-0'); setTimeout(()=&gt;t.classList.add('opacity-0'),2000);" title="Copy code" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</div>
+<div class="w-px h-8 bg-surface-container-highest hidden sm:block"></div>
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Road Transit Manifest</span>
+<span class="font-label-lg text-label-lg text-text-primary block mt-0.5">DGCA-RD-7739-IN</span>
+</div>
+<div class="w-px h-8 bg-surface-container-highest hidden sm:block"></div>
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Total Settled (GST Paid)</span>
+<span class="font-numeral-price text-numeral-price text-primary block mt-0.5">$492.00</span>
+</div>
+</div>
+</div>
+<!-- Quick Copy Feedback Toast -->
+<div class="opacity-0 transition-opacity duration-300 absolute bottom-3 right-space-xl bg-surface-dark text-on-surface px-space-md py-1 rounded-full font-label-badge text-label-badge" id="copyToast">
+        Booking Reference Copied!
+      </div>
+</div>
+<!-- Prominent Action Row -->
+<div class="bg-card-surface rounded-xl p-space-md shadow-sm mb-space-2xl flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm flex-wrap">
+<button class="bg-primary hover:bg-primary-container text-on-primary font-label-lg text-label-lg px-space-lg py-3 rounded-xl flex items-center gap-space-xs transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+          Download Official PDF Voucher
+        </button>
+<button class="bg-surface-container-low hover:bg-surface-container-high text-text-primary font-label-lg text-label-lg px-space-md py-3 rounded-xl flex items-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">receipt_long</span>
+          Print Tax Invoice
+        </button>
+<button class="bg-surface-container-low hover:bg-surface-container-high text-text-primary font-label-lg text-label-lg px-space-md py-3 rounded-xl flex items-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">event</span>
+          Add to Google / Apple Calendar
+        </button>
+</div>
+<button class="bg-surface-container-low hover:bg-surface-container-high text-text-primary font-label-lg text-label-lg px-space-md py-3 rounded-xl flex items-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">forward_to_inbox</span>
+        Email Itinerary to Team
+      </button>
+</div>
+<!-- Two-Column Primary Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
+<!-- LEFT COLUMN: Primary Trip Details (7 Columns) -->
+<div class="lg:col-span-7 space-y-space-xl">
+<!-- 1. Route Summary Card -->
+<div class="bg-card-surface rounded-xl overflow-hidden shadow-sm">
+<div class="relative h-48 w-full bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Panoramic desert highway leading toward the majestic sandstone ramparts of Rajasthan under a clear twilight sky with cinematic warm ambient amber tones and crisp architectural detail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5HjMKnXKn8iF1Qh7XTG-OaGvc34RsLgUJteXhsdZzZv5nmrb0EXO3uKCWPg82VFDbYAMikZWVP43xMxp0ru8Fst2SssvkaY4ZeLKM-sx2syJS-D6a3Uy2MXUgLa4MJ7UJdokQW5xumEzr2z_i56lTvYXNfxtuBiCmrqaoy_KnVjTiMC6J8MoFd2OpNHeAoz6VJN9TfsZwk_HYaV3Snnnxp13Gog-iDqKelAmaPkvyCBFT9eVAj5zGqQ">
+<div class="absolute inset-0 bg-gradient-to-t from-surface-dark/80 via-surface-dark/20 to-transparent"></div>
+<div class="absolute top-space-md left-space-md bg-urgency-amber text-on-primary font-label-badge text-label-badge uppercase px-space-sm py-1 rounded-full shadow-sm">
+              Curated Heritage Route
+            </div>
+<div class="absolute bottom-space-md left-space-md right-space-md text-on-surface">
+<span class="font-headline-lg text-headline-lg text-white font-bold block drop-shadow-sm">Jaipur Royal Heritage Trail</span>
+<p class="font-body-sm text-body-sm text-surface-container-high mt-0.5">Delhi NCR → Neemrana Fort Palace → Pink City Jaipur</p>
+</div>
+</div>
+<div class="p-space-lg space-y-space-md">
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-md bg-surface-container-low p-space-md rounded-lg">
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Start Date</span>
+<span class="font-label-lg text-label-lg text-text-primary">Nov 14, 2025</span>
+<span class="block font-body-sm text-body-sm text-text-secondary">06:30 AM Pick-up</span>
+</div>
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Return Date</span>
+<span class="font-label-lg text-label-lg text-text-primary">Nov 18, 2025</span>
+<span class="block font-body-sm text-body-sm text-text-secondary">08:00 PM Drop-off</span>
+</div>
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Duration</span>
+<span class="font-label-lg text-label-lg text-text-primary">4 Days / 3 Nights</span>
+<span class="block font-body-sm text-body-sm text-text-secondary">All transfers included</span>
+</div>
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Party Size</span>
+<span class="font-label-lg text-label-lg text-text-primary">2 Adults</span>
+<span class="block font-body-sm text-body-sm text-text-secondary">Private Cabin</span>
+</div>
+</div>
+<!-- Route Legs Indicator -->
+<div class="pt-space-xs">
+<span class="block font-title-md text-title-md text-text-primary mb-space-sm">Trip Itinerary Milestones</span>
+<div class="relative pl-6 space-y-space-md before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-surface-container-highest">
+<div class="relative">
+<div class="absolute -left-6 top-1 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+</div>
+<span class="font-label-md text-label-md text-text-primary">Leg 1: Delhi NCR Departure</span>
+<p class="font-body-sm text-body-sm text-text-secondary">Chauffeured sedan departure from South Delhi residence. NH-48 Express clearance.</p>
+</div>
+<div class="relative">
+<div class="absolute -left-6 top-1 w-4 h-4 rounded-full bg-tertiary-container flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+</div>
+<span class="font-label-md text-label-md text-text-primary">Leg 2: Mid-Journey Heritage Stop (Neemrana)</span>
+<p class="font-body-sm text-body-sm text-text-secondary">Rampart passes, reserved courtyard lounge, and afternoon tea service for 2 guests.</p>
+</div>
+<div class="relative">
+<div class="absolute -left-6 top-1 w-4 h-4 rounded-full bg-success-green flex items-center justify-center">
+<span class="w-1.5 h-1.5 rounded-full bg-white"></span>
+</div>
+<span class="font-label-md text-label-md text-text-primary">Leg 3: Shahpura Haveli, Jaipur Arrival</span>
+<p class="font-body-sm text-body-sm text-text-secondary">Express contactless suite key handover, welcome drink, and designated valet parking.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 2. Chauffeur & Transit Assignment Card -->
+<div class="bg-card-surface rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">directions_car</span>
+<span class="font-title-md text-title-md text-text-primary">Dedicated Chauffeur &amp; Fleet Allocated</span>
+</div>
+<span class="bg-surface-container-high px-space-sm py-0.5 rounded-full font-label-badge text-label-badge text-text-primary uppercase">
+              SLA Guarantee #719
+            </span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-lg">
+<div class="flex items-start gap-space-md">
+<img class="w-14 h-14 rounded-full object-cover shrink-0" data-alt="Close-up professional portrait of a verified chauffeur pilot wearing a clean navy uniform and ID badge smiling confidently with warm studio lighting and neutral background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoMU0E_tAOXGI1BDW5IBauNAXuLtXBWHnbs7M1CcTogj3vI-Kgvs_p0YLSK4dKByoPse4GCdVKJb0OXnLgR2rOguOQvcjVAu1IsOsqHFU5T71PU4VpPDt7xh8Kzwhe57zh5MVXU22oR1f6sx-y6CWvUeH1uMYsCBZ0eJHt0g2xnUD5cHeFkiAtaZ7Y5wxcj9v-IVN9arErc4j6H5rOwzcjbHYyfJmJfGFJB761rE2Durj5yo3a34hXiw">
+<div>
+<div class="flex items-center gap-1">
+<span class="font-headline-sm text-headline-sm text-text-primary">Rajesh Sharma</span>
+<span class="material-symbols-outlined text-success-green text-[18px]" title="Commercial Badge Verified">verified</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Senior Road Pilot • 9+ Years NH-48 Specialist</span>
+<div class="flex items-center gap-space-xs mt-1">
+<span class="material-symbols-outlined text-urgency-amber text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-label-md text-label-md text-text-primary">4.96</span>
+<span class="font-body-sm text-body-sm text-text-secondary">(1,420 chauffeured legs)</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge uppercase text-text-secondary">Vehicle Class</span>
+<span class="font-label-md text-label-md text-text-primary">Premium Executive AC</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge uppercase text-text-secondary">Fleet Unit</span>
+<span class="font-label-md text-label-md text-text-primary font-bold">Maruti Suzuki Ertiga VXi</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge uppercase text-text-secondary">Registration</span>
+<span class="font-label-md text-label-md text-text-primary">DL 01 TA 4920</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-md bg-surface-container-low/50 p-space-md rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-xs text-text-secondary">
+<span class="material-symbols-outlined text-success-green text-[20px]">sensors</span>
+<span class="font-body-sm text-body-sm">Live GPS Telematics telemetry unlocks 4 hours prior to departure</span>
+</div>
+<button class="font-label-md text-label-md text-primary hover:underline flex items-center gap-0.5" type="button">
+<span class="">View Chauffeur Protocol SLA</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- 3. Stay Details: Shahpura Haveli -->
+<div class="bg-card-surface rounded-xl overflow-hidden shadow-sm">
+<div class="grid grid-cols-1 sm:grid-cols-12">
+<div class="sm:col-span-5 h-52 sm:h-auto relative bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Traditional Rajasthani heritage hotel courtyard suite with intricate carved archways, warm lantern light, antique teak furniture, and soft linen bedding." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBiCZtUcn2E1FPoGPdnKl9c_ceMZPrTQ_6fXiSC53jP42rw3zWcatS9WKFwbBlNYG6DwZoJgo2e9rqLL7vlZWefdxkHcyArKhTxnNwMATjLFo5Vhp3W7OjsSwwNaTVNs9VocIkSlozjAs1yIpvD862_XqVX9dhAX8F3dbePTX4KErCF-6sfCMp2ehxVfpc2qdKL8RQQYpZn8KmxIUcSLyUuDKtpYbeXM1VW54BDrEaRZS7eBUiupYmPcg">
+<span class="absolute top-space-sm left-space-sm bg-surface-dark/70 text-on-surface font-label-badge text-label-badge uppercase px-space-sm py-0.5 rounded-full backdrop-blur-sm">
+                5-Star Heritage
+              </span>
+</div>
+<div class="sm:col-span-7 p-space-lg flex flex-col justify-between">
+<div>
+<div class="flex items-start justify-between gap-space-sm">
+<div>
+<span class="font-headline-sm text-headline-sm text-text-primary block">Courtyard Suite at Shahpura Haveli</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Kanti Nagar, Bani Park, Jaipur, Rajasthan</span>
+</div>
+<span class="bg-success-green/10 text-success-green font-label-badge text-label-badge px-space-sm py-1 rounded-full uppercase shrink-0">
+                    Confirmed
+                  </span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm mt-space-md text-text-primary">
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Check-In</span>
+<span class="font-label-lg text-label-lg font-bold">Nov 14, 2025</span>
+<span class="block font-body-sm text-body-sm text-text-secondary">02:00 PM Sharp</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Check-Out</span>
+<span class="font-label-lg text-label-lg font-bold">Nov 17, 2025</span>
+<span class="block font-body-sm text-body-sm text-text-secondary">11:00 AM Standard</span>
+</div>
+</div>
+<div class="flex flex-wrap gap-space-xs mt-space-md">
+<span class="bg-surface-container px-space-sm py-0.5 rounded-full font-body-sm text-body-sm text-text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-success-green">restaurant</span> Gourmet Breakfast Buffet
+                  </span>
+<span class="bg-surface-container px-space-sm py-0.5 rounded-full font-body-sm text-body-sm text-text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-success-green">wifi</span> High-Speed WiFi
+                  </span>
+<span class="bg-surface-container px-space-sm py-0.5 rounded-full font-body-sm text-body-sm text-text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-success-green">local_parking</span> Free Valet
+                  </span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm text-right">
+<span class="font-body-sm text-body-sm text-text-secondary">Reservation ID: </span>
+<span class="font-label-md text-label-md text-text-primary">SHP-HAV-08819</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. Mid-journey Rest Stop: Neemrana -->
+<div class="bg-card-surface rounded-xl p-space-lg shadow-sm flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Panoramic view of historic Neemrana fort stepped terraces with ancient stone balconies against a sunny arid landscape." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD08Etc6_f68FYWBrfUtex5ptuWDRx0X4DnKZbrf2nrj4SovIIA71QyAfc7Ug9Bn7XFXq6sPpFewDi68-AnjKKndgepdG2nPOimAYjbb_v36K_MWyr39ONFPEsVhOiym0ZcwcP_TcwCKQn9ujJNWoXYgHbBc08kRgdSAM6zpQGb_0j928K-IUoAHzIPNf2V7zqk68VV7s6RW2EHPxGqQmz94Td7GJZmMIJ2c0rYWZyBVVrOi-n9l41mNw">
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="bg-tertiary-container/10 text-tertiary-container font-label-badge text-label-badge px-space-sm py-0.5 rounded-full uppercase">
+                  Curated Rest Oasis
+                </span>
+<span class="font-body-sm text-body-sm text-text-secondary">KM Marker 122 on NH-48</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-text-primary block mt-0.5">Neemrana Fort Palace</span>
+<p class="font-body-sm text-body-sm text-text-secondary mt-0.5">High tea terrace privilege voucher &amp; rampart exploration pass for 2 guests.</p>
+</div>
+</div>
+<div class="shrink-0 text-right">
+<span class="font-label-badge text-label-badge uppercase text-success-green block font-bold">Pass Active</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Valid Nov 14 (10 AM - 3 PM)</span>
+</div>
+</div>
+<!-- 5. Primary Traveller Info -->
+<div class="bg-card-surface rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-text-primary text-[20px]">person</span>
+<span class="font-title-md text-title-md text-text-primary">Primary Passenger Documentation</span>
+</div>
+<span class="font-label-badge text-label-badge text-text-secondary uppercase">Verified KYC</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md bg-surface-container-low p-space-md rounded-lg">
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Full Name</span>
+<span class="font-label-lg text-label-lg text-text-primary font-bold">Kabir Malhotra</span>
+</div>
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Contact Number</span>
+<span class="font-label-lg text-label-lg text-text-primary">+91 98765 43210</span>
+</div>
+<div>
+<span class="block font-label-badge text-label-badge uppercase text-text-secondary">Corporate Email</span>
+<span class="font-label-lg text-label-lg text-text-primary truncate block">k.malhotra@enterprise.in</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Transit Status, QR Pass & Concierge (5 Columns) -->
+<div class="lg:col-span-5 space-y-space-xl">
+<!-- 1. Digital QR Code Pass Card -->
+<div class="bg-card-surface rounded-xl p-space-xl shadow-sm flex flex-col items-center text-center relative">
+<div class="w-full flex items-center justify-between mb-space-md">
+<span class="font-label-badge text-label-badge uppercase text-text-secondary tracking-widest">Tripmate FastPass</span>
+<span class="flex items-center gap-1 font-label-badge text-label-badge text-success-green font-bold">
+<span class="w-2 h-2 rounded-full bg-success-green animate-pulse"></span> READY FOR SCAN
+            </span>
+</div>
+<!-- Clean Styled SVG QR Code -->
+<div class="p-space-md bg-surface rounded-xl shadow-inner mb-space-md">
+<svg class="w-44 h-44 text-surface-dark" fill="currentColor" viewBox="0 0 100 100">
+<!-- Top Left Marker -->
+<rect fill="currentColor" height="24" width="24" x="10" y="10"></rect>
+<rect fill="#FAF9F7" height="16" width="16" x="14" y="14"></rect>
+<rect fill="currentColor" height="8" width="8" x="18" y="18"></rect>
+<!-- Top Right Marker -->
+<rect fill="currentColor" height="24" width="24" x="66" y="10"></rect>
+<rect fill="#FAF9F7" height="16" width="16" x="70" y="14"></rect>
+<rect fill="currentColor" height="8" width="8" x="74" y="18"></rect>
+<!-- Bottom Left Marker -->
+<rect fill="currentColor" height="24" width="24" x="10" y="66"></rect>
+<rect fill="#FAF9F7" height="16" width="16" x="14" y="70"></rect>
+<rect fill="currentColor" height="8" width="8" x="18" y="74"></rect>
+<!-- Micro Data Cells -->
+<rect fill="currentColor" height="6" width="6" x="38" y="10"></rect>
+<rect fill="currentColor" height="6" width="6" x="48" y="10"></rect>
+<rect fill="currentColor" height="6" width="6" x="38" y="20"></rect>
+<rect fill="currentColor" height="6" width="6" x="52" y="22"></rect>
+<rect fill="currentColor" height="6" width="14" x="42" y="30"></rect>
+<rect fill="currentColor" height="16" width="6" x="10" y="42"></rect>
+<rect fill="currentColor" height="6" width="8" x="22" y="44"></rect>
+<rect fill="currentColor" height="8" width="24" x="38" y="44"></rect>
+<rect fill="currentColor" height="14" width="6" x="70" y="42"></rect>
+<rect fill="currentColor" height="6" width="8" x="82" y="44"></rect>
+<rect fill="currentColor" height="6" width="12" x="44" y="60"></rect>
+<rect fill="currentColor" height="14" width="6" x="62" y="60"></rect>
+<rect fill="currentColor" height="14" width="6" x="38" y="72"></rect>
+<rect fill="currentColor" height="8" width="8" x="50" y="72"></rect>
+<rect fill="currentColor" height="6" width="14" x="64" y="80"></rect>
+<rect fill="currentColor" height="16" width="8" x="82" y="70"></rect>
+</svg>
+</div>
+<span class="font-headline-sm text-headline-sm text-text-primary tracking-wide">#TM-JPR-9841-KBR</span>
+<p class="font-body-sm text-body-sm text-text-secondary max-w-xs mt-1">
+            Scan at Shahpura Haveli lobby kiosk for instant room key dispensation &amp; at NH-48 FASTag express lanes.
+          </p>
+<div class="mt-space-md w-full pt-space-md flex items-center justify-center gap-space-lg text-text-secondary">
+<span class="flex items-center gap-1 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-success-green">lock</span> 256-Bit Encrypted
+            </span>
+<span class="flex items-center gap-1 font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-success-green">nfc</span> NFC Tap Enabled
+            </span>
+</div>
+</div>
+<!-- 2. Interactive Road Corridor Status Card -->
+<div class="bg-card-surface rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">alt_route</span>
+<span class="font-title-md text-title-md text-text-primary">Corridor Telematics Advisory</span>
+</div>
+<span class="bg-success-green/10 text-success-green px-space-sm py-0.5 rounded-full font-label-badge text-label-badge">Live Normal</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg mb-space-md">
+<div class="flex items-center justify-between text-text-primary font-label-md text-label-md mb-1">
+<span class="">NH-48 Expressway Transit</span>
+<span class="font-bold text-success-green">4h 30m Est. Drive</span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-success-green h-full w-4/5 rounded-full"></div>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm text-text-secondary mt-2">
+<span class="">Traffic density: Low (32 km/h avg)</span>
+<span class="">Weather: 24°C Clear</span>
+</div>
+</div>
+<div class="space-y-space-sm font-body-sm text-body-sm">
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-success-green text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span class="text-text-secondary">All FASTag automated electronic tolls prepaid across 4 toll plazas.</span>
+</div>
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-urgency-amber text-[18px] shrink-0 mt-0.5">warning</span>
+<span class="text-text-secondary">Minor road resurfacing around Dharuhera bypass (10 min buffer auto-calculated).</span>
+</div>
+<div class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px] shrink-0 mt-0.5">health_and_safety</span>
+<span class="text-text-secondary">24/7 Roadside Mechanical &amp; Medical dispatch standby activated.</span>
+</div>
+</div>
+</div>
+<!-- 3. Dedicated Concierge & SOS Card -->
+<div class="bg-surface-dark text-on-surface rounded-xl p-space-lg shadow-sm">
+<div class="flex items-center gap-space-sm mb-space-md">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shrink-0">
+<span class="material-symbols-outlined text-[20px]">support_agent</span>
+</div>
+<div>
+<span class="font-headline-sm text-headline-sm text-white block">Dedicated 24/7 Priority Concierge</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Personal Journey Specialist Assigned</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-surface-container-highest mb-space-lg">
+            Have special requests? Need itinerary adjustments or roadside assistance? Your Tripmate commander is on active monitoring.
+          </p>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+<a class="bg-card-surface hover:bg-surface text-surface-dark font-label-md text-label-md py-3 px-space-md rounded-xl flex items-center justify-center gap-space-xs transition-colors text-center" href="https://wa.me/18008747628" target="_blank">
+<span class="material-symbols-outlined text-success-green text-[18px]">chat</span>
+              WhatsApp Concierge
+            </a>
+<button class="bg-primary hover:bg-primary-container text-white font-label-md text-label-md py-3 px-space-md rounded-xl flex items-center justify-center gap-space-xs transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">e911_emergency</span>
+              Instant SOS Dispatch
+            </button>
+</div>
+</div>
+<!-- 4. Next Step Navigation Links -->
+<div class="bg-card-surface rounded-xl p-space-md shadow-sm space-y-space-sm">
+<a class="flex items-center justify-between p-space-md rounded-lg hover:bg-surface-container-low transition-colors group" data-path="recent-trips-my-trips-ledger" href="#">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">history</span>
+<span class="font-label-lg text-label-lg text-text-primary">View in My Trips Ledger</span>
+</div>
+<span class="material-symbols-outlined text-text-secondary group-hover:translate-x-1 transition-transform text-[20px]">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-space-md rounded-lg hover:bg-surface-container-low transition-colors group" data-path="discover-destinations" href="#">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">add_circle</span>
+<span class="font-label-lg text-label-lg text-text-primary">Book Return Leg or Add Heritage Activities</span>
+</div>
+<span class="material-symbols-outlined text-text-secondary group-hover:translate-x-1 transition-transform text-[20px]">chevron_right</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</div></main><footer class="w-full bg-surface-container-low shadow-[0_-1px_8px_rgba(20,21,26,0.02)]"><div class="max-w-7xl mx-auto px-margin py-space-2xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl mb-space-2xl"><div class="lg:col-span-2 space-y-space-md"><div class="flex items-center gap-space-sm"><img alt="Tripmate brand logo lockup: red rounded squircle badge with crisp white M monogram paired with bold black Tripmate text" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UiqyluXIZTu1lCjZtyRYkWLB4PsT8y97WJKZX6cbtYQ0Bg7pn0rsBrYgahSdGSWZN4eS--D_eA93snlWc1jVjJM_aJ_-1UxFDT96aWXdxkcEKISzjDtIxP658b_8EGXSWZnstUh76kM_UcITt5XqBiv2dX2lkrZSWqKBgYXiX0yKNsvqs36bX_cQqsYqGa3Tp5knIpaXeANaQsf_Xvr0niNMvS_bVtp85L6crfv06B2Td9_8TuV-hZl-4"><span class="font-headline-sm text-headline-sm text-text-primary">Tripmate</span></div><p class="font-body-md text-body-md text-text-secondary max-w-sm">Unified dynamic journey coordination across verified hospitality, private transit fleets, and premium mid-journey curated rest points.</p><div class="inline-flex items-center gap-space-sm bg-card-surface px-space-md py-space-sm rounded-xl"><span class="material-symbols-outlined text-success-green text-[20px]">support_agent</span><div><span class="block font-label-badge text-label-badge uppercase tracking-wider text-text-secondary">24/7 Priority Concierge</span><span class="font-label-lg text-label-lg text-text-primary">+1 (800) 874-7628</span></div></div></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Platform &amp; Travel</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="discover-destinations" href="#">Curated Destinations</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="hotel-stay-selection" href="#">Verified Accommodations</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="vehicle-transit-selection" href="#">Chauffeured Transit</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="mid-journey-rest-stop-selection" href="#">Highway Rest Points</a></li></ul></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Enterprise Fleet</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="b2b-commercial-overview" href="#">Commercial Fleet SLA</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="checkout-payment" href="#">Corporate Invoicing</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="booking-confirmation" href="#">Dispatch Protocols</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="recent-trips-my-trips-ledger" href="#">Fleet Telematics</a></li></ul></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Trust &amp; Governance</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Trust &amp; Safety Policy</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Privacy Framework</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Terms of Service</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Security &amp; Encryption</a></li></ul></div></div><div class="flex flex-col sm:flex-row items-center justify-between pt-space-lg gap-space-md"><p class="font-body-sm text-body-sm text-text-secondary">© 2025 Tripmate Technologies Inc. All rights reserved. Registered travel management platform.</p><div class="flex items-center gap-space-lg"><span class="font-body-sm text-body-sm text-text-secondary flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-success-green inline-block"></span>Operational Systems 99.98%</span><span class="font-body-sm text-body-sm text-text-secondary">SOC2 Type II Certified</span></div></div></div></footer>
+
+</body></html>

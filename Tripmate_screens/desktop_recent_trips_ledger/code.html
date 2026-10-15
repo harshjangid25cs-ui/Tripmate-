@@ -1,0 +1,476 @@
+<!DOCTYPE html><html class="light" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><title>Tripmate</title><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-container": "#fff8f7", "inverse-on-surface": "#f1f1ef", "inverse-primary": "#ffb3ae", "surface-container-highest": "#e3e2e0", "surface-container-lowest": "#ffffff", "surface-container-high": "#e9e8e6", "on-tertiary-container": "#fff9f5", "on-primary-fixed-variant": "#930015", "primary": "#b8001d", "on-primary-fixed": "#410004", "primary-fixed": "#ffdad7", "error": "#ba1a1a", "surface": "#faf9f7", "on-tertiary-fixed-variant": "#653e00", "inverse-surface": "#2f3130", "card-surface": "#FFFFFF", "surface-dim": "#dadad8", "on-surface": "#1a1c1b", "secondary-fixed": "#e3e1e9", "on-secondary-fixed-variant": "#46464c", "surface-container": "#efeeec", "primary-container": "#e11d2e", "background": "#faf9f7", "outline": "#916f6c", "primary-fixed-dim": "#ffb3ae", "text-secondary": "#6B7280", "on-tertiary": "#ffffff", "surface-tint": "#c0001f", "text-primary": "#14151A", "error-container": "#ffdad6", "on-secondary-fixed": "#1a1b20", "success-green": "#16A34A", "secondary": "#5e5e64", "on-error": "#ffffff", "on-primary": "#ffffff", "surface-light": "#FAF9F7", "tertiary-fixed": "#ffddb8", "surface-bright": "#faf9f7", "tertiary-fixed-dim": "#ffb95f", "on-error-container": "#93000a", "secondary-fixed-dim": "#c7c6cd", "on-secondary-container": "#64646a", "border-hairline": "#E5E3DF", "surface-dark": "#14151A", "on-tertiary-fixed": "#2a1700", "on-background": "#1a1c1b", "surface-variant": "#e3e2e0", "urgency-amber": "#F59E0B", "tertiary-container": "#a16600", "on-surface-variant": "#5d3f3d", "tertiary": "#805000", "surface-container-low": "#f4f3f1", "on-secondary": "#ffffff", "outline-variant": "#e6bdb9", "secondary-container": "#e3e1e9" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "space-lg": "1.5rem", "space-2xl": "3rem", "margin-mobile": "1rem", "gutter-mobile": "0.75rem", "gutter": "1rem", "space-sm": "0.5rem", "margin": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem" }, "fontFamily": { "label-lg": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "body-md": ["Inter"], "label-md": ["Inter"], "display-lg": ["Inter"], "title-md": ["Inter"], "numeral-price": ["Inter"], "label-badge": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "headline-sm": ["Inter"], "display-lg-mobile": ["Inter"] }, "fontSize": { "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }], "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "title-md": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "numeral-price": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-badge": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "display-lg-mobile": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "800" }] } } } }</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-card-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)]"><div class="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-xl"><a class="flex items-center gap-space-sm group" data-path="discover-destinations" href="#"><img alt="Tripmate brand logo lockup" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UiqyluXIZTu1lCjZtyRYkWLB4PsT8y97WJKZX6cbtYQ0Bg7pn0rsBrYgahSdGSWZN4eS--D_eA93snlWc1jVjJM_aJ_-1UxFDT96aWXdxkcEKISzjDtIxP658b_8EGXSWZnstUh76kM_UcITt5XqBiv2dX2lkrZSWqKBgYXiX0yKNsvqs36bX_cQqsYqGa3Tp5knIpaXeANaQsf_Xvr0niNMvS_bVtp85L6crfv06B2Td9_8TuV-hZl-4"></a><nav class="hidden xl:flex items-center gap-space-md shrink-0" data-active-classes="text-primary font-bold"><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="discover-destinations" href="#">Discover Destinations</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="hotel-stay-selection" href="#">Stays &amp; Hotels</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="vehicle-transit-selection" href="#">Vehicles</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="mid-journey-rest-stop-selection" href="#">Rest Stops</a><a aria-current="page" class="transition-colors text-primary font-bold" data-path="recent-trips-my-trips-ledger" href="#">My Trips</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="b2b-commercial-overview" href="#">B2B Commercial</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="support" href="#">Support</a></nav></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center bg-surface-container-low rounded-xl px-space-md py-space-xs"><span class="material-symbols-outlined text-text-secondary text-[20px] mr-space-xs">search</span><input class="bg-transparent font-body-md text-body-md text-text-primary placeholder:text-text-secondary outline-none w-48 focus:w-60 transition-all" placeholder="Search routes, stays, fleet..." type="text"></div><button class="hidden lg:flex items-center gap-space-xs px-space-md py-space-xs rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors text-on-surface" type="button"><span class="material-symbols-outlined text-[18px] text-text-secondary">language</span><span class="font-label-md text-label-md text-on-surface">USD · EN</span></button><button aria-label="User profile account" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center" type="button"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></button></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto px-margin py-space-xl flex flex-col gap-space-xl">
+<!-- Header Section -->
+<section class="flex flex-col md:flex-row md:items-end justify-between gap-space-lg">
+<div class="space-y-space-xs max-w-2xl">
+<div class="inline-flex items-center gap-space-xs px-space-sm py-0.5 rounded-full bg-surface-container text-on-surface-variant font-label-badge text-label-badge uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-success-green"></span>
+          Synchronized Ledger · Account #TM-CORP-0883
+        </div>
+<h1 class="font-display-lg text-display-lg text-text-primary tracking-tight">
+          My Trips &amp; Booking Ledger
+        </h1>
+<p class="font-body-lg text-body-lg text-text-secondary">
+          Manage your upcoming journeys, download verified GST invoices, and rebook curated circuits.
+        </p>
+</div>
+<!-- Quick Metrics Strip -->
+<div class="flex items-center gap-space-md p-space-sm bg-card-surface rounded-xl shadow-sm">
+<div class="px-space-md py-space-xs border-r border-border-hairline">
+<span class="block font-label-badge text-label-badge text-text-secondary uppercase">Total Spent</span>
+<span class="font-numeral-price text-numeral-price text-text-primary">₹80,776</span>
+</div>
+<div class="px-space-md py-space-xs">
+<span class="block font-label-badge text-label-badge text-text-secondary uppercase">Loyalty Tier</span>
+<span class="font-title-md text-title-md text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+            Emerald
+          </span>
+</div>
+</div>
+</section>
+<!-- Controls & Filter Bar -->
+<section class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-space-md bg-card-surface p-space-md rounded-xl shadow-sm">
+<!-- Segmented Tabs -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-2 xl:pb-0" id="filter-tabs">
+<button class="filter-btn px-space-md py-space-xs rounded-full bg-text-primary text-card-surface font-label-md text-label-md flex items-center gap-space-xs transition-colors shrink-0" data-filter="all" type="button">
+<span class="">All Bookings</span>
+<span class="bg-card-surface/20 text-card-surface px-1.5 py-0.5 rounded-full text-[10px] font-bold">3</span>
+</button>
+<button class="filter-btn px-space-md py-space-xs rounded-full bg-surface-container text-text-primary hover:bg-surface-container-high font-label-md text-label-md flex items-center gap-space-xs transition-colors shrink-0" data-filter="upcoming" type="button">
+<span class="">Upcoming</span>
+<span class="bg-primary text-on-primary px-1.5 py-0.5 rounded-full text-[10px] font-bold">1</span>
+</button>
+<button class="filter-btn px-space-md py-space-xs rounded-full bg-surface-container text-text-primary hover:bg-surface-container-high font-label-md text-label-md flex items-center gap-space-xs transition-colors shrink-0" data-filter="completed" type="button">
+<span class="">Completed</span>
+<span class="bg-surface-container-highest text-on-surface px-1.5 py-0.5 rounded-full text-[10px] font-bold">2</span>
+</button>
+<button class="filter-btn px-space-md py-space-xs rounded-full bg-surface-container text-text-secondary hover:bg-surface-container-high font-label-md text-label-md flex items-center gap-space-xs transition-colors shrink-0" data-filter="cancelled" type="button">
+<span class="">Cancelled</span>
+<span class="bg-surface-container-highest text-text-secondary px-1.5 py-0.5 rounded-full text-[10px] font-bold">0</span>
+</button>
+</div>
+<!-- Search & Tools -->
+<div class="flex flex-wrap sm:flex-nowrap items-center gap-space-sm">
+<div class="relative flex-1 sm:w-80">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary text-[20px]">search</span>
+<input class="w-full bg-surface rounded-xl pl-10 pr-space-md py-2.5 font-body-md text-body-md text-text-primary placeholder:text-text-secondary focus:bg-card-surface focus:outline-none transition-all shadow-inner" id="trip-search-input" placeholder="Search destination, trip ID, passenger..." type="text">
+</div>
+<div class="relative shrink-0">
+<button class="flex items-center gap-space-xs px-space-md py-2.5 rounded-xl bg-surface hover:bg-surface-container transition-colors text-text-primary font-label-md text-label-md shadow-sm" id="date-range-toggle" type="button">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">calendar_today</span>
+<span class="">FY 2025–26</span>
+<span class="material-symbols-outlined text-[16px] text-text-secondary">expand_more</span>
+</button>
+</div>
+<button class="flex items-center gap-space-xs px-space-md py-2.5 rounded-xl bg-surface-container-low hover:bg-surface-container transition-colors text-text-primary font-label-md text-label-md shadow-sm shrink-0 active:scale-95 duration-150" onclick="triggerExportModal()" type="button">
+<span class="material-symbols-outlined text-[18px] text-text-primary">archive</span>
+<span class="hidden sm:inline">Export All Invoices</span>
+<span class="sm:hidden">Export</span>
+</button>
+</div>
+</section>
+<!-- Main Trip Ledger List -->
+<div class="flex flex-col gap-space-lg" id="trips-container">
+<!-- ITEM 1: FEATURED UPCOMING TRIP CARD -->
+<article class="trip-card group bg-card-surface rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow" data-status="upcoming">
+<div class="grid grid-cols-1 lg:grid-cols-12 items-stretch">
+<!-- Media Column (4:3 ratio container on mobile, span-5 on desktop) -->
+<div class="relative lg:col-span-5 h-64 lg:h-auto min-h-[260px] overflow-hidden bg-surface-container">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" data-alt="Stunning architectural view of Hawa Mahal Jaipur palace facade made of pink terracotta stone with ornate jharokha lattice windows under bright golden hour sunlight, architectural travel photography, premium composition" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWhcLjY165krmh2wg7r6mXYBQt_mc46wALApoXeWtMDrGp4bT5N6xIOP6HV_cx5hgWcC-haot1xnWfRZbvaeyTUc9UHIq5sJ231VCKvnA-fhF3y4B667ctYZAAE5X5f7jKSdgdl8Wma0mCOrL31z6082oCR2XHZ0whadRvJOYt3ywzQKLy0PJxqjhpI3Ka5VKDahGrgXIRDMFACWHlMjCkABNtAWwlagpHXTLaXbqsm95SfKR223noxA">
+<!-- Urgency Pill Badge -->
+<div class="absolute top-space-md left-space-md flex items-center gap-1.5 px-3 py-1 rounded-full bg-urgency-amber text-card-surface font-label-badge text-label-badge shadow-md">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+              Upcoming in 12 Days
+            </div>
+<!-- Booking Ref Tag Bottom Left -->
+<div class="absolute bottom-space-md left-space-md px-2.5 py-1 rounded-lg bg-surface-dark/70 backdrop-blur-md text-card-surface font-body-sm text-body-sm tracking-wide">
+              Ref #TM-JPR-9841
+            </div>
+</div>
+<!-- Content Column -->
+<div class="lg:col-span-7 p-space-lg flex flex-col justify-between gap-space-md">
+<div>
+<div class="flex flex-wrap items-center justify-between gap-space-xs mb-space-xs">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-primary font-bold">
+                  Curated Heritage Circuit
+                </span>
+<span class="inline-flex items-center gap-1 font-body-sm text-body-sm text-success-green font-semibold">
+<span class="w-2 h-2 rounded-full bg-success-green"></span>
+                  Driver Dispatched &amp; Reserved
+                </span>
+</div>
+<h2 class="font-headline-md text-headline-md text-text-primary tracking-tight group-hover:text-primary transition-colors">
+                Jaipur Heritage &amp; Forts Circuit
+              </h2>
+<p class="font-body-md text-body-md text-text-secondary mt-1 flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-text-secondary">date_range</span>
+                Nov 14 – Nov 18, 2025 · <strong class="text-text-primary">4 Days / 3 Nights</strong>
+</p>
+<!-- Inclusions Chips -->
+<div class="flex flex-wrap gap-space-xs mt-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">hotel</span>
+                  Haveli Stay
+                </span>
+<span class="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">directions_car</span>
+                  Dedicated Sedan
+                </span>
+<span class="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">coffee</span>
+                  Neemrana Stopover
+                </span>
+<span class="inline-flex items-center gap-1 px-space-sm py-1 rounded-full bg-surface-container font-label-md text-label-md text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">group</span>
+                  2 Guests
+                </span>
+</div>
+</div>
+<!-- Bottom Shelf -->
+<div class="pt-space-md border-t border-border-hairline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md">
+<div>
+<span class="block font-label-badge text-label-badge uppercase tracking-wider text-text-secondary">
+                  Total Ledger Sum
+                </span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-lg text-headline-lg text-text-primary">₹27,376</span>
+<span class="font-body-sm text-body-sm text-success-green font-medium">(Paid in Full)</span>
+</div>
+</div>
+<!-- Action CTAs -->
+<div class="flex flex-wrap items-center gap-space-sm w-full sm:w-auto">
+<button class="px-space-md py-2.5 rounded-xl bg-surface hover:bg-surface-container text-text-primary font-label-md text-label-md transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                  Live Voucher
+                </button>
+<button class="px-space-md py-2.5 rounded-xl bg-surface hover:bg-surface-container text-text-primary font-label-md text-label-md transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[18px]">support_agent</span>
+                  Concierge
+                </button>
+<a class="px-space-lg py-2.5 rounded-xl bg-primary-container hover:bg-primary text-on-primary font-label-lg text-label-lg transition-colors flex items-center justify-center gap-1 shadow-sm" data-path="booking-confirmation" href="#">
+<span class="">Manage Itinerary</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</article>
+<!-- ITEM 2: COMPLETED TRIP ROW 1 -->
+<article class="trip-card group bg-card-surface rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow" data-status="completed">
+<div class="grid grid-cols-1 md:grid-cols-12 items-center p-space-md sm:p-space-lg gap-space-lg">
+<!-- Thumbnail Media -->
+<div class="md:col-span-3 lg:col-span-3 relative h-48 md:h-36 rounded-xl overflow-hidden bg-surface-container shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Panoramic serene landscape of Taj Lake Palace in Udaipur floating peacefully on Lake Pichola during calm morning blue hour with water reflections and Aravali hills in background, cinematic luxury travel photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdtQzkCNEgUfRNmoo7yViVTuMX5QogvSCNzcjl_SaLkNs-8JnzVtM5F9kEv24a8neY7kdDKc-m4Ni3XG5BfLXCYz-BQOMCRBhhrJeXo5wxXspBBywomLjE4T8KD718omSojha86lahwi5bYEGpfLhNKJWlYsA_snB109sOo17Cbt38QswTpL4KG2TeiAaHYHl2PeMKSzhuzA70EjaLHQSf-dRTcWwu3-pvqcsxgXEfOv4jjDXvhzyQzQ">
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-surface-dark/70 backdrop-blur-md text-card-surface font-label-badge text-label-badge">
+              Completed
+            </div>
+</div>
+<!-- Trip Information -->
+<div class="md:col-span-5 lg:col-span-5 space-y-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="font-body-sm text-body-sm text-text-secondary">Ref #TM-UDR-4102</span>
+<span class="w-1 h-1 rounded-full bg-border-hairline"></span>
+<span class="font-body-sm text-body-sm text-text-secondary">Oct 02 – Oct 05, 2025</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-text-primary tracking-tight group-hover:text-primary transition-colors">
+              Udaipur Lakes &amp; Heritage Retreat
+            </h3>
+<!-- Inclusions -->
+<div class="flex flex-wrap gap-1.5 pt-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-surface-container font-body-sm text-body-sm text-text-primary">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">villa</span>
+                Taj Lake Palace Stay
+              </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-surface-container font-body-sm text-body-sm text-text-primary">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">time_to_leave</span>
+                Self-Drive Thar 4x4
+              </span>
+</div>
+</div>
+<!-- Ledger Price & Actions -->
+<div class="md:col-span-4 lg:col-span-4 flex flex-col md:items-end justify-between h-full gap-space-sm pt-space-sm md:pt-0 border-t md:border-t-0 border-border-hairline">
+<div class="md:text-right">
+<span class="block font-label-badge text-label-badge uppercase tracking-wider text-text-secondary">Settled Amount</span>
+<div class="flex items-baseline md:justify-end gap-1">
+<span class="font-numeral-price text-numeral-price text-text-primary">₹34,500</span>
+<span class="font-body-sm text-body-sm text-text-secondary">incl. GST</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center md:justify-end gap-space-xs">
+<button class="px-space-sm py-2 rounded-xl bg-surface hover:bg-surface-container font-label-md text-label-md text-text-primary transition-colors flex items-center gap-1 shadow-sm" onclick="downloadInvoiceModal('TM-UDR-4102')" title="Download verified GST PDF invoice" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">description</span>
+                Tax Invoice
+              </button>
+<button class="p-2 rounded-xl bg-surface hover:bg-surface-container font-label-md text-label-md text-text-secondary transition-colors" title="View verified photo journal and memories" type="button">
+<span class="material-symbols-outlined text-[18px]">photo_library</span>
+</button>
+<a class="px-space-md py-2 rounded-xl bg-surface-dark text-card-surface hover:bg-on-surface font-label-md text-label-md transition-colors flex items-center gap-1" data-path="discover-destinations" href="#">
+<span class="">Rebook Circuit</span>
+<span class="material-symbols-outlined text-[16px]">autorenew</span>
+</a>
+</div>
+</div>
+</div>
+</article>
+<!-- ITEM 3: COMPLETED TRIP ROW 2 -->
+<article class="trip-card group bg-card-surface rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow" data-status="completed">
+<div class="grid grid-cols-1 md:grid-cols-12 items-center p-space-md sm:p-space-lg gap-space-lg">
+<!-- Thumbnail Media -->
+<div class="md:col-span-3 lg:col-span-3 relative h-48 md:h-36 rounded-xl overflow-hidden bg-surface-container shrink-0">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Lush green tiered tea plantations of Munnar Kerala blanketed in soft morning mountain mist with rolling hills in deep emerald and fog, tranquil atmospheric landscape photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrnTgUPuDZolZgtMSEF1QFZDXyiQR7XL3y9x9Ctj1uP8OIwxFDaDUu2g1OdyQayIdvmdwjWjMfwUvzisYv-23YYcLtJIZ6GODxYzIfOJg7kKj6QFBJCpx4PJCdeZOouzAQU8BBQx-zvRIW6k7Gm-nV-biHvxBtbRfc9pKs1K0OtNjOPGERvwGEfUcBH80SGgI_OPdZFdh3NFl0aAJQI5NlB00aDubmHO0hVfWMbKvbWRKjldeo7pDoZw">
+<div class="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-surface-dark/70 backdrop-blur-md text-card-surface font-label-badge text-label-badge">
+              Completed
+            </div>
+</div>
+<!-- Trip Information -->
+<div class="md:col-span-5 lg:col-span-5 space-y-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="font-body-sm text-body-sm text-text-secondary">Ref #TM-MNR-1094</span>
+<span class="w-1 h-1 rounded-full bg-border-hairline"></span>
+<span class="font-body-sm text-body-sm text-text-secondary">Aug 15 – Aug 18, 2025</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-text-primary tracking-tight group-hover:text-primary transition-colors">
+              Munnar Misty Hills Escape
+            </h3>
+<!-- Inclusions -->
+<div class="flex flex-wrap gap-1.5 pt-1">
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-surface-container font-body-sm text-body-sm text-text-primary">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">park</span>
+                Plantation Resort
+              </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-surface-container font-body-sm text-body-sm text-text-primary">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">local_taxi</span>
+                Private Scenic Cab
+              </span>
+</div>
+</div>
+<!-- Ledger Price & Actions -->
+<div class="md:col-span-4 lg:col-span-4 flex flex-col md:items-end justify-between h-full gap-space-sm pt-space-sm md:pt-0 border-t md:border-t-0 border-border-hairline">
+<div class="md:text-right">
+<span class="block font-label-badge text-label-badge uppercase tracking-wider text-text-secondary">Settled Amount</span>
+<div class="flex items-baseline md:justify-end gap-1">
+<span class="font-numeral-price text-numeral-price text-text-primary">₹18,900</span>
+<span class="font-body-sm text-body-sm text-text-secondary">incl. GST</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center md:justify-end gap-space-xs">
+<button class="px-space-sm py-2 rounded-xl bg-surface hover:bg-surface-container font-label-md text-label-md text-text-primary transition-colors flex items-center gap-1 shadow-sm" onclick="downloadInvoiceModal('TM-MNR-1094')" title="Download verified GST PDF invoice" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">description</span>
+                Tax Invoice
+              </button>
+<a class="px-space-md py-2 rounded-xl bg-surface-dark text-card-surface hover:bg-on-surface font-label-md text-label-md transition-colors flex items-center gap-1" data-path="discover-destinations" href="#">
+<span class="">Rebook Circuit</span>
+<span class="material-symbols-outlined text-[16px]">autorenew</span>
+</a>
+</div>
+</div>
+</div>
+</article>
+</div>
+<!-- Empty State Container (Hidden by default, triggered on empty search) -->
+<div class="hidden flex-col items-center justify-center py-space-2xl text-center bg-card-surface rounded-2xl p-space-xl" id="ledger-empty-state">
+<div class="w-16 h-16 rounded-full bg-surface-container flex items-center justify-center text-text-secondary mb-space-md">
+<span class="material-symbols-outlined text-[32px]">travel_explore</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-text-primary mb-1">No journeys match your filter</h3>
+<p class="font-body-md text-body-md text-text-secondary max-w-sm mb-space-lg">
+        Try resetting your search query or switching tabs to view archived or scheduled expeditions.
+      </p>
+<button class="px-space-lg py-2.5 rounded-xl bg-surface-dark text-card-surface font-label-md text-label-md" onclick="resetFilters()" type="button">
+        Reset All Filters
+      </button>
+</div>
+<!-- Bottom Utility Section: Travel Memories & Annual Tax Summary Bento -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg pt-space-md">
+<!-- Tax Statement Bento Card (Span 8) -->
+<div class="lg:col-span-8 bg-card-surface rounded-2xl p-space-lg shadow-sm flex flex-col justify-between gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-start justify-between gap-space-md">
+<div class="space-y-space-xs max-w-lg">
+<div class="inline-flex items-center gap-1 text-primary font-label-badge text-label-badge uppercase tracking-wider font-bold">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+              Corporate GST &amp; Compliance Center
+            </div>
+<h3 class="font-headline-md text-headline-md text-text-primary tracking-tight">
+              Annual Travel Expenses &amp; ITC Tax Summary
+            </h3>
+<p class="font-body-md text-body-md text-text-secondary">
+              Generate audited statements containing input tax credit breakdown, HSN-9964 transport codes, and hotel stay state GSTIN numbers formatted for rapid tax filing.
+            </p>
+</div>
+<!-- Mini Donut / Expense Pill -->
+<div class="p-space-md rounded-xl bg-surface flex flex-col items-center justify-center shrink-0 border border-border-hairline">
+<span class="font-label-badge text-label-badge text-text-secondary uppercase">Eligible ITC</span>
+<span class="font-headline-sm text-headline-sm text-success-green">₹14,539</span>
+<span class="font-body-sm text-body-sm text-text-secondary">18% GST Bracket</span>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-space-md pt-space-md border-t border-border-hairline">
+<div class="flex items-center gap-space-lg text-text-secondary font-body-sm text-body-sm">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-success-green">check_circle</span>
+              GSTIN: 08AAACT1289P1Z9
+            </span>
+<span class="hidden sm:flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-success-green">check_circle</span>
+              3 Verified Trips
+            </span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-2.5 rounded-xl bg-surface hover:bg-surface-container font-label-md text-label-md text-text-primary transition-colors flex items-center gap-1.5" onclick="triggerStatementDownload('csv')" type="button">
+<span class="material-symbols-outlined text-[18px]">table_chart</span>
+              Download CSV
+            </button>
+<button class="px-space-lg py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-on-primary font-label-md text-label-md transition-colors flex items-center gap-1.5 shadow-sm" onclick="triggerStatementDownload('pdf')" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+              Consolidated PDF Statement
+            </button>
+</div>
+</div>
+</div>
+<!-- Memory Vault Card (Span 4) -->
+<div class="lg:col-span-4 bg-surface-dark text-card-surface rounded-2xl p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden">
+<!-- Subtle Glow Circle Overlay -->
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="space-y-space-xs relative z-10">
+<div class="flex items-center justify-between">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-surface-dim">
+              Tripmate Heritage Vault
+            </span>
+<span class="material-symbols-outlined text-[20px] text-urgency-amber">auto_awesome</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-card-surface tracking-tight">
+            2025 Journey Memoir
+          </h3>
+<p class="font-body-md text-body-md text-surface-dim">
+            42 high-resolution photos, curatorial road notes, and private chauffeur logs compiled into an interactive keepsake.
+          </p>
+</div>
+<div class="pt-space-lg relative z-10 flex items-center justify-between">
+<div class="flex -space-x-2">
+<span class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-[10px] text-text-primary font-bold border-2 border-surface-dark">JPR</span>
+<span class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-[10px] text-text-primary font-bold border-2 border-surface-dark">UDR</span>
+<span class="w-8 h-8 rounded-full bg-surface-container-highest flex items-center justify-center text-[10px] text-text-primary font-bold border-2 border-surface-dark">MNR</span>
+</div>
+<button class="px-space-md py-2 rounded-xl bg-card-surface/10 hover:bg-card-surface/20 text-card-surface font-label-md text-label-md transition-colors flex items-center gap-1 backdrop-blur-md" onclick="triggerMemoirDownload()" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+            View Memoir
+          </button>
+</div>
+</div>
+</section>
+</div>
+<!-- Notification Toast Modal Container -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none" id="toast-notification">
+<div class="bg-surface-dark text-card-surface px-space-lg py-space-md rounded-xl shadow-xl flex items-center gap-space-sm border border-border-hairline/20">
+<span class="material-symbols-outlined text-success-green" id="toast-icon">check_circle</span>
+<span class="font-body-md text-body-md" id="toast-msg">Document exported successfully.</span>
+</div>
+</div>
+</div>
+<script>
+  // Filter Tabs Logic
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const tripCards = document.querySelectorAll('.trip-card');
+  const emptyState = document.getElementById('ledger-empty-state');
+  const searchInput = document.getElementById('trip-search-input');
+
+  let activeFilter = 'all';
+
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filter = btn.getAttribute('data-filter');
+      activeFilter = filter;
+
+      // Update button styling
+      filterBtns.forEach(b => {
+        b.className = 'filter-btn px-space-md py-space-xs rounded-full bg-surface-container text-text-primary hover:bg-surface-container-high font-label-md text-label-md flex items-center gap-space-xs transition-colors shrink-0';
+      });
+      btn.className = 'filter-btn px-space-md py-space-xs rounded-full bg-text-primary text-card-surface font-label-md text-label-md flex items-center gap-space-xs transition-colors shrink-0';
+
+      applyFilters();
+    });
+  });
+
+  // Search filter handler
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      applyFilters();
+    });
+  }
+
+  function applyFilters() {
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    let visibleCount = 0;
+
+    tripCards.forEach(card => {
+      const status = card.getAttribute('data-status');
+      const textContent = card.innerText.toLowerCase();
+
+      const matchesStatus = (activeFilter === 'all') || (status === activeFilter);
+      const matchesQuery = query === '' || textContent.includes(query);
+
+      if (matchesStatus && matchesQuery) {
+        card.style.display = '';
+        visibleCount++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    if (emptyState) {
+      if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+        emptyState.classList.add('flex');
+      } else {
+        emptyState.classList.add('hidden');
+        emptyState.classList.remove('flex');
+      }
+    }
+  }
+
+  function resetFilters() {
+    if (searchInput) searchInput.value = '';
+    const allBtn = document.querySelector('[data-filter="all"]');
+    if (allBtn) allBtn.click();
+  }
+
+  // Toast System
+  function showToast(message, icon = 'check_circle') {
+    const toast = document.getElementById('toast-notification');
+    const msgEl = document.getElementById('toast-msg');
+    const iconEl = document.getElementById('toast-icon');
+    if (!toast || !msgEl) return;
+
+    msgEl.innerText = message;
+    if (iconEl) iconEl.innerText = icon;
+
+    toast.classList.remove('translate-y-24', 'opacity-0', 'pointer-events-none');
+    toast.classList.add('translate-y-0', 'opacity-100');
+
+    setTimeout(() => {
+      toast.classList.add('translate-y-24', 'opacity-0', 'pointer-events-none');
+      toast.classList.remove('translate-y-0', 'opacity-100');
+    }, 3200);
+  }
+
+  function downloadInvoiceModal(tripRef) {
+    showToast(`GST Tax Invoice generated for ${tripRef}. Downloading PDF...`, 'receipt');
+  }
+
+  function triggerExportModal() {
+    showToast('Exporting complete ledger archive (ZIP with GST XMLs)...', 'folder_zip');
+  }
+
+  function triggerStatementDownload(format) {
+    showToast(`FY 2025–26 ITC statement downloaded as ${format.toUpperCase()}.`, 'download_done');
+  }
+
+  function triggerMemoirDownload() {
+    showToast('Compiling 2025 high-resolution travel memoir vault...', 'auto_awesome');
+  }
+</script></main><footer class="w-full bg-surface-container-low shadow-[0_-1px_8px_rgba(20,21,26,0.02)]"><div class="max-w-7xl mx-auto px-margin py-space-2xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl mb-space-2xl"><div class="lg:col-span-2 space-y-space-md"><div class="flex items-center gap-space-sm"><img alt="Tripmate brand logo lockup: red rounded squircle badge with crisp white M monogram paired with bold black Tripmate text" class="h-7 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UiqyluXIZTu1lCjZtyRYkWLB4PsT8y97WJKZX6cbtYQ0Bg7pn0rsBrYgahSdGSWZN4eS--D_eA93snlWc1jVjJM_aJ_-1UxFDT96aWXdxkcEKISzjDtIxP658b_8EGXSWZnstUh76kM_UcITt5XqBiv2dX2lkrZSWqKBgYXiX0yKNsvqs36bX_cQqsYqGa3Tp5knIpaXeANaQsf_Xvr0niNMvS_bVtp85L6crfv06B2Td9_8TuV-hZl-4"><span class="font-headline-sm text-headline-sm text-text-primary">Tripmate</span></div><p class="font-body-md text-body-md text-text-secondary max-w-sm">Unified dynamic journey coordination across verified hospitality, private transit fleets, and premium mid-journey curated rest points.</p><div class="inline-flex items-center gap-space-sm bg-card-surface px-space-md py-space-sm rounded-xl"><span class="material-symbols-outlined text-success-green text-[20px]">support_agent</span><div><span class="block font-label-badge text-label-badge uppercase tracking-wider text-text-secondary">24/7 Priority Concierge</span><span class="font-label-lg text-label-lg text-text-primary">+1 (800) 874-7628</span></div></div></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Platform &amp; Travel</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="discover-destinations" href="#">Curated Destinations</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="hotel-stay-selection" href="#">Verified Accommodations</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="vehicle-transit-selection" href="#">Chauffeured Transit</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="mid-journey-rest-stop-selection" href="#">Highway Rest Points</a></li></ul></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Enterprise Fleet</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="b2b-commercial-overview" href="#">Commercial Fleet SLA</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="checkout-payment" href="#">Corporate Invoicing</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="booking-confirmation" href="#">Dispatch Protocols</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="recent-trips-my-trips-ledger" href="#">Fleet Telematics</a></li></ul></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Trust &amp; Governance</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Trust &amp; Safety Policy</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Privacy Framework</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Terms of Service</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Security &amp; Encryption</a></li></ul></div></div><div class="flex flex-col sm:flex-row items-center justify-between pt-space-lg gap-space-md"><p class="font-body-sm text-body-sm text-text-secondary">© 2025 Tripmate Technologies Inc. All rights reserved. Registered travel management platform.</p><div class="flex items-center gap-space-lg"><span class="font-body-sm text-body-sm text-text-secondary flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-success-green inline-block"></span>Operational Systems 99.98%</span><span class="font-body-sm text-body-sm text-text-secondary">SOC2 Type II Certified</span></div></div></div></footer>
+
+</body></html>

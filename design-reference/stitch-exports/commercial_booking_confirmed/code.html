@@ -1,0 +1,358 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_blank" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{width:100vw;margin:0;padding:0;background-color:#FAF9F7;}body{overscroll-behavior:none;color:#14151A;}.pb-safe{padding-bottom:env(safe-area-inset-bottom,0px);}.pt-safe{padding-top:env(safe-area-inset-top,0px);}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "primary-container": "#e11d2e", "surface-container-highest": "#e3e2e0", "on-error": "#ffffff", "on-primary-fixed": "#410004", "success-green": "#16A34A", "surface-tint": "#c0001f", "tertiary": "#805000", "card-surface": "#FFFFFF", "inverse-primary": "#ffb3ae", "tertiary-container": "#a16600", "secondary-fixed": "#e3e1e9", "border-hairline": "#E5E3DF", "on-secondary": "#ffffff", "surface-container-low": "#f4f3f1", "on-primary-container": "#fff8f7", "on-surface": "#1a1c1b", "on-tertiary": "#ffffff", "tertiary-fixed-dim": "#ffb95f", "on-secondary-fixed-variant": "#46464c", "on-surface-variant": "#5d3f3d", "error-container": "#ffdad6", "text-primary": "#14151A", "background": "#faf9f7", "surface-dark": "#14151A", "on-error-container": "#93000a", "on-background": "#1a1c1b", "on-primary": "#ffffff", "surface-bright": "#faf9f7", "on-secondary-container": "#64646a", "on-tertiary-container": "#fff9f5", "outline": "#916f6c", "secondary-fixed-dim": "#c7c6cd", "tertiary-fixed": "#ffddb8", "on-tertiary-fixed-variant": "#653e00", "urgency-amber": "#F59E0B", "surface-variant": "#e3e2e0", "surface-dim": "#dadad8", "inverse-on-surface": "#f1f1ef", "primary": "#b8001d", "primary-fixed-dim": "#ffb3ae", "surface-container-lowest": "#ffffff", "surface-container-high": "#e9e8e6", "on-primary-fixed-variant": "#930015", "primary-fixed": "#ffdad7", "surface-light": "#FAF9F7", "secondary": "#5e5e64", "secondary-container": "#e3e1e9", "surface-container": "#efeeec", "on-tertiary-fixed": "#2a1700", "inverse-surface": "#2f3130", "error": "#ba1a1a", "on-secondary-fixed": "#1a1b20", "surface": "#faf9f7", "outline-variant": "#e6bdb9", "text-secondary": "#6B7280" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "margin": "1.5rem", "gutter-mobile": "0.75rem", "margin-mobile": "1rem", "space-lg": "1.5rem", "space-2xl": "3rem", "space-md": "1rem", "space-xl": "2rem", "space-sm": "0.5rem", "gutter": "1rem", "space-xs": "0.25rem" }, "fontFamily": { "display-lg-mobile": ["Inter"], "headline-sm": ["Inter"], "numeral-price": ["Inter"], "label-lg": ["Inter"], "body-lg": ["Inter"], "headline-lg": ["Inter"], "headline-md": ["Inter"], "body-sm": ["Inter"], "display-lg": ["Inter"], "title-md": ["Inter"], "body-md": ["Inter"], "label-badge": ["Inter"], "label-md": ["Inter"] }, "fontSize": { "display-lg-mobile": ["32px", {"lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "800"}], "headline-sm": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "700"}], "numeral-price": ["20px", {"lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "label-lg": ["14px", {"lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "600"}], "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}], "headline-lg": ["28px", {"lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700"}], "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700"}], "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}], "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "800"}], "title-md": ["16px", {"lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600"}], "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}], "label-badge": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "700"}], "label-md": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}] } } } };</script><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface font-body-md text-text-primary pt-safe pb-safe flex flex-col min-h-screen"><main class="flex flex-col relative w-full bg-surface min-h-screen"><div class="flex flex-col w-full px-4 pb-12 pt-2">
+<!-- Brand Breadcrumb / Back Navigation -->
+<div class="flex items-center justify-between py-2 mb-3">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-lg bg-primary flex items-center justify-center text-on-primary">
+<span class="font-headline-sm text-headline-sm leading-none">M</span>
+</div>
+<span class="font-headline-sm text-headline-sm tracking-tight text-text-primary">Tripmate <span class="text-text-secondary font-body-sm text-body-sm">Enterprise</span></span>
+</div>
+<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-high text-text-secondary">
+<span class="material-symbols-outlined text-[16px]">verified_user</span>
+<span class="font-label-badge text-label-badge text-text-primary">B2B SECURE</span>
+</div>
+</div>
+<!-- Confirmation Banner -->
+<div class="w-full bg-card-surface rounded-2xl p-5 mb-5 shadow-sm">
+<div class="flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-full bg-success-green/10 flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-success-green text-[24px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-low text-text-secondary mb-2">
+<span class="w-1.5 h-1.5 rounded-full bg-success-green"></span>
+<span class="font-label-badge text-label-badge text-text-primary uppercase tracking-wide">TM-CORP-8821 • GST INVOICE READY</span>
+</div>
+<h1 class="font-headline-md text-headline-md text-text-primary tracking-tight">Your Commercial Trip is Booked!</h1>
+<p class="font-body-md text-body-md text-text-secondary mt-1">Corporate itinerary confirmed. Driver details &amp; dispatch tracking assigned 24h prior.</p>
+</div>
+</div>
+</div>
+<!-- Trip Summary Card -->
+<div class="w-full bg-card-surface rounded-2xl p-5 mb-5 shadow-sm">
+<div class="flex items-center justify-between pb-3.5 mb-3.5 bg-surface-container-low/40 rounded-xl px-3 py-2.5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary text-[20px]">corporate_fare</span>
+<span class="font-title-md text-title-md text-text-primary">Trip Overview</span>
+</div>
+<span class="font-label-badge text-label-badge px-2 py-0.5 rounded-full bg-success-green text-on-error">CONFIRMED</span>
+</div>
+<!-- Parameter list -->
+<div class="flex flex-col gap-3.5">
+<!-- Route -->
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-[18px]">location_on</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-body-sm text-body-sm text-text-secondary block">Route / Destination</span>
+<span class="font-title-md text-title-md text-text-primary block truncate">Delhi NCR ↔ Jaipur Heritage Circuit</span>
+</div>
+</div>
+<!-- Dates -->
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">calendar_today</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-body-sm text-body-sm text-text-secondary block">Dates &amp; Duration</span>
+<span class="font-title-md text-title-md text-text-primary block">Thu, Nov 20 – Mon, Nov 24, 2025 <span class="text-text-secondary font-body-sm text-body-sm">(5D • 4N)</span></span>
+</div>
+</div>
+<!-- Reporting Time -->
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">schedule</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-body-sm text-body-sm text-text-secondary block">Reporting &amp; Departure</span>
+<span class="font-title-md text-title-md text-text-primary block">07:30 AM IST <span class="text-text-secondary font-body-sm text-body-sm">(Fleet at 07:00 AM)</span></span>
+</div>
+</div>
+<!-- Fleet -->
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">directions_bus</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-body-sm text-body-sm text-text-secondary block">Fleet Vehicle</span>
+<span class="font-title-md text-title-md text-text-primary block truncate">Volvo 9600 Luxury Multi-Axle (45-Seater)</span>
+</div>
+</div>
+<!-- Headcount -->
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">group</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-body-sm text-body-sm text-text-secondary block">Passenger Headcount</span>
+<span class="font-title-md text-title-md text-text-primary block">28 Passengers <span class="text-urgency-amber font-label-md text-label-md font-semibold">(5 Exec Reserved)</span></span>
+</div>
+</div>
+<!-- Purpose / Tag -->
+<div class="flex items-start gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-text-secondary text-[18px]">work</span>
+</div>
+<div class="flex-1 min-w-0">
+<span class="font-body-sm text-body-sm text-text-secondary block">Purpose / Cost Center</span>
+<span class="font-title-md text-title-md text-text-primary block">Engineering Offsite Q4 — Jaipur</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Traveller & Ticket Roster Section -->
+<div class="w-full bg-card-surface rounded-2xl p-5 mb-5 shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Assigned Passenger Tickets</h2>
+<span class="font-label-badge text-label-badge px-2 py-0.5 rounded-full bg-surface-container-high text-text-secondary">5 OF 28 ISSUED</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary mb-4">5 Executive passes issued • Centralized QR boarding enabled</p>
+<!-- Roster List -->
+<div class="flex flex-col gap-2.5">
+<!-- Row 1 -->
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between gap-2">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-text-primary truncate">Aarav Sharma</span>
+<span class="font-label-badge text-label-badge px-1.5 py-0.2 rounded bg-urgency-amber/15 text-urgency-amber">EXEC</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Seat 2A • +91 98765 43210</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<button class="px-2.5 py-1.5 rounded-lg bg-card-surface text-text-primary font-label-md text-label-md flex items-center gap-1 shadow-sm active:bg-surface-container-high transition-colors" onclick="openTicketModal('Aarav Sharma', '2A')">
+<span class="material-symbols-outlined text-[16px] text-primary">qr_code_2</span>
+<span>Ticket</span>
+</button>
+<button class="p-1.5 rounded-lg bg-card-surface text-text-secondary shadow-sm active:bg-surface-container-high transition-colors" onclick="notifyCopied(this)" title="Copy Link">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between gap-2">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-text-primary truncate">Priya Nair</span>
+<span class="font-label-badge text-label-badge px-1.5 py-0.2 rounded bg-urgency-amber/15 text-urgency-amber">EXEC</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Seat 2B • +91 98112 34567</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<button class="px-2.5 py-1.5 rounded-lg bg-card-surface text-text-primary font-label-md text-label-md flex items-center gap-1 shadow-sm active:bg-surface-container-high transition-colors" onclick="openTicketModal('Priya Nair', '2B')">
+<span class="material-symbols-outlined text-[16px] text-primary">qr_code_2</span>
+<span>Ticket</span>
+</button>
+<button class="p-1.5 rounded-lg bg-card-surface text-text-secondary shadow-sm active:bg-surface-container-high transition-colors" onclick="notifyCopied(this)" title="Copy Link">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between gap-2">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-text-primary truncate">Rohan Verma</span>
+<span class="font-label-badge text-label-badge px-1.5 py-0.2 rounded bg-urgency-amber/15 text-urgency-amber">EXEC</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Seat 3A • +91 99887 65432</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<button class="px-2.5 py-1.5 rounded-lg bg-card-surface text-text-primary font-label-md text-label-md flex items-center gap-1 shadow-sm active:bg-surface-container-high transition-colors" onclick="openTicketModal('Rohan Verma', '3A')">
+<span class="material-symbols-outlined text-[16px] text-primary">qr_code_2</span>
+<span>Ticket</span>
+</button>
+<button class="p-1.5 rounded-lg bg-card-surface text-text-secondary shadow-sm active:bg-surface-container-high transition-colors" onclick="notifyCopied(this)" title="Copy Link">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Row 4 -->
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between gap-2">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-text-primary truncate">Sneha Kapoor</span>
+<span class="font-label-badge text-label-badge px-1.5 py-0.2 rounded bg-urgency-amber/15 text-urgency-amber">EXEC</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Seat 3B • +91 97110 98765</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<button class="px-2.5 py-1.5 rounded-lg bg-card-surface text-text-primary font-label-md text-label-md flex items-center gap-1 shadow-sm active:bg-surface-container-high transition-colors" onclick="openTicketModal('Sneha Kapoor', '3B')">
+<span class="material-symbols-outlined text-[16px] text-primary">qr_code_2</span>
+<span>Ticket</span>
+</button>
+<button class="p-1.5 rounded-lg bg-card-surface text-text-secondary shadow-sm active:bg-surface-container-high transition-colors" onclick="notifyCopied(this)" title="Copy Link">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Row 5 -->
+<div class="p-3 rounded-xl bg-surface-container-low flex items-center justify-between gap-2">
+<div class="min-w-0 flex-1">
+<div class="flex items-center gap-1.5">
+<span class="font-title-md text-title-md text-text-primary truncate">Devansh Mehta</span>
+<span class="font-label-badge text-label-badge px-1.5 py-0.2 rounded bg-urgency-amber/15 text-urgency-amber">EXEC</span>
+</div>
+<span class="font-body-sm text-body-sm text-text-secondary block">Seat 4A • +91 98223 34455</span>
+</div>
+<div class="flex items-center gap-1.5 shrink-0">
+<button class="px-2.5 py-1.5 rounded-lg bg-card-surface text-text-primary font-label-md text-label-md flex items-center gap-1 shadow-sm active:bg-surface-container-high transition-colors" onclick="openTicketModal('Devansh Mehta', '4A')">
+<span class="material-symbols-outlined text-[16px] text-primary">qr_code_2</span>
+<span>Ticket</span>
+</button>
+<button class="p-1.5 rounded-lg bg-card-surface text-text-secondary shadow-sm active:bg-surface-container-high transition-colors" onclick="notifyCopied(this)" title="Copy Link">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Remaining Passenger Notice -->
+<div class="mt-3 py-2 px-3 bg-surface-container-low/60 rounded-xl flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-text-secondary">23 Regular team passes pending assignment</span>
+<button class="font-label-badge text-label-badge text-primary uppercase font-bold tracking-wide">Assign +</button>
+</div>
+</div>
+<!-- Summary Cost Breakdown Card -->
+<div class="w-full bg-card-surface rounded-2xl p-5 mb-5 shadow-sm">
+<div class="flex items-center justify-between pb-3 mb-3">
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Corporate Invoice Breakdown</h2>
+<span class="font-label-badge text-label-badge px-2 py-0.5 rounded-full bg-success-green/10 text-success-green">ITC QUALIFIED</span>
+</div>
+<div class="flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-text-secondary">Volvo Luxury Coach (5 Days @ ₹38,500/day)</span>
+<span class="font-title-md text-title-md text-text-primary">₹1,92,500</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-text-secondary">Interstate Permits, Tolls &amp; Allowances</span>
+<span class="font-label-badge text-label-badge px-2 py-0.5 rounded-md bg-surface-container-high text-text-primary">Included</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-body-md text-body-md text-text-secondary">Applicable GST (18% ITC Pass-Through)</span>
+<span class="font-title-md text-title-md text-text-primary">₹34,650</span>
+</div>
+<div class="my-1.5 py-3 px-3.5 bg-surface-container-low rounded-xl flex items-baseline justify-between">
+<div>
+<span class="font-body-sm text-body-sm text-text-secondary uppercase tracking-wider block">Total Corporate Package</span>
+<span class="font-label-md text-label-md text-success-green font-semibold">₹8,112.50 / traveler (28 Pax)</span>
+</div>
+<span class="font-numeral-price text-numeral-price text-text-primary font-extrabold">₹2,27,150</span>
+</div>
+</div>
+</div>
+<!-- Bottom Action Controls -->
+<div class="w-full flex flex-col gap-3">
+<!-- Primary CTA Button -->
+<button class="w-full py-3.5 px-6 rounded-xl bg-primary-container text-on-primary-container font-label-lg text-label-lg uppercase font-bold flex items-center justify-center gap-2 active:bg-primary transition-colors shadow-sm" id="btnShareTickets">
+<span class="material-symbols-outlined text-[20px]">share</span>
+<span>Share All Tickets (WhatsApp &amp; Email) →</span>
+</button>
+<!-- Secondary CTA Button -->
+<button class="w-full py-3.5 px-6 rounded-xl bg-card-surface text-text-primary font-label-lg text-label-lg font-bold flex items-center justify-center gap-2 active:bg-surface-container-high transition-colors shadow-sm" id="btnDownloadInvoice">
+<span class="material-symbols-outlined text-[20px] text-text-secondary">download</span>
+<span>Download GST Invoice &amp; Roster (PDF)</span>
+</button>
+<!-- 24/7 Enterprise Help Text -->
+<div class="text-center py-2 px-4">
+<p class="font-body-sm text-body-sm text-text-secondary">
+        Need corporate invoice customization?
+        <a class="font-label-md text-label-md text-primary font-semibold underline underline-offset-2 ml-1" href="#enterprise-support">Contact your 24/7 Enterprise Desk</a>
+</p>
+</div>
+</div>
+<!-- Modal / Overlay for Ticket Preview -->
+<div class="hidden fixed inset-0 z-50 bg-surface-dark/60 backdrop-blur-sm flex items-center justify-center p-4" id="ticketModal">
+<div class="w-full max-w-sm bg-card-surface rounded-2xl p-6 shadow-xl flex flex-col">
+<div class="flex items-center justify-between pb-3">
+<span class="font-headline-sm text-headline-sm text-text-primary">Executive Pass</span>
+<button class="w-8 h-8 rounded-full bg-surface-container-low flex items-center justify-center text-text-secondary" onclick="closeTicketModal()">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+<div class="py-4 flex flex-col items-center justify-center text-center">
+<!-- Ticket QR Placeholder -->
+<div class="w-40 h-40 bg-surface-container-low rounded-xl p-3 flex flex-col items-center justify-center mb-3">
+<svg class="w-32 h-32 text-text-primary" fill="currentColor" viewBox="0 0 100 100">
+<path d="M10 10h30v30H10zM15 15v20h20V15zM20 20h10v10H20zM60 10h30v30H60zM65 15v20h20V15zM70 20h10v10H70zM10 60h30v30H10zM15 65v20h20V65zM20 70h10v10H20zM60 60h10v10H60zM75 60h15v10H75zM60 75h15v15H60zM80 80h10v10H80z"></path>
+</svg>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-text-primary" id="modalPassengerName">Aarav Sharma</h3>
+<p class="font-body-md text-body-md text-text-secondary" id="modalPassengerSeat">Seat 2A • Volvo 9600 Multi-Axle</p>
+<span class="mt-2 font-label-badge text-label-badge px-3 py-1 rounded-full bg-success-green/15 text-success-green uppercase">Authorized Corporate Roster</span>
+</div>
+<button class="w-full py-3 rounded-xl bg-surface-container-high text-text-primary font-label-md text-label-md font-bold mt-2" onclick="closeTicketModal()">
+        Done
+      </button>
+</div>
+</div>
+<!-- Toast Notification -->
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-surface-dark text-on-error px-4 py-2.5 rounded-full font-label-md text-label-md flex items-center gap-2 shadow-lg transition-opacity duration-200 opacity-0 pointer-events-none" id="copyToast">
+<span class="material-symbols-outlined text-[16px] text-success-green">check_circle</span>
+<span>Pass link copied to clipboard</span>
+</div>
+</div>
+<script>
+  function notifyCopied(btn) {
+    const toast = document.getElementById('copyToast');
+    if (toast) {
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2200);
+    }
+  }
+
+  function openTicketModal(name, seat) {
+    const modal = document.getElementById('ticketModal');
+    const nameEl = document.getElementById('modalPassengerName');
+    const seatEl = document.getElementById('modalPassengerSeat');
+    if (modal && nameEl && seatEl) {
+      nameEl.textContent = name;
+      seatEl.textContent = 'Seat ' + seat + ' • Volvo 9600 Multi-Axle';
+      modal.classList.remove('hidden');
+    }
+  }
+
+  function closeTicketModal() {
+    const modal = document.getElementById('ticketModal');
+    if (modal) {
+      modal.classList.add('hidden');
+    }
+  }
+
+  document.getElementById('btnShareTickets')?.addEventListener('click', function() {
+    const toast = document.getElementById('copyToast');
+    if (toast) {
+      toast.querySelector('span:last-child').textContent = 'All 5 passes queued for batch dispatch';
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+        toast.querySelector('span:last-child').textContent = 'Pass link copied to clipboard';
+      }, 2400);
+    }
+  });
+
+  document.getElementById('btnDownloadInvoice')?.addEventListener('click', function() {
+    const toast = document.getElementById('copyToast');
+    if (toast) {
+      toast.querySelector('span:last-child').textContent = 'Downloading GST Invoice #TM-CORP-8821.pdf';
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+        toast.querySelector('span:last-child').textContent = 'Pass link copied to clipboard';
+      }, 2400);
+    }
+  });
+</script></main></body></html>

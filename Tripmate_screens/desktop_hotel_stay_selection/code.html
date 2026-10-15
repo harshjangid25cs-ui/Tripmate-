@@ -1,0 +1,544 @@
+<!DOCTYPE html><html class="light" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_standard" name="shell-type"><title>Tripmate</title><link href="https://fonts.googleapis.com" rel="preconnect"><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-primary-container": "#fff8f7", "inverse-on-surface": "#f1f1ef", "inverse-primary": "#ffb3ae", "surface-container-highest": "#e3e2e0", "surface-container-lowest": "#ffffff", "surface-container-high": "#e9e8e6", "on-tertiary-container": "#fff9f5", "on-primary-fixed-variant": "#930015", "primary": "#b8001d", "on-primary-fixed": "#410004", "primary-fixed": "#ffdad7", "error": "#ba1a1a", "surface": "#faf9f7", "on-tertiary-fixed-variant": "#653e00", "inverse-surface": "#2f3130", "card-surface": "#FFFFFF", "surface-dim": "#dadad8", "on-surface": "#1a1c1b", "secondary-fixed": "#e3e1e9", "on-secondary-fixed-variant": "#46464c", "surface-container": "#efeeec", "primary-container": "#e11d2e", "background": "#faf9f7", "outline": "#916f6c", "primary-fixed-dim": "#ffb3ae", "text-secondary": "#6B7280", "on-tertiary": "#ffffff", "surface-tint": "#c0001f", "text-primary": "#14151A", "error-container": "#ffdad6", "on-secondary-fixed": "#1a1b20", "success-green": "#16A34A", "secondary": "#5e5e64", "on-error": "#ffffff", "on-primary": "#ffffff", "surface-light": "#FAF9F7", "tertiary-fixed": "#ffddb8", "surface-bright": "#faf9f7", "tertiary-fixed-dim": "#ffb95f", "on-error-container": "#93000a", "secondary-fixed-dim": "#c7c6cd", "on-secondary-container": "#64646a", "border-hairline": "#E5E3DF", "surface-dark": "#14151A", "on-tertiary-fixed": "#2a1700", "on-background": "#1a1c1b", "surface-variant": "#e3e2e0", "urgency-amber": "#F59E0B", "tertiary-container": "#a16600", "on-surface-variant": "#5d3f3d", "tertiary": "#805000", "surface-container-low": "#f4f3f1", "on-secondary": "#ffffff", "outline-variant": "#e6bdb9", "secondary-container": "#e3e1e9" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xl": "2rem", "space-lg": "1.5rem", "space-2xl": "3rem", "margin-mobile": "1rem", "gutter-mobile": "0.75rem", "gutter": "1rem", "space-sm": "0.5rem", "margin": "1.5rem", "space-md": "1rem", "space-xs": "0.25rem" }, "fontFamily": { "label-lg": ["Inter"], "headline-md": ["Inter"], "headline-lg": ["Inter"], "body-md": ["Inter"], "label-md": ["Inter"], "display-lg": ["Inter"], "title-md": ["Inter"], "numeral-price": ["Inter"], "label-badge": ["Inter"], "body-lg": ["Inter"], "body-sm": ["Inter"], "headline-sm": ["Inter"], "display-lg-mobile": ["Inter"] }, "fontSize": { "label-lg": ["14px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.015em", "fontWeight": "700" }], "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }], "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "title-md": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "numeral-price": ["20px", { "lineHeight": "24px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-badge": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "700" }], "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }], "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }], "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "display-lg-mobile": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "800" }] } } } }</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 w-full z-50 bg-card-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(20,21,26,0.04)]"><div class="h-20 max-w-7xl mx-auto px-margin flex items-center justify-between gap-space-lg"><div class="flex items-center gap-space-xl"><a class="flex items-center gap-2 group flex-shrink-0" data-path="discover-destinations" href="#"><span class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center text-on-primary font-bold text-[18px] shadow-sm">M</span><span class="font-headline-sm text-headline-sm text-text-primary tracking-tight font-bold">Tripmate</span></a><nav class="hidden xl:flex items-center gap-6 whitespace-nowrap" data-active-classes="text-primary font-bold"><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="discover-destinations" href="#">Discover Destinations</a><a aria-current="page" class="transition-colors text-primary font-bold font-label-lg text-label-lg" data-path="hotel-stay-selection" href="#">Stays &amp; Hotels</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="vehicle-transit-selection" href="#">Vehicles</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="mid-journey-rest-stop-selection" href="#">Rest Stops</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="recent-trips-my-trips-ledger" href="#">My Trips</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="b2b-commercial-overview" href="#">B2B Commercial</a><a class="font-label-lg text-label-lg text-on-surface-variant hover:text-on-surface transition-colors" data-path="support" href="#">Support</a></nav></div><div class="flex items-center gap-space-md flex-shrink-0"><div class="hidden md:flex items-center bg-surface-container-low rounded-xl px-space-md py-space-xs"><span class="material-symbols-outlined text-text-secondary text-[20px] mr-space-xs">search</span><input class="bg-transparent font-body-md text-body-md text-text-primary placeholder:text-text-secondary outline-none w-48 focus:w-60 transition-all" placeholder="Search routes, stays, fleet..." type="text"></div><button class="hidden lg:flex items-center gap-space-xs px-space-md py-space-xs rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors text-on-surface" type="button"><span class="material-symbols-outlined text-[18px] text-text-secondary">language</span><span class="font-label-md text-label-md text-on-surface">USD · EN</span></button><button aria-label="User profile account" class="w-8 h-8 rounded-full bg-primary flex items-center justify-center" type="button"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></button></div></div></header><main class="w-full pt-20 bg-surface min-h-[calc(100vh-80px)]"><div class="flex flex-col w-full">
+<!-- Sticky Circuit Header & Stepper Flow -->
+<section class="sticky top-20 z-40 bg-surface/90 backdrop-blur-xl shadow-sm">
+<div class="max-w-7xl mx-auto px-margin py-space-md">
+<!-- Circuit Path & Step Counter Meta -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm mb-space-sm">
+<div class="flex items-center gap-space-sm text-text-secondary">
+<span class="inline-flex items-center gap-1 font-label-badge text-label-badge tracking-wider uppercase text-primary bg-primary-fixed/60 px-2 py-0.5 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+            Active Circuit Customizer
+          </span>
+<span class="text-secondary/40 text-xs">•</span>
+<span class="font-label-md text-label-md text-text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">route</span>
+            Jaipur Royal Heritage Trail
+          </span>
+<span class="text-secondary/40 text-xs">•</span>
+<span class="font-body-sm text-body-sm text-text-secondary">4 Days / 3 Nights</span>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs font-label-md text-label-md text-text-secondary">
+<span class="text-text-primary font-bold">Step 2 of 4:</span>
+<span class="">Choose Your Lodging</span>
+</div>
+<div class="w-32 h-1.5 bg-surface-container-high rounded-full overflow-hidden flex">
+<div class="h-full bg-success-green w-1/4"></div>
+<div class="h-full bg-primary-container w-1/4"></div>
+<div class="h-full bg-surface-container-highest w-2/4"></div>
+</div>
+</div>
+</div>
+<!-- Filter Matrix Bar -->
+<div class="flex items-center gap-space-sm overflow-x-auto pb-1 pt-1 no-scrollbar">
+<button class="filter-chip active flex-shrink-0 px-4 py-2 rounded-full bg-surface-dark text-on-primary font-label-md text-label-md shadow-sm transition-all flex items-center gap-1.5" type="button">
+<span class="">All Stays</span>
+<span class="bg-surface/20 text-on-primary px-1.5 py-0.2 rounded-full text-[10px]">8</span>
+</button>
+<button class="filter-chip flex-shrink-0 px-4 py-2 rounded-full bg-card-surface text-text-primary font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">temple_hindu</span>
+<span class="">Heritage Havelis</span>
+</button>
+<button class="filter-chip flex-shrink-0 px-4 py-2 rounded-full bg-card-surface text-text-primary font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">castle</span>
+<span class="">Royal Palaces</span>
+</button>
+<button class="filter-chip flex-shrink-0 px-4 py-2 rounded-full bg-card-surface text-text-primary font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">villa</span>
+<span class="">Boutique Villas</span>
+</button>
+<button class="filter-chip flex-shrink-0 px-4 py-2 rounded-full bg-card-surface text-text-primary font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">pool</span>
+<span class="">Pool &amp; Spa Included</span>
+</button>
+<button class="filter-chip flex-shrink-0 px-4 py-2 rounded-full bg-card-surface text-text-primary font-label-md text-label-md shadow-sm hover:bg-surface-container-low transition-all flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px] text-text-secondary">free_breakfast</span>
+<span class="">Breakfast Included</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Core Body: 70% Inventory / 30% Sticky Blueprint Summary -->
+<div class="max-w-7xl mx-auto px-margin py-space-xl w-full">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl items-start">
+<!-- LEFT COLUMN: Hotel Listing Cards (70% ~ 8 cols on desktop) -->
+<section class="lg:col-span-8 flex flex-col gap-space-xl">
+<!-- Header Info Banner -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm bg-surface-container-low p-space-md rounded-xl">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">verified_user</span>
+<div>
+<p class="font-title-md text-title-md text-text-primary">Tripmate Heritage Verified Concierge</p>
+<p class="font-body-sm text-body-sm text-text-secondary">Every property is physically vetted on 45 hospitality &amp; structural safety benchmarks.</p>
+</div>
+</div>
+<span class="font-label-md text-label-md text-text-secondary bg-card-surface px-3 py-1.5 rounded-lg shadow-sm whitespace-nowrap self-start sm:self-center">
+            8 Properties in Jaipur
+          </span>
+</div>
+<!-- HOTEL CARD 1: Recommended & Currently Selected -->
+<article class="hotel-item relative bg-card-surface rounded-2xl shadow-sm transition-all overflow-hidden ring-2 ring-primary ring-offset-2 ring-offset-surface">
+<!-- Top Row Flag / Badge Ribbon -->
+<div class="bg-primary/10 px-space-md py-2 flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[18px]">workspace_premium</span>
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-primary">Circuit Default • Best Fit for Old City Trail</span>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-success-green text-on-primary font-label-badge text-label-badge">
+<span class="material-symbols-outlined text-[13px]">check_circle</span>
+              Current Selection
+            </span>
+</div>
+<div class="p-space-md flex flex-col gap-space-md">
+<!-- 4:3 Photographic Inset Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md">
+<div class="md:col-span-7 relative group overflow-hidden rounded-xl aspect-[4/3]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Cinematic shot of Shahpura Haveli boutique hotel inner courtyard in Jaipur with intricate yellow sandstone arches, brass hurricane lanterns flickering at dusk, tranquil central fountain, and lush palm fronds, warm architectural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAb25itu-HVLzCBYaBZJcXdfm8y6lltqHUHn-jVgwKXFGQ5a4MW8QJkhgygV8XZDV8nmW9S2rhXNSKFPkBknvmSpCBLUp5ZDNFan3fXt8UYySGptPD2HmoZf_xUHcJlnzszkqSyuaOQR0pucpfSA9nENE7Cv4V3U2Lk2er5sWThfbFxqxOmBI-l0BERA--28VosKTfjcsaETOfe9tjJjlSapAWSnaCuTwCArUJ9nf9ryZx3XgvwnE1xlw">
+<!-- Amber Scarcity Floating Tag -->
+<div class="absolute top-3 left-3 flex items-center gap-1 px-3 py-1 rounded-full bg-urgency-amber text-on-primary font-label-badge text-label-badge shadow-md">
+<span class="material-symbols-outlined text-[13px]">alarm</span>
+                  Only 2 rooms left for Nov 14–18
+                </div>
+<!-- Photo Gallery Pill Button -->
+<button class="absolute bottom-3 right-3 bg-surface-dark/75 backdrop-blur-md text-on-primary px-2.5 py-1 rounded-full font-label-badge text-label-badge flex items-center gap-1 hover:bg-surface-dark transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">photo_library</span>
+                  18 Photos
+                </button>
+</div>
+<!-- Quick Meta and Review Digest -->
+<div class="md:col-span-5 flex flex-col justify-between">
+<div class="space-y-space-xs">
+<div class="flex items-center gap-1.5">
+<div class="flex items-center text-urgency-amber">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-text-primary">4.9</span>
+<span class="font-body-sm text-body-sm text-text-secondary">(184 reviews)</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-text-primary tracking-tight">Shahpura Haveli</h3>
+<p class="font-body-sm text-body-sm text-text-secondary">Royal Heritage Boutique • Gangori Bazar, Walled City</p>
+<div class="pt-2 flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-success-green">sanitizer</span>
+                      45-pt Hygiene Certified
+                    </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">local_bar</span>
+                      Rooftop Lounge
+                    </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">directions_walk</span>
+                      400m to City Palace
+                    </span>
+</div>
+</div>
+<!-- Distance from circuit track -->
+<div class="bg-surface-container-low p-space-sm rounded-lg mt-space-sm">
+<div class="flex items-center justify-between font-label-md text-label-md text-text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-primary">local_taxi</span>
+                      Private Transit Proximity
+                    </span>
+<span class="text-text-primary font-bold">Portico Pickup</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Pre-selected Room Tier Box -->
+<div class="bg-surface rounded-xl p-space-md shadow-inner flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-text-primary">Courtyard Haveli Suite</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-label-badge text-label-badge">450 sq ft</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary flex flex-wrap items-center gap-x-3 gap-y-1">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-success-green">check</span> Private Jharokha Balcony</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-success-green">check</span> King Royal Mattress</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-success-green">check</span> Daily Buffet Breakfast for 2</span>
+</p>
+</div>
+<!-- Price Shelf for this Selected Option -->
+<div class="flex md:flex-col items-end justify-between md:justify-center border-t md:border-t-0 pt-2 md:pt-0">
+<div class="text-left md:text-right">
+<span class="font-label-badge text-label-badge text-success-green font-bold uppercase tracking-wider block">Package Base Inclusive</span>
+<span class="font-numeral-price text-numeral-price text-text-primary">₹15,400 <span class="text-xs font-normal text-text-secondary">value</span></span>
+</div>
+<div class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container font-label-md text-label-md text-text-primary mt-1">
+<span class="material-symbols-outlined text-[16px] text-success-green">task_alt</span>
+                  Included in Plan
+                </div>
+</div>
+</div>
+</div>
+</article>
+<!-- HOTEL CARD 2: Alternative 1 - Trending Palace -->
+<article class="hotel-item bg-card-surface rounded-2xl shadow-sm transition-all overflow-hidden hover:shadow-md">
+<div class="p-space-md flex flex-col gap-space-md">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md">
+<div class="md:col-span-7 relative group overflow-hidden rounded-xl aspect-[4/3]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Expansive outdoor heritage pool at Samode Haveli Jaipur flanked by white canopied sunbeds, historic frescoes, pink terracotta facade, lush bougainvillea vines under warm bright midday sun" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa2xHK-A9zopFHEQC-0ylOoHwy8umNy7TNlLGAnC2KPT2-1wDgqX0VLyq_vhHFQJgyEwaqdHvQ9sKa-imZVPbO4DYfwal68hc1oj8rX2N9mOffKSOhA_tTF5-uk9_TLrLnTF_boU7NEnsbn4IWEPZqTHVptA38lIO2fhQKAgGpvFuKVqOJOSo5iaecm0_cnJXQi8ey0Tw7B4KMt1pYdDib82JnuPrxxrQgS7H4SMFAtZAh6_X3Aq5ceQ">
+<!-- Urgency Badge: Trending -->
+<div class="absolute top-3 left-3 flex items-center gap-1 px-3 py-1 rounded-full bg-primary-container text-on-primary font-label-badge text-label-badge shadow-md">
+<span class="material-symbols-outlined text-[13px]">local_fire_department</span>
+                  Trending in Jaipur
+                </div>
+<button class="absolute bottom-3 right-3 bg-surface-dark/75 backdrop-blur-md text-on-primary px-2.5 py-1 rounded-full font-label-badge text-label-badge flex items-center gap-1 hover:bg-surface-dark transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">photo_library</span>
+                  24 Photos
+                </button>
+</div>
+<!-- Meta Data -->
+<div class="md:col-span-5 flex flex-col justify-between">
+<div class="space-y-space-xs">
+<div class="flex items-center gap-1.5">
+<div class="flex items-center text-urgency-amber">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-text-primary">4.85</span>
+<span class="font-body-sm text-body-sm text-text-secondary">(210 reviews)</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-text-primary tracking-tight">Samode Haveli &amp; Garden Palace</h3>
+<p class="font-body-sm text-body-sm text-text-secondary">Signature Regal Retreat • Jorawar Singh Gate</p>
+<div class="pt-2 flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">pool</span>
+                      Signature Marble Pool
+                    </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">spa</span>
+                      Ayurvedic Spa
+                    </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">nature</span>
+                      Private Gardens
+                    </span>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg mt-space-sm">
+<div class="flex items-center justify-between font-label-md text-label-md text-text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">transfer_within_a_station</span>
+                      Circuit Match
+                    </span>
+<span class="text-success-green font-bold">+10 mins transfer</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Tier Box & Selection Upgrade CTA -->
+<div class="bg-surface rounded-xl p-space-md shadow-inner flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-text-primary">Deluxe Heritage Room</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-label-badge text-label-badge">Pool Access</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary flex flex-wrap items-center gap-x-3 gap-y-1">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-success-green">check</span> Verandah with Garden View</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-success-green">check</span> Breakfast &amp; Afternoon High Tea</span>
+</p>
+</div>
+<!-- Price Upgrade & Button -->
+<div class="flex md:flex-col items-end justify-between md:justify-center gap-2">
+<div class="text-left md:text-right">
+<span class="font-label-badge text-label-badge text-text-secondary block">Differential Upgrade</span>
+<span class="font-numeral-price text-numeral-price text-primary-container">+ ₹3,200</span>
+<span class="block font-body-sm text-body-sm text-text-secondary">total for 3 nights</span>
+</div>
+<button class="hotel-select-btn px-5 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-dark hover:text-on-primary text-text-primary font-label-lg text-label-lg transition-colors shadow-sm flex items-center gap-1.5" type="button">
+<span class="">Select This Hotel</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- HOTEL CARD 3: Alternative 2 - Ultra Luxury Maharaja Wing -->
+<article class="hotel-item bg-card-surface rounded-2xl shadow-sm transition-all overflow-hidden hover:shadow-md">
+<div class="p-space-md flex flex-col gap-space-md">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-space-md">
+<div class="md:col-span-7 relative group overflow-hidden rounded-xl aspect-[4/3]">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Interior of opulent royal suite at The Raj Palace Grand Heritage Jaipur, hand-carved gilded wood canopy bed, crystal chandeliers, red velvet upholstery, and traditional antique mirrors with majestic royal aura" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMI5NCHtBw5pjBSkvq3iroD4ORlXc6iZ5j9zGCYu4MBYnCd9tonLgeGt9V0T1zYyhNwy0Hvq8d_gpjbTqnXUn9NEUG4G3l5Z1NOFj_KK7WeelPsmSqHu2vq6AU-eezT7Bon7pFIMxvFZIxeIWHBDZDKXt2RfoZojU44doHfs32j7ufyptSGzADYfIbhIUOxmM3nHC6OccpxNxVtSrhIfxL1muYFmtjz_Ctxu4J1_HE-GAhDugrXzbCFg">
+<div class="absolute top-3 left-3 flex items-center gap-1 px-3 py-1 rounded-full bg-surface-dark/75 backdrop-blur-md text-on-primary font-label-badge text-label-badge shadow-md">
+<span class="material-symbols-outlined text-[13px] text-urgency-amber">hotel_class</span>
+                  Heritage Grand Palace Hotel
+                </div>
+<button class="absolute bottom-3 right-3 bg-surface-dark/75 backdrop-blur-md text-on-primary px-2.5 py-1 rounded-full font-label-badge text-label-badge flex items-center gap-1 hover:bg-surface-dark transition-colors" type="button">
+<span class="material-symbols-outlined text-[14px]">photo_library</span>
+                  32 Photos
+                </button>
+</div>
+<!-- Meta Data -->
+<div class="md:col-span-5 flex flex-col justify-between">
+<div class="space-y-space-xs">
+<div class="flex items-center gap-1.5">
+<div class="flex items-center text-urgency-amber">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-text-primary">4.95</span>
+<span class="font-body-sm text-body-sm text-text-secondary">(96 reviews)</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-text-primary tracking-tight">The Raj Palace Grand Heritage</h3>
+<p class="font-body-sm text-body-sm text-text-secondary">Luxury Maharaja Wing • Amber Fort Road</p>
+<div class="pt-2 flex flex-wrap gap-1.5">
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">concierge</span>
+                      24/7 Butler Service
+                    </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">museum</span>
+                      Private Museum Tour
+                    </span>
+<span class="px-2 py-0.5 rounded bg-surface-container-low text-text-secondary font-label-badge text-label-badge flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary">wine_bar</span>
+                      Royal Dinners
+                    </span>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg mt-space-sm">
+<div class="flex items-center justify-between font-label-md text-label-md text-text-secondary">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-secondary">diamond</span>
+                      VIP Tier
+                    </span>
+<span class="text-text-primary font-bold">Includes Palace Entry Passes</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Room Tier Box & Selection Upgrade CTA -->
+<div class="bg-surface rounded-xl p-space-md shadow-inner flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-title-md text-title-md text-text-primary">Maharaja Heritage Suite</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container text-text-secondary font-label-badge text-label-badge">620 sq ft</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary flex flex-wrap items-center gap-x-3 gap-y-1">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-success-green">check</span> Historical Artifacts &amp; Fireplace</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[15px] text-success-green">check</span> Full Gourmet Breakfast Buffet</span>
+</p>
+</div>
+<!-- Price Upgrade & Button -->
+<div class="flex md:flex-col items-end justify-between md:justify-center gap-2">
+<div class="text-left md:text-right">
+<span class="font-label-badge text-label-badge text-text-secondary block">Differential Upgrade</span>
+<span class="font-numeral-price text-numeral-price text-primary-container">+ ₹8,500</span>
+<span class="block font-body-sm text-body-sm text-text-secondary">total for 3 nights</span>
+</div>
+<button class="hotel-select-btn px-5 py-2.5 rounded-xl bg-surface-container-high hover:bg-surface-dark hover:text-on-primary text-text-primary font-label-lg text-label-lg transition-colors shadow-sm flex items-center gap-1.5" type="button">
+<span class="">Select This Hotel</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</article>
+<!-- Pagination / Discovery Indicator -->
+<div class="flex items-center justify-between py-space-md bg-card-surface px-space-md rounded-xl shadow-sm">
+<p class="font-body-sm text-body-sm text-text-secondary">Showing 3 of 8 curated heritage properties</p>
+<button class="font-label-md text-label-md text-primary flex items-center gap-1 hover:underline" type="button">
+            Load More Havelis &amp; Palaces
+            <span class="material-symbols-outlined text-[18px]">expand_more</span>
+</button>
+</div>
+</section>
+<!-- RIGHT COLUMN: Sticky Trip Summary & Live Pricing Blueprint (30% ~ 4 cols) -->
+<aside class="lg:col-span-4 sticky top-44 space-y-space-md">
+<!-- Live Itinerary Blueprint Card -->
+<div class="bg-card-surface rounded-2xl p-space-lg shadow-sm">
+<!-- Blueprint Header -->
+<div class="flex items-center justify-between pb-space-sm mb-space-sm border-b border-surface-container-highest">
+<div>
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-text-secondary block">Trip Blueprint</span>
+<h2 class="font-headline-sm text-headline-sm text-text-primary">Jaipur Heritage Circuit</h2>
+</div>
+<span class="material-symbols-outlined text-primary text-[28px]">luggage</span>
+</div>
+<!-- Trip Scope Mini Matrix -->
+<div class="grid grid-cols-2 gap-space-sm py-space-xs mb-space-md bg-surface-container-low rounded-xl p-3">
+<div>
+<span class="block font-label-badge text-label-badge text-text-secondary uppercase">Dates</span>
+<span class="font-label-md text-label-md text-text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">calendar_month</span>
+                Nov 14–18, 2025
+              </span>
+</div>
+<div>
+<span class="block font-label-badge text-label-badge text-text-secondary uppercase">Travelers</span>
+<span class="font-label-md text-label-md text-text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-text-secondary">group</span>
+                2 Adults (Private)
+              </span>
+</div>
+</div>
+<!-- Inclusions Circuit Ledger -->
+<div class="space-y-space-md mb-space-lg">
+<span class="font-label-badge text-label-badge uppercase tracking-wider text-text-secondary block">Active Component Status</span>
+<!-- Step 1: Destination Base (Done) -->
+<div class="flex items-start gap-space-sm">
+<span class="w-6 h-6 rounded-full bg-success-green/15 text-success-green flex items-center justify-center flex-shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</span>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-text-primary">Route &amp; Circuit Plan</span>
+<span class="font-label-badge text-label-badge text-text-secondary">Confirmed</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary truncate">Delhi → Neemrana → Jaipur 4D/3N</p>
+</div>
+</div>
+<!-- Step 2: Lodging (Active Stage) -->
+<div class="flex items-start gap-space-sm bg-primary/5 p-2 rounded-xl -mx-2">
+<span class="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center flex-shrink-0 mt-0.5 font-bold text-xs">
+                2
+              </span>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-text-primary font-bold">Heritage Stay</span>
+<span class="font-label-badge text-label-badge text-primary uppercase font-bold">Selected</span>
+</div>
+<p class="font-title-md text-title-md text-primary font-semibold truncate" id="summary-hotel-name">Shahpura Haveli</p>
+<p class="font-body-sm text-body-sm text-text-secondary" id="summary-hotel-room">Courtyard Haveli Suite (3 Nights)</p>
+</div>
+</div>
+<!-- Step 3: Vehicle Fleet (Pending) -->
+<div class="flex items-start gap-space-sm opacity-60">
+<span class="w-6 h-6 rounded-full bg-surface-container-highest text-text-secondary flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-semibold">
+                3
+              </span>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-text-primary">Chauffeured Transit</span>
+<span class="font-label-badge text-label-badge text-text-secondary">Next Step</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary truncate">Swift Dzire or Sedan (Pending selection)</p>
+</div>
+</div>
+<!-- Step 4: Highway Curated Rest Stop -->
+<div class="flex items-start gap-space-sm opacity-60">
+<span class="w-6 h-6 rounded-full bg-surface-container-highest text-text-secondary flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-semibold">
+                4
+              </span>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-text-primary">Mid-Journey Rest Stop</span>
+<span class="font-label-badge text-label-badge text-text-secondary">Auto-Included</span>
+</div>
+<p class="font-body-sm text-body-sm text-text-secondary truncate">Neemrana Heritage Fort Rest Stop</p>
+</div>
+</div>
+</div>
+<!-- Live Pricing Calculation Block -->
+<div class="pt-space-md border-t border-surface-container-highest space-y-2">
+<div class="flex items-center justify-between font-body-sm text-body-sm text-text-secondary">
+<span class="">Circuit Base Package</span>
+<span class="">₹22,400</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm text-text-secondary">
+<span class="">Hotel Selection Differential</span>
+<span class="text-success-green font-semibold" id="summary-diff-price">₹0 (Base Included)</span>
+</div>
+<div class="flex items-center justify-between font-body-sm text-body-sm text-text-secondary">
+<span class="">Taxes &amp; Heritage Surcharges (GST 18%)</span>
+<span class="">₹4,976</span>
+</div>
+<!-- Total Bar -->
+<div class="pt-3 border-t border-dashed border-surface-container-highest flex items-baseline justify-between">
+<div>
+<span class="font-title-md text-title-md text-text-primary block font-bold">Total Journey Price</span>
+<span class="font-body-sm text-body-sm text-text-secondary">All-inclusive for 2 guests</span>
+</div>
+<div class="text-right">
+<span class="font-headline-lg text-headline-lg text-text-primary font-extrabold tracking-tight" id="summary-total-price">₹27,376</span>
+</div>
+</div>
+</div>
+<!-- Primary Flow Conversion Button -->
+<div class="mt-space-lg space-y-space-xs">
+<a class="w-full flex items-center justify-center gap-space-xs py-3.5 px-space-lg rounded-xl bg-primary-container hover:bg-primary text-on-primary font-headline-sm text-headline-sm transition-all shadow-md group" data-path="vehicle-transit-selection" href="#">
+<span class="">Confirm Stay &amp; Choose Vehicle</span>
+<span class="material-symbols-outlined text-[20px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</a>
+<p class="font-body-sm text-body-sm text-center text-text-secondary pt-1 flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-success-green">verified</span>
+              Zero cancellation charges up to 48 hrs before Nov 14
+            </p>
+</div>
+</div>
+<!-- 24/7 Concierge Floating Pill Assist -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-card-surface flex items-center justify-center text-primary shadow-sm flex-shrink-0">
+<span class="material-symbols-outlined text-[20px]">room_service</span>
+</div>
+<div class="min-w-0">
+<span class="font-label-md text-label-md text-text-primary block">Need a specific palace room?</span>
+<span class="font-body-sm text-body-sm text-text-secondary">Call concierge: +1 (800) 874-7628</span>
+</div>
+</div>
+</aside>
+</div>
+</div>
+</div>
+<script>
+  // Dynamic Hotel selection interaction logic
+  document.addEventListener('DOMContentLoaded', () => {
+    const hotelCards = document.querySelectorAll('.hotel-item');
+    const summaryHotelName = document.getElementById('summary-hotel-name');
+    const summaryHotelRoom = document.getElementById('summary-hotel-room');
+    const summaryDiffPrice = document.getElementById('summary-diff-price');
+    const summaryTotalPrice = document.getElementById('summary-total-price');
+
+    const pricingMap = [
+      { name: 'Shahpura Haveli', room: 'Courtyard Haveli Suite (3 Nights)', diffLabel: '₹0 (Base Included)', total: '₹27,376' },
+      { name: 'Samode Haveli & Garden Palace', room: 'Deluxe Heritage Room (3 Nights)', diffLabel: '+ ₹3,200', total: '₹30,576' },
+      { name: 'The Raj Palace Grand Heritage', room: 'Maharaja Heritage Suite (3 Nights)', diffLabel: '+ ₹8,500', total: '₹35,876' }
+    ];
+
+    hotelCards.forEach((card, idx) => {
+      const selectBtn = card.querySelector('.hotel-select-btn');
+      if (selectBtn) {
+        selectBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+
+          // Reset other cards
+          hotelCards.forEach(c => {
+            c.classList.remove('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-surface');
+            const ribbon = c.querySelector('.selection-active-badge');
+            if (ribbon) ribbon.remove();
+          });
+
+          // Style active card
+          card.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-surface');
+          
+          // Update summary blueprint
+          if (pricingMap[idx]) {
+            summaryHotelName.textContent = pricingMap[idx].name;
+            summaryHotelRoom.textContent = pricingMap[idx].room;
+            summaryDiffPrice.textContent = pricingMap[idx].diffLabel;
+            summaryTotalPrice.textContent = pricingMap[idx].total;
+          }
+
+          // Smooth scroll on mobile if needed
+          if (window.innerWidth < 1024) {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+          }
+        });
+      }
+    });
+
+    // Chip click interaction
+    const chips = document.querySelectorAll('.filter-chip');
+    chips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chips.forEach(c => {
+          c.classList.remove('bg-surface-dark', 'text-on-primary');
+          c.classList.add('bg-card-surface', 'text-text-primary');
+        });
+        chip.classList.add('bg-surface-dark', 'text-on-primary');
+        chip.classList.remove('bg-card-surface', 'text-text-primary');
+      });
+    });
+  });
+</script></main><footer class="w-full bg-surface-container-low shadow-[0_-1px_8px_rgba(20,21,26,0.02)]"><div class="max-w-7xl mx-auto px-margin py-space-2xl"><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-xl mb-space-2xl"><div class="lg:col-span-2 space-y-space-md"><div class="flex items-center gap-2"><span class="w-8 h-8 rounded-xl bg-primary flex items-center justify-center text-on-primary font-bold text-[16px] shadow-sm">M</span><span class="font-headline-sm text-headline-sm text-text-primary font-bold">Tripmate</span></div><p class="font-body-md text-body-md text-text-secondary max-w-sm">Unified dynamic journey coordination across verified hospitality, private transit fleets, and premium mid-journey curated rest points.</p><div class="inline-flex items-center gap-space-sm bg-card-surface px-space-md py-space-sm rounded-xl"><span class="material-symbols-outlined text-success-green text-[20px]">support_agent</span><div><span class="block font-label-badge text-label-badge uppercase tracking-wider text-text-secondary">24/7 Priority Concierge</span><span class="font-label-lg text-label-lg text-text-primary">+1 (800) 874-7628</span></div></div></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Platform &amp; Travel</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="discover-destinations" href="#">Curated Destinations</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="hotel-stay-selection" href="#">Verified Accommodations</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="vehicle-transit-selection" href="#">Chauffeured Transit</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="mid-journey-rest-stop-selection" href="#">Highway Rest Points</a></li></ul></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Enterprise Fleet</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="b2b-commercial-overview" href="#">Commercial Fleet SLA</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="checkout-payment" href="#">Corporate Invoicing</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="booking-confirmation" href="#">Dispatch Protocols</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="recent-trips-my-trips-ledger" href="#">Fleet Telematics</a></li></ul></div><div><span class="block font-title-md text-title-md text-text-primary mb-space-md">Trust &amp; Governance</span><ul class="space-y-space-sm"><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Trust &amp; Safety Policy</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Privacy Framework</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Terms of Service</a></li><li class="font-body-md text-body-md text-text-secondary"><a class="hover:text-text-primary transition-colors" data-path="support" href="#">Security &amp; Encryption</a></li></ul></div></div><div class="flex flex-col sm:flex-row items-center justify-between pt-space-lg gap-space-md"><p class="font-body-sm text-body-sm text-text-secondary">© 2025 Tripmate Technologies Inc. All rights reserved. Registered travel management platform.</p><div class="flex items-center gap-space-lg"><span class="font-body-sm text-body-sm text-text-secondary flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-success-green inline-block"></span>Operational Systems 99.98%</span><span class="font-body-sm text-body-sm text-text-secondary">SOC2 Type II Certified</span></div></div></div></footer>
+
+</body></html>
