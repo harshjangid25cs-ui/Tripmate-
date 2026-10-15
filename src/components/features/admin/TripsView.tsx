@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 
 export function TripsView() {
-  const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
+  const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
   const [circuits, setCircuits] = useState<CircuitAdmin[]>(() =>
     AdminService.getCircuits()
   );
@@ -41,7 +41,7 @@ export function TripsView() {
     requestReasonModal(
       nextVal ? "Activate Circuit" : "Hide Circuit",
       `${nextVal ? "Publish" : "Deactivate"} circuit ${circuit.title} from customer catalog.`,
-      (reason) => {
+      async (reason) => {
         AdminService.updateCircuit(
           currentAdmin,
           circuit.id,
@@ -53,6 +53,7 @@ export function TripsView() {
           "success"
         );
         refresh();
+        await refreshOperationalData();
       }
     );
   };
@@ -70,7 +71,7 @@ export function TripsView() {
     requestReasonModal(
       formData.id ? "Update Circuit" : "Create Circuit",
       `Save modifications to circuit '${formData.title}'.`,
-      (reason) => {
+      async (reason) => {
         if (formData.id) {
           AdminService.updateCircuit(
             currentAdmin,
@@ -110,6 +111,7 @@ export function TripsView() {
         }
         setIsEditing(false);
         refresh();
+        await refreshOperationalData();
       }
     );
   };

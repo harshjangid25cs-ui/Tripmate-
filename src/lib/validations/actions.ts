@@ -141,3 +141,37 @@ export const updateUserProfileSchema = z.object({
 export const markNotificationReadSchema = z.object({
   notificationId: z.string().min(1, "Notification ID is required."),
 });
+
+// ---------------------------------------------------------------------------
+// Admin Operations & Dispatch Actions (src/lib/actions/admin-ops.ts)
+// ---------------------------------------------------------------------------
+
+export const adminUpdateBookingStatusSchema = z.object({
+  tripId: z.string().uuid("Invalid trip UUID."),
+  newStatus: z.enum(["draft", "pending_approval", "confirmed", "cancelled", "completed"], {
+    errorMap: () => ({ message: "Invalid trip status." }),
+  }),
+  reason: z.string().trim().min(1, "Reason must not be empty.").optional(),
+  refundMode: z.enum(["policy", "full", "none", "custom"]).optional(),
+  customRefundAmount: z.number().min(0, "Refund amount cannot be negative.").optional(),
+});
+
+export const adminAssignDriverSchema = z.object({
+  tripId: z.string().uuid("Invalid trip UUID."),
+  driverId: z.string().uuid("Invalid driver UUID."),
+  vehicleId: z.string().uuid("Invalid vehicle UUID.").optional(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminResolveApprovalSchema = z.object({
+  tripId: z.string().uuid("Invalid trip UUID."),
+  approvalId: z.string().uuid("Invalid approval UUID.").optional(),
+  decision: z.enum(["approved", "rejected"], {
+    errorMap: () => ({ message: "Decision must be approved or rejected." }),
+  }),
+  notes: z.string().trim().optional(),
+});
+
+export type AdminUpdateBookingStatusInput = z.infer<typeof adminUpdateBookingStatusSchema>;
+export type AdminAssignDriverInput = z.infer<typeof adminAssignDriverSchema>;
+export type AdminResolveApprovalInput = z.infer<typeof adminResolveApprovalSchema>;

@@ -14,7 +14,7 @@ export interface UserTripSummary {
   bookingRef: string;
   title: string;
   bookingKind: "normal" | "commercial";
-  status: "draft" | "pending_approval" | "confirmed" | "cancelled";
+  status: "draft" | "pending_approval" | "confirmed" | "cancelled" | "completed";
   derivedStatus: DerivedTripStatus;
   startDate: string | null;
   endDate: string | null;

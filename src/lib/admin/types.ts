@@ -411,3 +411,19 @@ export interface PaymentInvoiceRecord {
   gst_number?: string;
   created_at: string;
 }
+
+// Aliases for admin operational models
+export type AdminBooking = BookingAdmin;
+export type AdminTrip = CircuitAdmin;
+export type AdminApproval = CommercialApprovalItem;
+
+export interface AdminOperationalSnapshot {
+  bookings: BookingAdmin[];
+  approvals: CommercialApprovalItem[];
+  circuits: CircuitAdmin[];
+  metrics: {
+    totalRevenue: number;
+    pendingApprovalsCount: number;
+    cancelledBookings: number;
+  };
+}

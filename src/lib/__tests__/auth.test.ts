@@ -242,10 +242,37 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
         })
       ).toBe(false);
 
-      // User with app_metadata role
+      // User with forged user_metadata.role MUST be rejected (user_metadata is client-writable)
+      expect(
+        isAuthorizedAdmin({
+          user: {
+            email: "arjun.kapoor@tripmate.io",
+            app_metadata: {},
+            user_metadata: { role: "super_admin" },
+          },
+        })
+      ).toBe(false);
+
+      expect(
+        isAuthorizedAdmin({
+          user: {
+            email: "attacker@gmail.com",
+            app_metadata: {},
+            user_metadata: { role: "admin" },
+          },
+        })
+      ).toBe(false);
+
+      // User with app_metadata role is ACCEPTED (server/service_role tamper-proof)
       expect(
         isAuthorizedAdmin({
           user: { email: "admin@custom.com", app_metadata: { role: "admin" } },
+        })
+      ).toBe(true);
+
+      expect(
+        isAuthorizedAdmin({
+          user: { email: "lead@custom.com", app_metadata: { role: "super_admin" } },
         })
       ).toBe(true);
 

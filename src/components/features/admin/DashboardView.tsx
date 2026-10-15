@@ -18,6 +18,13 @@ import {
 
 export function DashboardView({ onNavigate }: { onNavigate: (tab: string) => void }) {
   const { currentAdmin } = useAdmin();
+  const [, setTick] = React.useState(0);
+
+  React.useEffect(() => {
+    return AdminService.subscribe(() => {
+      setTick((t) => t + 1);
+    });
+  }, []);
 
   const bookings = AdminService.getBookings();
   const idReviews = AdminService.getIdReviews();

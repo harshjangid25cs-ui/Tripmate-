@@ -7,6 +7,8 @@ import { AdminHeader } from "@/components/features/admin/AdminHeader";
 import { ADMIN_SESSION_COOKIE, isAuthorizedAdmin } from "@/lib/admin/admin-auth";
 import { createClient } from "@/lib/supabase/server";
 
+import { fetchAdminOperationalSnapshot } from "@/lib/actions/admin-ops";
+
 // Enforce noindex per ADMIN.md §1 & §5: "Admin is a separate area (/admin, own layout, own guard, noindex)"
 export const metadata: Metadata = {
   title: "TripMate Admin & Operations",
@@ -58,8 +60,19 @@ export default async function AdminLayout({
     }
   }
 
+  // Load live Supabase operational snapshot for authorized operator
+  let initialSnapshot = null;
+  try {
+    const snapshotRes = await fetchAdminOperationalSnapshot();
+    if (snapshotRes.ok && snapshotRes.data) {
+      initialSnapshot = snapshotRes.data;
+    }
+  } catch {
+    // Graceful fallback to client seed
+  }
+
   return (
-    <AdminProvider>
+    <AdminProvider initialSnapshot={initialSnapshot}>
       <div className="min-h-screen bg-slate-100/60 font-sans text-slate-900 antialiased selection:bg-primary-500 selection:text-white flex flex-col">
         <AdminHeader />
         <div className="flex-1 flex overflow-hidden">{children}</div>

@@ -5,6 +5,10 @@ import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { BookingAdmin } from "@/lib/admin/types";
 import {
+  adminUpdateBookingStatusAction,
+  adminAssignDriverOrVehicleAction,
+} from "@/lib/actions/admin-ops";
+import {
   Search,
   Eye,
   Ban,
@@ -13,11 +17,12 @@ import {
 } from "lucide-react";
 
 export function BookingsView() {
-  const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
+  const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
   const [bookings, setBookings] = useState<BookingAdmin[]>(() => AdminService.getBookings());
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedBooking, setSelectedBooking] = useState<BookingAdmin | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
 
   // Driver Assignment dialog state
   const [isAssigningDriver, setIsAssigningDriver] = useState(false);
@@ -62,7 +67,7 @@ export function BookingsView() {
     return matchQuery && matchStatus;
   });
 
-  const handleExecuteCancel = (e: React.FormEvent) => {
+  const handleExecuteCancel = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedBooking) return;
     if (!cancelReason.trim()) {
@@ -70,26 +75,51 @@ export function BookingsView() {
       return;
     }
 
-    const res = AdminService.cancelBooking(
-      currentAdmin,
-      selectedBooking.id,
-      cancelRefundMode,
-      cancelRefundMode === "custom" ? customRefundAmount : null,
-      cancelReason.trim()
-    );
-
-    if (res.ok) {
-      toast(
-        `Booking ${selectedBooking.booking_ref} cancelled. Refund amount: ₹${(
-          res.refundAmount || 0
-        ).toLocaleString("en-IN")}`,
-        "success"
+    setIsMutating(true);
+    try {
+      const res = AdminService.cancelBooking(
+        currentAdmin,
+        selectedBooking.id,
+        cancelRefundMode,
+        cancelRefundMode === "custom" ? customRefundAmount : null,
+        cancelReason.trim()
       );
-      setIsCancelOpen(false);
-      setCancelReason("");
-      refresh();
-    } else {
-      toast(res.error || "Failed to cancel booking", "error");
+
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedBooking.id);
+      if (isUuid) {
+        const serverRes = await adminUpdateBookingStatusAction({
+          tripId: selectedBooking.id,
+          newStatus: "cancelled",
+          reason: cancelReason.trim(),
+          refundMode: cancelRefundMode,
+          customRefundAmount: cancelRefundMode === "custom" ? customRefundAmount : undefined,
+        });
+
+        if (!serverRes.ok) {
+          toast(serverRes.error || "Failed to cancel booking on server.", "error");
+          setIsMutating(false);
+          return;
+        }
+      }
+
+      if (res.ok) {
+        toast(
+          `Booking ${selectedBooking.booking_ref} cancelled. Refund amount: ₹${(
+            res.refundAmount || 0
+          ).toLocaleString("en-IN")}`,
+          "success"
+        );
+        setIsCancelOpen(false);
+        setCancelReason("");
+        refresh();
+        await refreshOperationalData();
+      } else {
+        toast(res.error || "Failed to cancel booking", "error");
+      }
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Error cancelling booking", "error");
+    } finally {
+      setIsMutating(false);
     }
   };
 
@@ -100,19 +130,42 @@ export function BookingsView() {
     requestReasonModal(
       "Confirm Driver Assignment",
       `Assign verified driver to booking ${selectedBooking.booking_ref}. Customer will be emailed with driver contact details.`,
-      (reason) => {
-        const res = AdminService.assignDriver(
-          currentAdmin,
-          selectedBooking.id,
-          selectedDriverId,
-          reason
-        );
-        if (res.ok) {
-          toast("Driver assigned and notification dispatched", "success");
-          setIsAssigningDriver(false);
-          refresh();
-        } else {
-          toast(res.error || "Assignment failed", "error");
+      async (reason) => {
+        setIsMutating(true);
+        try {
+          const res = AdminService.assignDriver(
+            currentAdmin,
+            selectedBooking.id,
+            selectedDriverId,
+            reason
+          );
+
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedBooking.id);
+          const isDriverUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedDriverId);
+
+          if (isUuid && isDriverUuid) {
+            const serverRes = await adminAssignDriverOrVehicleAction({
+              tripId: selectedBooking.id,
+              driverId: selectedDriverId,
+              reason,
+            });
+            if (!serverRes.ok) {
+              toast(serverRes.error || "Failed to sync driver assignment to server.", "error");
+            }
+          }
+
+          if (res.ok) {
+            toast("Driver assigned and notification dispatched", "success");
+            setIsAssigningDriver(false);
+            refresh();
+            await refreshOperationalData();
+          } else {
+            toast(res.error || "Assignment failed", "error");
+          }
+        } catch (err: unknown) {
+          toast(err instanceof Error ? err.message : "Assignment failed", "error");
+        } finally {
+          setIsMutating(false);
         }
       }
     );
@@ -733,7 +786,8 @@ export function BookingsView() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-rose-600 hover:bg-rose-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  disabled={isMutating}
+                  className="rounded-xl bg-rose-600 hover:bg-rose-700 px-5 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-50"
                 >
                   Execute Cancellation & Audit
                 </button>

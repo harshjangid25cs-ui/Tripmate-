@@ -1044,6 +1044,30 @@ export class AdminService {
     }
   }
 
+  /**
+   * Hydrates the AdminService state with live records from Supabase.
+   * Real Supabase records are merged at the top of collections.
+   * Mock records are retained as a fallback seed for unmigrated views or demos.
+   */
+  static hydrateOperationalData(snapshot: {
+    bookings?: BookingAdmin[];
+    circuits?: CircuitAdmin[];
+  }) {
+    if (snapshot.bookings && snapshot.bookings.length > 0) {
+      const liveBookingIds = new Set(snapshot.bookings.map((b) => b.id));
+      const fallbackMocks = currentState.bookings.filter((b) => !liveBookingIds.has(b.id));
+      currentState.bookings = [...snapshot.bookings, ...fallbackMocks];
+    }
+
+    if (snapshot.circuits && snapshot.circuits.length > 0) {
+      const liveCircuitIds = new Set(snapshot.circuits.map((c) => c.id));
+      const fallbackMocks = currentState.circuits.filter((c) => !liveCircuitIds.has(c.id));
+      currentState.circuits = [...snapshot.circuits, ...fallbackMocks];
+    }
+
+    this.notify();
+  }
+
   // --- Audit Logger ---
   static writeAudit(
     actor: AdminActor,

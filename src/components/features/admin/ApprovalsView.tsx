@@ -4,13 +4,15 @@ import React, { useState } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { CommercialApprovalItem } from "@/lib/admin/types";
+import { adminResolveApprovalAction } from "@/lib/actions/admin-ops";
 import { Building2, CheckCircle2 } from "lucide-react";
 
 export function ApprovalsView() {
-  const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
+  const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
   const [approvals, setApprovals] = useState<CommercialApprovalItem[]>(() =>
     AdminService.getCommercialApprovals()
   );
+  const [isMutating, setIsMutating] = useState(false);
 
   const canApprove = hasPermission("commercial_approval");
   const refresh = () => setApprovals(AdminService.getCommercialApprovals());
@@ -29,18 +31,40 @@ export function ApprovalsView() {
       `Override approval decision for corporate reservation ${item.company_name} (Total: ₹${item.total_amount.toLocaleString(
         "en-IN"
       )}). Note will be transmitted to company administrators.`,
-      (note) => {
-        const res = AdminService.decideCommercialApproval(
-          currentAdmin,
-          item.trip_id,
-          decision,
-          note
-        );
-        if (res.ok) {
-          toast(`Commercial booking ${decision} successfully`, "success");
-          refresh();
-        } else {
-          toast(res.error || "Decision failed", "error");
+      async (note) => {
+        setIsMutating(true);
+        try {
+          const res = AdminService.decideCommercialApproval(
+            currentAdmin,
+            item.trip_id,
+            decision,
+            note
+          );
+
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.trip_id);
+          if (isUuid) {
+            const serverRes = await adminResolveApprovalAction({
+              tripId: item.trip_id,
+              decision,
+              notes: note,
+            });
+            if (!serverRes.ok) {
+              toast(serverRes.error || "Server action failed", "error");
+              return;
+            }
+          }
+
+          if (res.ok) {
+            toast(`Commercial booking ${decision} successfully`, "success");
+            refresh();
+            await refreshOperationalData();
+          } else {
+            toast(res.error || "Decision failed", "error");
+          }
+        } catch (err: unknown) {
+          toast(err instanceof Error ? err.message : "Decision failed", "error");
+        } finally {
+          setIsMutating(false);
         }
       }
     );
@@ -124,17 +148,20 @@ export function ApprovalsView() {
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
+                      disabled={isMutating}
                       onClick={() => handleDecision(item, "rejected")}
-                      className="rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-4 py-2 text-xs font-bold transition-all"
+                      className="rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-4 py-2 text-xs font-bold transition-all disabled:opacity-50"
                     >
                       Reject
                     </button>
                     <button
                       type="button"
+                      disabled={isMutating}
                       onClick={() => handleDecision(item, "approved")}
-                      className="rounded-xl bg-primary-600 hover:bg-primary-700 text-white px-5 py-2 text-xs font-bold shadow-sm transition-all"
+                      className="rounded-xl bg-primary-600 hover:bg-primary-700 text-white px-5 py-2 text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5"
                     >
-                      Authorize & Confirm
+                      {isMutating && <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />}
+                      <span>Authorize & Confirm</span>
                     </button>
                   </div>
                 )}

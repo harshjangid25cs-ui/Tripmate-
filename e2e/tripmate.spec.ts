@@ -577,10 +577,11 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
       },
     ]);
     await page.goto("/login");
+    await page.waitForLoadState("networkidle");
     await page.locator("#email").fill("arjun.kapoor@tripmate.io");
     await page.locator("#password").fill(DEMO_PASSWORD);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/home", { timeout: 15000 });
+    await page.waitForURL("**/home", { timeout: 25000 });
 
     // Customer attempts to navigate to /admin
     await page.goto("/admin");

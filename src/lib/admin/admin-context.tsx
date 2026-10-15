@@ -1,9 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import type { AdminRole, AdminUser, AdminCapability } from "./types";
+import type { AdminRole, AdminUser, AdminCapability, AdminOperationalSnapshot } from "./types";
 import { hasAdminPermission, ADMIN_ROLES } from "./permissions";
 import { AdminService } from "./admin-service";
+import { fetchAdminOperationalSnapshot } from "@/lib/actions/admin-ops";
 
 interface AdminContextType {
   currentAdmin: AdminUser;
@@ -18,11 +19,18 @@ interface AdminContextType {
     onConfirm: (reason: string) => void | Promise<void>
   ) => void;
   toast: (message: string, type?: "success" | "error" | "info") => void;
+  refreshOperationalData: () => Promise<void>;
 }
 
 const AdminContext = createContext<AdminContextType | null>(null);
 
-export function AdminProvider({ children }: { children: React.ReactNode }) {
+export function AdminProvider({
+  children,
+  initialSnapshot,
+}: {
+  children: React.ReactNode;
+  initialSnapshot?: AdminOperationalSnapshot | null;
+}) {
   const [admins, setAdmins] = useState<AdminUser[]>(() => AdminService.getAdmins());
   const [currentAdmin, setCurrentAdmin] = useState<AdminUser>(
     () => admins[0] ?? {
@@ -53,11 +61,44 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     Array<{ id: string; message: string; type: "success" | "error" | "info" }>
   >([]);
 
+  // Hydrate initial SSR snapshot if available
+  useEffect(() => {
+    if (initialSnapshot) {
+      AdminService.hydrateOperationalData(initialSnapshot);
+    }
+  }, [initialSnapshot]);
+
+  // Fetch live snapshot on client load if not SSR-hydrated
+  useEffect(() => {
+    let isMounted = true;
+    fetchAdminOperationalSnapshot().then((res) => {
+      if (isMounted && res.ok && res.data) {
+        AdminService.hydrateOperationalData(res.data);
+      }
+    }).catch(() => {
+      // Graceful fallback to initial mock seed
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     return AdminService.subscribe(() => {
       setAdmins(AdminService.getAdmins());
     });
   }, []);
+
+  const refreshOperationalData = async () => {
+    try {
+      const res = await fetchAdminOperationalSnapshot();
+      if (res.ok && res.data) {
+        AdminService.hydrateOperationalData(res.data);
+      }
+    } catch {
+      // Graceful fallback
+    }
+  };
 
   const switchRole = (newRole: AdminRole) => {
     setCurrentRole(newRole);
@@ -131,6 +172,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         verifyMfa,
         requestReasonModal,
         toast,
+        refreshOperationalData,
       }}
     >
       {children}

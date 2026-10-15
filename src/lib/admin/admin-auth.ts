@@ -111,15 +111,9 @@ export function isAuthorizedAdmin({
 
   // 2. Check Supabase user attributes if authenticated
   if (user) {
-    // Check app_metadata.role
+    // Check app_metadata.role (tamper-proof, set via server/service role only)
     const appRole = user.app_metadata?.role;
     if (appRole === "admin" || appRole === "super_admin") {
-      return true;
-    }
-
-    // Check user_metadata.role
-    const userRole = user.user_metadata?.role;
-    if (userRole === "admin" || userRole === "super_admin") {
       return true;
     }
 

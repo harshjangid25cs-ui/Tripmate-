@@ -528,7 +528,7 @@ export interface Database {
           end_date: string | null;
           total_days: number | null;
           traveler_count: number;
-          status: "draft" | "pending_approval" | "confirmed" | "cancelled";
+          status: "draft" | "pending_approval" | "confirmed" | "cancelled" | "completed";
           subtotal_amount: number;
           service_fee: number;
           tax_amount: number;
@@ -557,7 +557,7 @@ export interface Database {
           start_date?: string | null;
           end_date?: string | null;
           traveler_count?: number;
-          status?: "draft" | "pending_approval" | "confirmed" | "cancelled";
+          status?: "draft" | "pending_approval" | "confirmed" | "cancelled" | "completed";
           currency?: string;
           created_at?: string;
           updated_at?: string;
@@ -572,7 +572,7 @@ export interface Database {
           start_date?: string | null;
           end_date?: string | null;
           traveler_count?: number;
-          status?: "draft" | "pending_approval" | "confirmed" | "cancelled";
+          status?: "draft" | "pending_approval" | "confirmed" | "cancelled" | "completed";
           confirmed_at?: string | null;
           cancelled_at?: string | null;
           cancellation_reason?: string | null;
@@ -757,6 +757,10 @@ export interface Database {
         Update: {
           booking_time?: string | null;
           trip_purpose?: string | null;
+          approval_status?: "not_required" | "pending" | "approved" | "rejected";
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          review_note?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -1054,6 +1058,63 @@ export interface Database {
           p_passengers: Json;
         };
         Returns: void;
+      };
+      is_admin_jwt: {
+        Args: Record<string, never>;
+        Returns: boolean;
+      };
+      admin_get_operational_snapshot: {
+        Args: Record<string, never>;
+        Returns: {
+          bookings: Json;
+          approvals: Json;
+          circuits: Json;
+          metrics: {
+            totalRevenue: number;
+            pendingApprovalsCount: number;
+            cancelledBookings: number;
+          };
+        };
+      };
+      admin_update_booking_status: {
+        Args: {
+          p_trip_id: string;
+          p_status: string;
+          p_reason?: string | null;
+          p_refund_amount?: number | null;
+        };
+        Returns: {
+          ok: boolean;
+          trip_id: string;
+          status: string;
+          refund_amount?: number;
+        };
+      };
+      admin_assign_driver: {
+        Args: {
+          p_trip_id: string;
+          p_driver_id: string;
+          p_vehicle_id?: string | null;
+        };
+        Returns: {
+          ok: boolean;
+          trip_id: string;
+          driver_id: string;
+          driver_name?: string;
+        };
+      };
+      admin_resolve_approval: {
+        Args: {
+          p_trip_id: string;
+          p_decision: "approved" | "rejected";
+          p_notes?: string | null;
+        };
+        Returns: {
+          ok: boolean;
+          trip_id: string;
+          status: string;
+          decision: string;
+        };
       };
     };
 
