@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { VehicleAdmin } from "@/lib/admin/types";
-import { adminUpsertVehicleAction } from "@/lib/actions/admin-ops";
-import { Plus, Edit2, Users, Briefcase, EyeOff, Eye } from "lucide-react";
+import { adminUpsertVehicleAction, adminDeleteVehicleAction } from "@/lib/actions/admin-ops";
+import { Plus, Edit2, Users, Briefcase, EyeOff, Eye, Trash2 } from "lucide-react";
 import { CatalogImageUpload } from "./CatalogImageUpload";
 
 export function VehiclesView() {
@@ -43,6 +43,27 @@ export function VehiclesView() {
           reason,
         });
         toast(`Vehicle ${veh.name} is now ${nextVal ? "active" : "disabled"}.`, "success");
+        refresh();
+        await refreshOperationalData();
+      }
+    );
+  };
+
+  const handleDeleteVehicle = (veh: VehicleAdmin) => {
+    if (!canWrite) {
+      toast("Catalog Manager or Super Admin role required", "error");
+      return;
+    }
+    requestReasonModal(
+      "Delete Vehicle",
+      `Are you sure you want to delete ${veh.name} (${veh.type})?`,
+      async (reason) => {
+        AdminService.deleteVehicle(currentAdmin, veh.id, reason);
+        await adminDeleteVehicleAction({ vehicleId: veh.id, reason });
+        toast(`Vehicle ${veh.name} deleted.`, "success");
+        if (isEditing && formData.id === veh.id) {
+          setIsEditing(false);
+        }
         refresh();
         await refreshOperationalData();
       }
@@ -227,19 +248,31 @@ export function VehiclesView() {
                 <span>Edit</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => handleToggleActive(v)}
-                disabled={!canWrite}
-                className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                  v.is_active
-                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700"
-                } disabled:opacity-50`}
-              >
-                {v.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                <span>{v.is_active ? "Disable" : "Enable"}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleToggleActive(v)}
+                  disabled={!canWrite}
+                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                    v.is_active
+                      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  } disabled:opacity-50`}
+                >
+                  {v.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  <span>{v.is_active ? "Disable" : "Enable"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteVehicle(v)}
+                  disabled={!canWrite}
+                  className="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                  title="Delete Vehicle"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -350,20 +383,33 @@ export function VehiclesView() {
                 helperText="Uploaded to Supabase catalog-images bucket and displayed on fleet cards."
               />
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
-                >
-                  Save Vehicle
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                {formData.id ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteVehicle(formData as VehicleAdmin)}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete Vehicle</span>
+                  </button>
+                ) : <div />}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  >
+                    Save Vehicle
+                  </button>
+                </div>
               </div>
             </form>
           </div>

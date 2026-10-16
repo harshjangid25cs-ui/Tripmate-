@@ -294,6 +294,8 @@ export interface BookingAdmin {
   company_name?: string;
   driver?: DriverAdmin | null;
   driver_id?: string | null;
+  vehicle?: VehicleAdmin | null;
+  vehicle_id?: string | null;
   travellers: TravellerAdmin[];
   notes: BookingNote[];
   created_at: string;

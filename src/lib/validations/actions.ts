@@ -33,7 +33,7 @@ export const selectTripHotelSchema = z.object({
 
 export const selectTripVehicleSchema = z.object({
   tripId: z.string().min(1, "Trip ID is required."),
-  vehicleId: z.string().min(1, "Vehicle ID is required."),
+  vehicleId: z.string().nullable().optional(),
 });
 
 export const toggleTripStopSchema = z.object({
@@ -158,8 +158,8 @@ export const adminUpdateBookingStatusSchema = z.object({
 
 export const adminAssignDriverSchema = z.object({
   tripId: z.string().uuid("Invalid trip UUID."),
-  driverId: z.string().uuid("Invalid driver UUID."),
-  vehicleId: z.string().uuid("Invalid vehicle UUID.").optional(),
+  driverId: z.string().uuid("Invalid driver UUID.").nullable().optional().or(z.literal("")),
+  vehicleId: z.string().uuid("Invalid vehicle UUID.").nullable().optional().or(z.literal("")),
   reason: z.string().trim().optional(),
 });
 
@@ -314,6 +314,66 @@ export const adminToggleCouponSchema = z.object({
   reason: z.string().trim().optional(),
 });
 
+export const adminDeleteCircuitSchema = z.object({
+  circuitId: z.string().min(1, "Circuit ID is required."),
+  reason: z.string().trim().optional(),
+});
+
+export const adminDeleteDestinationSchema = z.object({
+  destinationId: z.string().min(1, "Destination ID is required."),
+  reason: z.string().trim().optional(),
+});
+
+export const adminToggleDestinationStatusSchema = z.object({
+  destinationId: z.string().min(1, "Destination ID is required."),
+  isActive: z.boolean(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminDeleteHotelSchema = z.object({
+  hotelId: z.string().min(1, "Hotel ID is required."),
+  reason: z.string().trim().optional(),
+});
+
+export const adminToggleHotelStatusSchema = z.object({
+  hotelId: z.string().min(1, "Hotel ID is required."),
+  isActive: z.boolean(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminToggleVehicleStatusSchema = z.object({
+  vehicleId: z.string().min(1, "Vehicle ID is required."),
+  isActive: z.boolean(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminDeleteDriverSchema = z.object({
+  driverId: z.string().min(1, "Driver ID is required."),
+  reason: z.string().trim().optional(),
+});
+
+export const adminToggleDriverStatusSchema = z.object({
+  driverId: z.string().min(1, "Driver ID is required."),
+  isActive: z.boolean(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminDeleteStopSchema = z.object({
+  stopId: z.string().min(1, "Stop ID is required."),
+  reason: z.string().trim().optional(),
+});
+
+export const adminToggleStopStatusSchema = z.object({
+  stopId: z.string().min(1, "Stop ID is required."),
+  isActive: z.boolean(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminDeleteCouponSchema = z.object({
+  couponId: z.string().min(1, "Coupon ID is required."),
+  reason: z.string().trim().optional(),
+});
+
 export const adminUpdatePricingConfigSchema = z.object({
   serviceFee: z.number().min(0, "Service fee cannot be negative."),
   gstRate: z.number().min(0).max(1, "GST rate must be between 0 and 1 (e.g. 0.18)."),
@@ -343,16 +403,27 @@ export type AdminUpdateBookingStatusInput = z.infer<typeof adminUpdateBookingSta
 export type AdminAssignDriverInput = z.infer<typeof adminAssignDriverSchema>;
 export type AdminResolveApprovalInput = z.infer<typeof adminResolveApprovalSchema>;
 export type AdminUpsertCircuitInput = z.infer<typeof adminUpsertCircuitSchema>;
+export type AdminDeleteCircuitInput = z.infer<typeof adminDeleteCircuitSchema>;
 export type AdminToggleCircuitStatusInput = z.infer<typeof adminToggleCircuitStatusSchema>;
 export type AdminControlActiveTripInput = z.infer<typeof adminControlActiveTripSchema>;
 export type AdminUpsertVehicleInput = z.infer<typeof adminUpsertVehicleSchema>;
 export type AdminDeleteVehicleInput = z.infer<typeof adminDeleteVehicleSchema>;
+export type AdminToggleVehicleStatusInput = z.infer<typeof adminToggleVehicleStatusSchema>;
 export type AdminUpsertDriverInput = z.infer<typeof adminUpsertDriverSchema>;
+export type AdminDeleteDriverInput = z.infer<typeof adminDeleteDriverSchema>;
+export type AdminToggleDriverStatusInput = z.infer<typeof adminToggleDriverStatusSchema>;
 export type AdminUpsertHotelInput = z.infer<typeof adminUpsertHotelSchema>;
+export type AdminDeleteHotelInput = z.infer<typeof adminDeleteHotelSchema>;
+export type AdminToggleHotelStatusInput = z.infer<typeof adminToggleHotelStatusSchema>;
 export type AdminUpsertStopInput = z.infer<typeof adminUpsertStopSchema>;
+export type AdminDeleteStopInput = z.infer<typeof adminDeleteStopSchema>;
+export type AdminToggleStopStatusInput = z.infer<typeof adminToggleStopStatusSchema>;
 export type AdminUpsertDestinationInput = z.infer<typeof adminUpsertDestinationSchema>;
+export type AdminDeleteDestinationInput = z.infer<typeof adminDeleteDestinationSchema>;
+export type AdminToggleDestinationStatusInput = z.infer<typeof adminToggleDestinationStatusSchema>;
 export type AdminUpsertCouponInput = z.infer<typeof adminUpsertCouponSchema>;
 export type AdminToggleCouponInput = z.infer<typeof adminToggleCouponSchema>;
+export type AdminDeleteCouponInput = z.infer<typeof adminDeleteCouponSchema>;
 export type AdminUpdatePricingConfigInput = z.infer<typeof adminUpdatePricingConfigSchema>;
 export type ApplyCustomerCouponInput = z.infer<typeof applyCustomerCouponSchema>;
 export type CreateRazorpayOrderInput = z.infer<typeof createRazorpayOrderSchema>;

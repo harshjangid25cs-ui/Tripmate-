@@ -4,13 +4,20 @@ import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { DestinationAdmin } from "@/lib/admin/types";
-import { adminUpsertDestinationAction } from "@/lib/actions/admin-ops";
+import {
+  adminUpsertDestinationAction,
+  adminDeleteDestinationAction,
+  adminToggleDestinationStatusAction,
+} from "@/lib/actions/admin-ops";
 import {
   CheckCircle2,
   XCircle,
   AlertCircle,
   Plus,
   Edit2,
+  Trash2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { CatalogImageUpload } from "./CatalogImageUpload";
 
@@ -94,6 +101,46 @@ export function DestinationsView() {
         } else {
           toast(res.missing?.join(", ") || "Failed to update", "error");
         }
+      }
+    );
+  };
+
+  const handleDeleteDestination = (dest: DestinationAdmin) => {
+    if (!canWrite) {
+      toast("Restricted: Catalog Manager or Super Admin role required", "error");
+      return;
+    }
+    requestReasonModal(
+      "Delete Destination",
+      `Are you sure you want to delete destination '${dest.name}' (${dest.slug})? Circuits linked to this destination will need reassignment.`,
+      async (reason) => {
+        AdminService.deleteDestination(currentAdmin, dest.id, reason);
+        await adminDeleteDestinationAction({ destinationId: dest.id, reason });
+        toast(`Destination ${dest.name} deleted.`, "success");
+        if (isEditing && formData.id === dest.id) {
+          setIsEditing(false);
+        }
+        refresh();
+        await refreshOperationalData();
+      }
+    );
+  };
+
+  const handleToggleActive = (dest: DestinationAdmin) => {
+    if (!canWrite) {
+      toast("Restricted: Catalog Manager or Super Admin role required", "error");
+      return;
+    }
+    const nextVal = !dest.is_active;
+    requestReasonModal(
+      nextVal ? "Activate Destination" : "Deactivate Destination",
+      `${nextVal ? "Activate" : "Deactivate"} ${dest.name} in catalog.`,
+      async (reason) => {
+        AdminService.updateDestination(currentAdmin, dest.id, { is_active: nextVal }, reason);
+        await adminToggleDestinationStatusAction({ destinationId: dest.id, isActive: nextVal, reason });
+        toast(`Destination ${dest.name} is now ${nextVal ? "active" : "inactive"}.`, "success");
+        refresh();
+        await refreshOperationalData();
       }
     );
   };
@@ -339,7 +386,7 @@ export function DestinationsView() {
               </div>
 
               {/* Bottom Actions */}
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => {
@@ -355,18 +402,42 @@ export function DestinationsView() {
                   <span>Edit</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleMakeBookable(dest, dest.is_bookable)}
-                  disabled={!canWrite}
-                  className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
-                    dest.is_bookable
-                      ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
-                  } ${!canWrite ? "opacity-50 cursor-not-allowed" : ""}`}
-                >
-                  {dest.is_bookable ? "Unpublish" : "Make Bookable"}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(dest)}
+                    disabled={!canWrite}
+                    className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition-all ${
+                      dest.is_active ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    }`}
+                    title={dest.is_active ? "Deactivate" : "Activate"}
+                  >
+                    {dest.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleMakeBookable(dest, dest.is_bookable)}
+                    disabled={!canWrite}
+                    className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
+                      dest.is_bookable
+                        ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
+                        : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    } ${!canWrite ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {dest.is_bookable ? "Unpublish" : "Make Bookable"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteDestination(dest)}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-2 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                    title="Delete Destination"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -554,20 +625,33 @@ export function DestinationsView() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
-                >
-                  Save & Validate
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                {formData.id ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteDestination(formData as DestinationAdmin)}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete Destination</span>
+                  </button>
+                ) : <div />}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  >
+                    Save & Validate
+                  </button>
+                </div>
               </div>
             </form>
           </div>

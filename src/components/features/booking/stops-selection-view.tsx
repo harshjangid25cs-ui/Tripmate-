@@ -230,6 +230,7 @@ export function StopsSelectionView({ tripData, stops }: StopsSelectionViewProps)
                       alt={stop.name}
                       fill
                       priority
+                      unoptimized
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
                     />

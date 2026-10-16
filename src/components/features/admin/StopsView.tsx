@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { StopAdmin } from "@/lib/admin/types";
-import { adminUpsertStopAction } from "@/lib/actions/admin-ops";
-import { Plus, Edit2, EyeOff, Eye } from "lucide-react";
+import { adminUpsertStopAction, adminDeleteStopAction } from "@/lib/actions/admin-ops";
+import { Plus, Edit2, EyeOff, Eye, Trash2 } from "lucide-react";
 import { CatalogImageUpload } from "./CatalogImageUpload";
 
 export function StopsView() {
@@ -41,6 +41,27 @@ export function StopsView() {
           reason,
         });
         toast(`Stop ${stop.name} is now ${nextVal ? "active" : "disabled"}.`, "success");
+        refresh();
+        await refreshOperationalData();
+      }
+    );
+  };
+
+  const handleDeleteStop = (stop: StopAdmin) => {
+    if (!canWrite) {
+      toast("Catalog Manager or Super Admin role required", "error");
+      return;
+    }
+    requestReasonModal(
+      "Delete Stop",
+      `Are you sure you want to delete ${stop.name}?`,
+      async (reason) => {
+        AdminService.deleteStop(currentAdmin, stop.id, reason);
+        await adminDeleteStopAction({ stopId: stop.id, reason });
+        toast(`Stop ${stop.name} deleted.`, "success");
+        if (isEditing && formData.id === stop.id) {
+          setIsEditing(false);
+        }
         refresh();
         await refreshOperationalData();
       }
@@ -201,19 +222,31 @@ export function StopsView() {
                 <span>Edit</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => handleToggleActive(s)}
-                disabled={!canWrite}
-                className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                  s.is_active
-                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700"
-                } disabled:opacity-50`}
-              >
-                {s.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                <span>{s.is_active ? "Disable" : "Enable"}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleToggleActive(s)}
+                  disabled={!canWrite}
+                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                    s.is_active
+                      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  } disabled:opacity-50`}
+                >
+                  {s.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  <span>{s.is_active ? "Disable" : "Enable"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteStop(s)}
+                  disabled={!canWrite}
+                  className="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                  title="Delete Stop"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -299,20 +332,33 @@ export function StopsView() {
                 helperText="Uploaded to Supabase catalog-images bucket and displayed on highway rest stop cards."
               />
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
-                >
-                  Save Stop
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                {formData.id ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteStop(formData as StopAdmin)}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete Stop</span>
+                  </button>
+                ) : <div />}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  >
+                    Save Stop
+                  </button>
+                </div>
               </div>
             </form>
           </div>

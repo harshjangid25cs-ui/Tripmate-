@@ -117,6 +117,7 @@ export function DestinationDetailView({
             alt={`${destination.name} - ${destination.tagline}`}
             fill
             priority
+            unoptimized
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 448px"
           />
@@ -261,6 +262,7 @@ export function DestinationDetailView({
                       src={hImage}
                       alt={h.title}
                       fill
+                      unoptimized
                       className="object-cover"
                       sizes="(max-width: 768px) 72vw, 280px"
                     />

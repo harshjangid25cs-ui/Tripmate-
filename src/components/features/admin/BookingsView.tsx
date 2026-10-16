@@ -130,32 +130,61 @@ export function BookingsView() {
     }
   };
 
+  const handleUpdateStatus = (newStatus: "confirmed" | "completed" | "cancelled") => {
+    if (!selectedBooking) return;
+    requestReasonModal(
+      `Mark Booking as ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}`,
+      `Update booking status of ${selectedBooking.booking_ref} to ${newStatus}.`,
+      async (reason) => {
+        setIsMutating(true);
+        try {
+          AdminService.updateBookingStatus(currentAdmin, selectedBooking.id, newStatus, reason);
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedBooking.id);
+          if (isUuid) {
+            await adminUpdateBookingStatusAction({
+              tripId: selectedBooking.id,
+              newStatus,
+              reason,
+            });
+          }
+          toast(`Booking marked as ${newStatus}`, "success");
+          refresh();
+          await refreshOperationalData();
+        } catch (err: unknown) {
+          toast(err instanceof Error ? err.message : "Failed to update status", "error");
+        } finally {
+          setIsMutating(false);
+        }
+      }
+    );
+  };
+
   const handleAssignDriver = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedBooking || !selectedDriverId) return;
+    if (!selectedBooking) return;
 
     requestReasonModal(
       "Confirm Dispatch Assignment",
-      `Assign verified driver and fleet vehicle to booking ${selectedBooking.booking_ref}. Customer will be emailed with trip details.`,
+      `Update verified driver and fleet vehicle assignment for booking ${selectedBooking.booking_ref}.`,
       async (reason) => {
         setIsMutating(true);
         try {
           const res = AdminService.assignDriver(
             currentAdmin,
             selectedBooking.id,
-            selectedDriverId,
+            selectedDriverId === "none" ? "" : selectedDriverId,
             reason
           );
 
           const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedBooking.id);
           const isDriverUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedDriverId);
-          const isVehicleUuid = selectedVehicleId ? /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedVehicleId) : true;
+          const isVehicleUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedVehicleId);
 
-          if (isUuid && isDriverUuid && isVehicleUuid) {
+          if (isUuid) {
             const serverRes = await adminAssignDriverOrVehicleAction({
               tripId: selectedBooking.id,
-              driverId: selectedDriverId,
-              vehicleId: selectedVehicleId || undefined,
+              driverId: selectedDriverId === "none" ? null : (isDriverUuid ? selectedDriverId : null),
+              vehicleId: selectedVehicleId === "none" ? null : (isVehicleUuid ? selectedVehicleId : null),
               reason,
             });
             if (!serverRes.ok) {
@@ -409,7 +438,29 @@ export function BookingsView() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {selectedBooking.status !== "confirmed" && (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateStatus("confirmed")}
+                    disabled={isMutating}
+                    className="flex items-center gap-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 text-xs font-bold transition-all disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>Mark Confirmed</span>
+                  </button>
+                )}
+                {selectedBooking.status !== "completed" && selectedBooking.status !== "cancelled" && (
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateStatus("completed")}
+                    disabled={isMutating}
+                    className="flex items-center gap-1.5 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 px-3 py-1.5 text-xs font-bold transition-all disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5" />
+                    <span>Mark Completed</span>
+                  </button>
+                )}
                 {selectedBooking.status !== "cancelled" && (canCancelPolicy || canCancelDiscretionary) && (
                   <button
                     type="button"
@@ -562,7 +613,11 @@ export function BookingsView() {
                     {canAssignDriver && (
                       <button
                         type="button"
-                        onClick={() => setIsAssigningDriver(!isAssigningDriver)}
+                        onClick={() => {
+                          setSelectedDriverId(selectedBooking.driver_id || "none");
+                          setSelectedVehicleId(selectedBooking.vehicle_id || "none");
+                          setIsAssigningDriver(!isAssigningDriver);
+                        }}
                         className="text-xs font-bold text-primary-600 hover:underline"
                       >
                         {selectedBooking.driver ? "Reassign" : "Assign Driver"}
@@ -598,9 +653,8 @@ export function BookingsView() {
                           value={selectedDriverId}
                           onChange={(e) => setSelectedDriverId(e.target.value)}
                           className="rounded-xl border border-slate-300 p-2 text-xs flex-1 font-semibold w-full"
-                          required
                         >
-                          <option value="">Select verified active driver...</option>
+                          <option value="none">None (No Chauffeur / Unassigned)</option>
                           {drivers.map((d) => (
                             <option key={d.id} value={d.id}>
                               {d.name} ({d.license_plate}) - Rating {d.rating} ★
@@ -612,7 +666,7 @@ export function BookingsView() {
                           onChange={(e) => setSelectedVehicleId(e.target.value)}
                           className="rounded-xl border border-slate-300 p-2 text-xs flex-1 font-semibold w-full"
                         >
-                          <option value="">(Optional) Assign Fleet Vehicle...</option>
+                          <option value="none">None (No Fleet Vehicle / Unassigned)</option>
                           {vehicles.map((v) => (
                             <option key={v.id} value={v.id}>
                               {v.name} ({v.type})

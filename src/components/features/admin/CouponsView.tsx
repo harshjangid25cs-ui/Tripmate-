@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { Coupon } from "@/lib/admin/types";
-import { Plus, Edit2, EyeOff, Eye, History } from "lucide-react";
+import { adminDeleteCouponAction } from "@/lib/actions/admin-ops";
+import { Plus, Edit2, EyeOff, Eye, History, Trash2 } from "lucide-react";
 
 export function CouponsView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
@@ -27,6 +28,26 @@ export function CouponsView() {
       (reason) => {
         AdminService.updateCoupon(currentAdmin, coupon.id, { is_active: nextVal }, reason);
         toast(`Coupon ${coupon.code} is now ${nextVal ? "active" : "deactivated"}.`, "success");
+        refresh();
+      }
+    );
+  };
+
+  const handleDeleteCoupon = (coupon: Coupon) => {
+    if (!canWrite) {
+      toast("Finance Manager or Super Admin role required", "error");
+      return;
+    }
+    requestReasonModal(
+      "Delete Coupon",
+      `Are you sure you want to delete coupon ${coupon.code}?`,
+      async (reason) => {
+        AdminService.deleteCoupon(currentAdmin, coupon.id, reason);
+        await adminDeleteCouponAction({ couponId: coupon.id, reason });
+        toast(`Coupon ${coupon.code} deleted.`, "success");
+        if (isEditing && formData.id === coupon.id) {
+          setIsEditing(false);
+        }
         refresh();
       }
     );
@@ -193,6 +214,7 @@ export function CouponsView() {
                         }}
                         disabled={!canWrite}
                         className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-40"
+                        title="Edit Coupon"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
@@ -201,8 +223,18 @@ export function CouponsView() {
                         onClick={() => handleToggleActive(c)}
                         disabled={!canWrite}
                         className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 disabled:opacity-40"
+                        title={c.is_active ? "Deactivate" : "Activate"}
                       >
                         {c.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCoupon(c)}
+                        disabled={!canWrite}
+                        className="rounded-lg p-1.5 text-rose-600 hover:bg-rose-50 disabled:opacity-40"
+                        title="Delete Coupon"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </td>
@@ -394,20 +426,33 @@ export function CouponsView() {
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
-                >
-                  Save Coupon
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                {formData.id ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCoupon(formData as Coupon)}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete Coupon</span>
+                  </button>
+                ) : <div />}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  >
+                    Save Coupon
+                  </button>
+                </div>
               </div>
             </form>
           </div>

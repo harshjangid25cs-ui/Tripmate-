@@ -4,8 +4,8 @@ import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { DriverAdmin } from "@/lib/admin/types";
-import { adminUpsertDriverAction } from "@/lib/actions/admin-ops";
-import { Plus, Edit2, Star, EyeOff, Eye, Lock } from "lucide-react";
+import { adminUpsertDriverAction, adminDeleteDriverAction } from "@/lib/actions/admin-ops";
+import { Plus, Edit2, Star, EyeOff, Eye, Lock, Trash2 } from "lucide-react";
 
 export function DriversView() {
   const { currentAdmin, currentRole, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
@@ -49,6 +49,27 @@ export function DriversView() {
           reason,
         });
         toast(`Driver ${drv.name} is now ${nextVal ? "active" : "deactivated"}.`, "success");
+        refresh();
+        await refreshOperationalData();
+      }
+    );
+  };
+
+  const handleDeleteDriver = (drv: DriverAdmin) => {
+    if (!canWrite) {
+      toast("Catalog Manager or Super Admin role required", "error");
+      return;
+    }
+    requestReasonModal(
+      "Delete Driver",
+      `Are you sure you want to delete ${drv.name} (${drv.license_plate})?`,
+      async (reason) => {
+        AdminService.deleteDriver(currentAdmin, drv.id, reason);
+        await adminDeleteDriverAction({ driverId: drv.id, reason });
+        toast(`Driver ${drv.name} deleted.`, "success");
+        if (isEditing && formData.id === drv.id) {
+          setIsEditing(false);
+        }
         refresh();
         await refreshOperationalData();
       }
@@ -194,19 +215,31 @@ export function DriversView() {
                 <span>Edit</span>
               </button>
 
-              <button
-                type="button"
-                onClick={() => handleToggleActive(d)}
-                disabled={!canWrite}
-                className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                  d.is_active
-                    ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700"
-                } disabled:opacity-50`}
-              >
-                {d.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                <span>{d.is_active ? "Deactivate" : "Activate"}</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleToggleActive(d)}
+                  disabled={!canWrite}
+                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                    d.is_active
+                      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                  } disabled:opacity-50`}
+                >
+                  {d.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  <span>{d.is_active ? "Deactivate" : "Activate"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteDriver(d)}
+                  disabled={!canWrite}
+                  className="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                  title="Delete Driver"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
             </div>
           </div>
         ))}
@@ -281,20 +314,33 @@ export function DriversView() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
-                >
-                  Save Driver
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                {formData.id ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteDriver(formData as DriverAdmin)}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete Driver</span>
+                  </button>
+                ) : <div />}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  >
+                    Save Driver
+                  </button>
+                </div>
               </div>
             </form>
           </div>

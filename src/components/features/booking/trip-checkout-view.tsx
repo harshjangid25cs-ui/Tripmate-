@@ -253,10 +253,10 @@ export function TripCheckoutView({ tripData }: TripCheckoutViewProps) {
   const totalDays = trip.total_days || 4;
   const nights = Math.max(1, totalDays - 1);
   const destinationName = destination?.name || "Jaipur";
-  const hotelName = hotel?.hotel?.name || "Shahpura Haveli & Heritage Suites";
-  const vehicleName = vehicle?.vehicle?.name || "Maruti Suzuki Dzire";
+  const vehicleName = vehicle?.vehicle?.name || "No vehicle selected (Own/Independent Transport)";
+  const hotelName = hotel?.hotel?.name || "Selected Hotel";
   const hotelSubtotal = hotel?.subtotal ?? 12600;
-  const vehicleSubtotal = vehicle?.subtotal ?? 7596;
+  const vehicleSubtotal = vehicle ? Number(vehicle.subtotal) : 0;
   const stopsSubtotal = stops.reduce((acc, s) => acc + Number(s.subtotal || 0), 0);
 
   return (
@@ -386,10 +386,12 @@ export function TripCheckoutView({ tripData }: TripCheckoutViewProps) {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
                   <span className="font-semibold text-text-primary block">
-                    Transport: {vehicleName}
+                    Transport: {vehicle ? vehicleName : "No vehicle selected (Own/Independent Transport)"}
                   </span>
                   <span className="text-text-secondary text-[11px]">
-                    {totalDays} Days • Dedicated Chauffeur &amp; Fuel incl.
+                    {vehicle
+                      ? `${totalDays} Days • Dedicated Chauffeur & Fuel incl.`
+                      : "Self-arranged transport • ₹0 Transport Fee"}
                   </span>
                 </div>
                 <span className="font-semibold text-text-primary">

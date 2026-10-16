@@ -302,6 +302,8 @@ export interface Database {
           updated_at?: string;
         };
         Update: {
+          id?: string;
+          destination_id?: string;
           title?: string;
           days?: number;
           nights?: number;

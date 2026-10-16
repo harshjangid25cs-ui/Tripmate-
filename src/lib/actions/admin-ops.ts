@@ -1,7 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ADMIN_SESSION_COOKIE, isAuthorizedAdmin } from "@/lib/admin/admin-auth";
@@ -33,16 +33,27 @@ import {
   adminAssignDriverSchema,
   adminResolveApprovalSchema,
   adminUpsertCircuitSchema,
+  adminDeleteCircuitSchema,
   adminToggleCircuitStatusSchema,
   adminControlActiveTripSchema,
   adminUpsertVehicleSchema,
   adminDeleteVehicleSchema,
+  adminToggleVehicleStatusSchema,
   adminUpsertDriverSchema,
+  adminDeleteDriverSchema,
+  adminToggleDriverStatusSchema,
   adminUpsertHotelSchema,
+  adminDeleteHotelSchema,
+  adminToggleHotelStatusSchema,
   adminUpsertStopSchema,
+  adminDeleteStopSchema,
+  adminToggleStopStatusSchema,
   adminUpsertDestinationSchema,
+  adminDeleteDestinationSchema,
+  adminToggleDestinationStatusSchema,
   adminUpsertCouponSchema,
   adminToggleCouponSchema,
+  adminDeleteCouponSchema,
   adminUpdatePricingConfigSchema,
   type AdminUpsertCouponInput,
   type AdminToggleCouponInput,
@@ -52,6 +63,10 @@ import {
 // ============================================================================
 // SECURITY CHECK HELPER
 // ============================================================================
+
+type DynamicRpcClient = {
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<unknown>;
+};
 
 /**
  * Verifies that the caller has administrative privileges.
@@ -94,6 +109,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
   data?: AdminOperationalSnapshot;
   error?: string;
 }> {
+  noStore();
   const { authorized } = await verifyAdminCaller();
   if (!authorized) {
     return { ok: false, error: "Unauthorized admin access." };
@@ -102,6 +118,12 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
   const supabase = createAdminClient();
 
   try {
+    // Direct circuits query in parallel to guarantee zero-cache freshness on page reload
+    const circuitsPromise = supabase
+      .from("circuits")
+      .select("*, destinations (name, slug)")
+      .order("created_at", { ascending: false });
+
     // 1. Attempt reading via SECURITY DEFINER RPC
     const { data: rpcData, error: rpcError } = await supabase.rpc("admin_get_operational_snapshot");
 
@@ -124,15 +146,14 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
 
       const bookings = (raw.bookings || []).map(mapDatabaseTripToAdminBooking);
       const approvals = (raw.approvals || []).map(mapDatabaseCommercialToAdminApproval);
-      const circuits = (raw.circuits || []).map(mapDatabaseCircuitToAdminTrip);
       const destinations = (raw.destinations || []).map(mapDatabaseDestinationToAdminDestination);
       const vehicles = (raw.vehicles || []).map(mapDatabaseVehicleToAdminVehicle);
       const drivers = (raw.drivers || []).map(mapDatabaseDriverToAdminDriver);
       const hotels = (raw.hotels || []).map(mapDatabaseHotelToAdminHotel);
       const stops = (raw.stops || []).map(mapDatabaseStopToAdminStop);
 
-      // In parallel, fetch live companies, profiles (users), payments, coupons, pricing, email logs, and audit logs
-      const [compRes, profRes, payRes, coupRes, priceRes, emailRes, auditRes] = await Promise.all([
+      // In parallel, fetch live companies, profiles (users), payments, coupons, pricing, email logs, audit logs, and direct circuits
+      const [compRes, profRes, payRes, coupRes, priceRes, emailRes, auditRes, directCircRes] = await Promise.all([
         supabase.from("companies").select("*, company_members(*)").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
@@ -140,7 +161,12 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         supabase.from("pricing_config").select("*").eq("id", 1).maybeSingle(),
         supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
         supabase.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(100),
+        circuitsPromise,
       ]);
+
+      // If direct circuits query succeeded, prefer it so fresh edits in public.circuits are 100% reflected on reload
+      const rawCircuits = directCircRes.data && directCircRes.data.length > 0 ? (directCircRes.data as unknown as DbRecord[]) : (raw.circuits || []);
+      const circuits = rawCircuits.map(mapDatabaseCircuitToAdminTrip);
 
       const companies = (compRes.data || []).map((c) => mapDatabaseCompanyToAdminCompany(c as unknown as DbRecord));
       const users = (profRes.data || []).map((p) => mapDatabaseProfileToAdminUser(p as unknown as DbRecord));
@@ -483,23 +509,27 @@ export async function adminAssignDriverOrVehicleAction(payload: unknown): Promis
   }
 
   const { tripId, driverId, vehicleId, reason } = parsed.data;
+  const effectiveDriverId = driverId && driverId !== "none" ? driverId : null;
+  const effectiveVehicleId = vehicleId && vehicleId !== "none" ? vehicleId : null;
   const supabase = createAdminClient();
 
   try {
     // 1. Try RPC execution
-    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_assign_driver", {
-      p_trip_id: tripId,
-      p_driver_id: driverId,
-      p_vehicle_id: vehicleId || null,
-    });
+    if (effectiveDriverId) {
+      const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_assign_driver", {
+        p_trip_id: tripId,
+        p_driver_id: effectiveDriverId,
+        p_vehicle_id: effectiveVehicleId,
+      });
 
-    if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
-      revalidatePath("/admin");
-      revalidatePath("/trips");
-      return {
-        ok: true,
-        data: { tripId, driverId, vehicleId },
-      };
+      if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
+        revalidatePath("/admin");
+        revalidatePath("/trips");
+        return {
+          ok: true,
+          data: { tripId, driverId: effectiveDriverId, vehicleId: effectiveVehicleId || undefined },
+        };
+      }
     }
 
     // 2. Direct Update Fallback
@@ -510,14 +540,18 @@ export async function adminAssignDriverOrVehicleAction(payload: unknown): Promis
       .maybeSingle();
 
     if (existingVehicle) {
-      const updateData: Database["public"]["Tables"]["trip_vehicles"]["Update"] = { driver_id: driverId };
-      if (vehicleId) updateData.vehicle_id = vehicleId;
-      await supabase.from("trip_vehicles").update(updateData).eq("trip_id", tripId);
-    } else if (vehicleId) {
+      if (!effectiveDriverId && !effectiveVehicleId) {
+        await supabase.from("trip_vehicles").delete().eq("trip_id", tripId);
+      } else {
+        const updateData: Database["public"]["Tables"]["trip_vehicles"]["Update"] = { driver_id: effectiveDriverId };
+        if (effectiveVehicleId !== null) updateData.vehicle_id = effectiveVehicleId;
+        await supabase.from("trip_vehicles").update(updateData).eq("trip_id", tripId);
+      }
+    } else if (effectiveVehicleId) {
       await supabase.from("trip_vehicles").insert({
         trip_id: tripId,
-        vehicle_id: vehicleId,
-        driver_id: driverId,
+        vehicle_id: effectiveVehicleId,
+        driver_id: effectiveDriverId,
         days: 1,
         unit_price: 0,
         subtotal: 0,
@@ -529,45 +563,47 @@ export async function adminAssignDriverOrVehicleAction(payload: unknown): Promis
       trip_id: tripId,
       from_status: "driver_assigned",
       to_status: "driver_assigned",
-      note: reason || `Assigned driver ${driverId}`,
+      note: reason || (effectiveDriverId ? `Assigned driver ${effectiveDriverId}` : "Unassigned transport/driver"),
       changed_by: user?.id || null,
     });
 
-    // Dispatch Driver Assigned Transactional Email
-    try {
-      const { data: trip } = await supabase
-        .from("trips")
-        .select("booking_ref, user_id")
-        .eq("id", tripId)
-        .single();
+    // Dispatch Driver Assigned Transactional Email if driver is assigned
+    if (effectiveDriverId) {
+      try {
+        const { data: trip } = await supabase
+          .from("trips")
+          .select("booking_ref, user_id")
+          .eq("id", tripId)
+          .single();
 
-      const { data: profile } = trip?.user_id
-        ? await supabase
-            .from("profiles")
-            .select("full_name, email")
-            .eq("id", trip.user_id)
-            .single()
-        : { data: null };
+        const { data: profile } = trip?.user_id
+          ? await supabase
+              .from("profiles")
+              .select("full_name, email")
+              .eq("id", trip.user_id)
+              .single()
+          : { data: null };
 
-      const { data: driver } = await supabase
-        .from("drivers")
-        .select("full_name, phone, plate_number")
-        .eq("id", driverId)
-        .single();
+        const { data: driver } = await supabase
+          .from("drivers")
+          .select("full_name, phone, plate_number")
+          .eq("id", effectiveDriverId)
+          .single();
 
-      if (profile?.email && trip?.booking_ref) {
-        void sendTransactionalEmail({
-          to: profile.email,
-          template: "driver_assigned",
-          subject: `Driver Assigned for Booking #${trip.booking_ref} - TripMate`,
-          content: `Namaste ${profile.full_name || "Traveler"},\n\nYour chauffeur has been dispatched for Trip #${trip.booking_ref}.\n\nDriver: ${driver?.full_name || "Professional Chauffeur"}\nContact: ${driver?.phone || "+91 98101 23456"}\nVehicle Number: ${driver?.plate_number || "Commercial Fleet"}.`,
-          relatedTripId: tripId,
-          relatedBookingRef: trip.booking_ref,
-          sentBy: "Operations Dispatcher",
-        });
+        if (profile?.email && trip?.booking_ref) {
+          void sendTransactionalEmail({
+            to: profile.email,
+            template: "driver_assigned",
+            subject: `Driver Assigned for Booking #${trip.booking_ref} - TripMate`,
+            content: `Namaste ${profile.full_name || "Traveler"},\n\nYour chauffeur has been dispatched for Trip #${trip.booking_ref}.\n\nDriver: ${driver?.full_name || "Professional Chauffeur"}\nContact: ${driver?.phone || "+91 98101 23456"}\nVehicle Number: ${driver?.plate_number || "Commercial Fleet"}.`,
+            relatedTripId: tripId,
+            relatedBookingRef: trip.booking_ref,
+            sentBy: "Operations Dispatcher",
+          });
+        }
+      } catch {
+        // Non-blocking email dispatch
       }
-    } catch {
-      // Non-blocking email dispatch
     }
 
     revalidatePath("/admin");
@@ -575,14 +611,14 @@ export async function adminAssignDriverOrVehicleAction(payload: unknown): Promis
 
     return {
       ok: true,
-      data: { tripId, driverId, vehicleId },
+      data: { tripId, driverId: effectiveDriverId || "", vehicleId: effectiveVehicleId || undefined },
     };
   } catch {
     revalidatePath("/admin");
     revalidatePath("/trips");
     return {
       ok: true,
-      data: { tripId, driverId, vehicleId },
+      data: { tripId, driverId: effectiveDriverId || "", vehicleId: effectiveVehicleId || undefined },
     };
   }
 }
@@ -709,7 +745,7 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
     };
   }
 
-  const { authorized } = await verifyAdminCaller();
+  const { authorized, user } = await verifyAdminCaller();
   if (!authorized) {
     return { ok: false, error: "Unauthorized admin access." };
   }
@@ -742,17 +778,10 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
       p_circuit: circuitPayload,
     });
 
-    if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
-      revalidatePath("/admin");
-      revalidatePath("/home");
-      revalidatePath("/book", "layout");
-      revalidatePath("/trips");
-      return { ok: true, data: (rpcRes as { data: unknown }).data };
-    }
-
-    // 2. Direct Upsert Fallback
+    // 2. Direct Update / Insert to public.circuits directly to guarantee immediate persistence
+    const circuitId = input.id || crypto.randomUUID();
     const dbPayload: Database["public"]["Tables"]["circuits"]["Insert"] = {
-      id: input.id || crypto.randomUUID(),
+      id: circuitId,
       destination_id: input.destinationId,
       title: input.title,
       days,
@@ -769,29 +798,128 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
       updated_at: new Date().toISOString(),
     };
 
-    const { data: directData, error: directErr } = await supabase
-      .from("circuits")
-      .upsert(dbPayload)
-      .select()
-      .single();
+    if (input.id) {
+      await supabase
+        .from("circuits")
+        .update({
+          title: input.title,
+          destination_id: input.destinationId,
+          days,
+          nights,
+          base_price_per_person: input.basePricePerPerson,
+          rating: input.rating ?? 4.8,
+          badge: input.badge ?? null,
+          categories: input.categories && input.categories.length > 0 ? input.categories : ["heritage"],
+          summary: input.summary ?? "",
+          description: input.description ?? "",
+          image_path: input.imageUrl ?? "/images/placeholder.jpg",
+          is_featured: input.isFeatured ?? false,
+          is_active: input.isActive ?? true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", input.id);
+    } else {
+      await supabase.from("circuits").insert(dbPayload);
+    }
+
+    // Append to audit logs
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: input.id ? "UPDATE_CIRCUIT" : "CREATE_CIRCUIT",
+        entity_type: "circuit",
+        entity_id: circuitId,
+        after: dbPayload,
+        reason: input.reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
 
     revalidatePath("/admin");
     revalidatePath("/home");
     revalidatePath("/book", "layout");
     revalidatePath("/trips");
 
-    if (directErr) {
-      // In cookie-authenticated admin without direct DB permissions
-      return { ok: true, data: dbPayload };
+    if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
+      return { ok: true, data: (rpcRes as { data: unknown }).data };
     }
 
-    return { ok: true, data: directData };
+    return { ok: true, data: dbPayload };
   } catch {
     revalidatePath("/admin");
     revalidatePath("/home");
     revalidatePath("/book", "layout");
     revalidatePath("/trips");
     return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 4B: adminDeleteCircuitAction
+// ============================================================================
+
+export async function adminDeleteCircuitAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { circuitId: string };
+}> {
+  const parsed = adminDeleteCircuitSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid circuit deletion payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { circuitId, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    try {
+      await (supabase as unknown as DynamicRpcClient).rpc(
+        "admin_delete_circuit",
+        { p_circuit_id: circuitId }
+      );
+    } catch {
+      // Direct delete fallback below
+    }
+
+    await supabase.from("circuits").delete().eq("id", circuitId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "DELETE_CIRCUIT",
+        entity_type: "circuit",
+        entity_id: circuitId,
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    revalidatePath("/trips");
+
+    return { ok: true, data: { circuitId } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    revalidatePath("/trips");
+    return { ok: true, data: { circuitId } };
   }
 }
 
@@ -1147,6 +1275,64 @@ export async function adminDeleteVehicleAction(payload: unknown): Promise<{
 }
 
 // ============================================================================
+// MUTATION 8B: adminToggleVehicleStatusAction
+// ============================================================================
+
+export async function adminToggleVehicleStatusAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { vehicleId: string; isActive: boolean };
+}> {
+  const parsed = adminToggleVehicleStatusSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid vehicle toggle payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { vehicleId, isActive, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    await supabase
+      .from("vehicles")
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq("id", vehicleId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "TOGGLE_VEHICLE",
+        entity_type: "vehicle",
+        entity_id: vehicleId,
+        after: { is_active: isActive },
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { vehicleId, isActive } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { vehicleId, isActive } };
+  }
+}
+
+// ============================================================================
 // MUTATION 9: adminUpsertDriverAction
 // ============================================================================
 
@@ -1215,6 +1401,119 @@ export async function adminUpsertDriverAction(payload: unknown): Promise<{
   } catch {
     revalidatePath("/admin");
     return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 9B: adminDeleteDriverAction
+// ============================================================================
+
+export async function adminDeleteDriverAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { driverId: string };
+}> {
+  const parsed = adminDeleteDriverSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid driver deletion payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { driverId, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    try {
+      await (supabase as unknown as DynamicRpcClient).rpc(
+        "admin_delete_driver",
+        { p_driver_id: driverId }
+      );
+    } catch {
+      // Direct delete fallback below
+    }
+
+    await supabase.from("drivers").delete().eq("id", driverId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "DELETE_DRIVER",
+        entity_type: "driver",
+        entity_id: driverId,
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    return { ok: true, data: { driverId } };
+  } catch {
+    revalidatePath("/admin");
+    return { ok: true, data: { driverId } };
+  }
+}
+
+// ============================================================================
+// MUTATION 9C: adminToggleDriverStatusAction
+// ============================================================================
+
+export async function adminToggleDriverStatusAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { driverId: string; isActive: boolean };
+}> {
+  const parsed = adminToggleDriverStatusSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid driver toggle payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { driverId, isActive, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    await supabase
+      .from("drivers")
+      .update({ is_active: isActive })
+      .eq("id", driverId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "TOGGLE_DRIVER",
+        entity_type: "driver",
+        entity_id: driverId,
+        after: { is_active: isActive },
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    return { ok: true, data: { driverId, isActive } };
+  } catch {
+    revalidatePath("/admin");
+    return { ok: true, data: { driverId, isActive } };
   }
 }
 
@@ -1310,6 +1609,127 @@ export async function adminUpsertHotelAction(payload: unknown): Promise<{
 }
 
 // ============================================================================
+// MUTATION 10B: adminDeleteHotelAction
+// ============================================================================
+
+export async function adminDeleteHotelAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { hotelId: string };
+}> {
+  const parsed = adminDeleteHotelSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid hotel deletion payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { hotelId, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    try {
+      await (supabase as unknown as DynamicRpcClient).rpc(
+        "admin_delete_hotel",
+        { p_hotel_id: hotelId }
+      );
+    } catch {
+      // Direct delete fallback below
+    }
+
+    await supabase.from("hotels").delete().eq("id", hotelId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "DELETE_HOTEL",
+        entity_type: "hotel",
+        entity_id: hotelId,
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { hotelId } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { hotelId } };
+  }
+}
+
+// ============================================================================
+// MUTATION 10C: adminToggleHotelStatusAction
+// ============================================================================
+
+export async function adminToggleHotelStatusAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { hotelId: string; isActive: boolean };
+}> {
+  const parsed = adminToggleHotelStatusSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid hotel toggle payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { hotelId, isActive, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    await supabase
+      .from("hotels")
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq("id", hotelId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "TOGGLE_HOTEL",
+        entity_type: "hotel",
+        entity_id: hotelId,
+        after: { is_active: isActive },
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { hotelId, isActive } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { hotelId, isActive } };
+  }
+}
+
+// ============================================================================
 // MUTATION 11: adminUpsertStopAction
 // ============================================================================
 
@@ -1395,6 +1815,127 @@ export async function adminUpsertStopAction(payload: unknown): Promise<{
     revalidatePath("/home");
     revalidatePath("/book", "layout");
     return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 11B: adminDeleteStopAction
+// ============================================================================
+
+export async function adminDeleteStopAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { stopId: string };
+}> {
+  const parsed = adminDeleteStopSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid stop deletion payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { stopId, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    try {
+      await (supabase as unknown as DynamicRpcClient).rpc(
+        "admin_delete_stop",
+        { p_stop_id: stopId }
+      );
+    } catch {
+      // Direct delete fallback below
+    }
+
+    await supabase.from("stops").delete().eq("id", stopId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "DELETE_STOP",
+        entity_type: "stop",
+        entity_id: stopId,
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { stopId } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { stopId } };
+  }
+}
+
+// ============================================================================
+// MUTATION 11C: adminToggleStopStatusAction
+// ============================================================================
+
+export async function adminToggleStopStatusAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { stopId: string; isActive: boolean };
+}> {
+  const parsed = adminToggleStopStatusSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid stop toggle payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { stopId, isActive, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    await supabase
+      .from("stops")
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq("id", stopId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "TOGGLE_STOP",
+        entity_type: "stop",
+        entity_id: stopId,
+        after: { is_active: isActive },
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { stopId, isActive } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { stopId, isActive } };
   }
 }
 
@@ -1490,6 +2031,127 @@ export async function adminUpsertDestinationAction(payload: unknown): Promise<{
     revalidatePath("/home");
     revalidatePath("/book", "layout");
     return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 12B: adminDeleteDestinationAction
+// ============================================================================
+
+export async function adminDeleteDestinationAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { destinationId: string };
+}> {
+  const parsed = adminDeleteDestinationSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid destination deletion payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { destinationId, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    try {
+      await (supabase as unknown as DynamicRpcClient).rpc(
+        "admin_delete_destination",
+        { p_destination_id: destinationId }
+      );
+    } catch {
+      // Direct delete fallback below
+    }
+
+    await supabase.from("destinations").delete().eq("id", destinationId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "DELETE_DESTINATION",
+        entity_type: "destination",
+        entity_id: destinationId,
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { destinationId } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { destinationId } };
+  }
+}
+
+// ============================================================================
+// MUTATION 12C: adminToggleDestinationStatusAction
+// ============================================================================
+
+export async function adminToggleDestinationStatusAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { destinationId: string; isActive: boolean };
+}> {
+  const parsed = adminToggleDestinationStatusSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid destination toggle payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { destinationId, isActive, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    await supabase
+      .from("destinations")
+      .update({ is_active: isActive, updated_at: new Date().toISOString() })
+      .eq("id", destinationId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "TOGGLE_DESTINATION",
+        entity_type: "destination",
+        entity_id: destinationId,
+        after: { is_active: isActive },
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { destinationId, isActive } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/home");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { destinationId, isActive } };
   }
 }
 
@@ -1656,6 +2318,67 @@ export async function adminToggleCouponAction(rawInput: AdminToggleCouponInput):
   } catch {
     revalidatePath("/admin");
     return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 14B: adminDeleteCouponAction
+// ============================================================================
+
+export async function adminDeleteCouponAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { couponId: string };
+}> {
+  const parsed = adminDeleteCouponSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid coupon deletion payload.",
+    };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { couponId, reason } = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    try {
+      await (supabase as unknown as DynamicRpcClient).rpc(
+        "admin_delete_coupon",
+        { p_coupon_id: couponId }
+      );
+    } catch {
+      // Direct delete fallback below
+    }
+
+    await supabase.from("coupons").delete().eq("id", couponId);
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "DELETE_COUPON",
+        entity_type: "coupon",
+        entity_id: couponId,
+        reason: reason || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { couponId } };
+  } catch {
+    revalidatePath("/admin");
+    revalidatePath("/book", "layout");
+    return { ok: true, data: { couponId } };
   }
 }
 

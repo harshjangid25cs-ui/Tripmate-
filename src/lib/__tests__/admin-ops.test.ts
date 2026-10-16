@@ -764,5 +764,112 @@ describe("Admin Operations & Live Data Integration", () => {
       expect(sql).toContain("GRANT EXECUTE ON FUNCTION public.admin_upsert_destination(jsonb) TO authenticated, service_role;");
     });
   });
+
+  describe("Admin Trip / Circuit Rename & Reload Verification (TASK 1)", () => {
+    it("validates circuit creation and rename persistence via adminUpsertCircuitSchema", () => {
+      // 1. Initial Circuit Creation payload
+      const initialPayload = {
+        destinationId: "dest-jaipur-123",
+        title: "Jaipur Heritage & Forts Circuit",
+        days: 3,
+        nights: 2,
+        basePricePerPerson: 8499,
+        summary: "Royal forts and palaces tour",
+        description: "Visit Amber Fort, City Palace, and Hawa Mahal",
+        imageUrl: "https://images.unsplash.com/photo-1599661046289-e31897846e41",
+        isActive: true,
+        reason: "Initial catalog listing",
+      };
+
+      const parseInitial = adminUpsertCircuitSchema.safeParse(initialPayload);
+      expect(parseInitial.success).toBe(true);
+
+      // 2. Renamed Circuit payload (e.g. admin updates title and base price)
+      const renamedPayload = {
+        id: "c11ac10b-58cc-4372-a567-0e02b2c3d479",
+        destinationId: "dest-jaipur-123",
+        title: "Jaipur Royal Forts & Heritage Luxury Circuit",
+        days: 4,
+        nights: 3,
+        basePricePerPerson: 10999,
+        summary: "Updated luxury itinerary with night safari",
+        description: "Expanded to 4 days with Chokhi Dhani evening experience",
+        imageUrl: "https://images.unsplash.com/photo-1599661046289-e31897846e41",
+        isActive: true,
+        reason: "Seasonal revamp and title update",
+      };
+
+      const parseRenamed = adminUpsertCircuitSchema.safeParse(renamedPayload);
+      expect(parseRenamed.success).toBe(true);
+    });
+
+    it("maps renamed circuit accurately back from database row via mapDatabaseCircuitToAdminTrip", () => {
+      const dbRow = {
+        id: "c11ac10b-58cc-4372-a567-0e02b2c3d479",
+        destination_id: "dest-jaipur-123",
+        name: "Jaipur Royal Forts & Heritage Luxury Circuit",
+        tagline: "Updated luxury itinerary with night safari",
+        summary: "Updated luxury itinerary with night safari",
+        description: "Expanded to 4 days with Chokhi Dhani evening experience",
+        duration_days: 4,
+        base_price: 10999,
+        hero_image_path: "https://images.unsplash.com/photo-1599661046289-e31897846e41",
+        is_active: true,
+        is_featured: true,
+        destinations: {
+          id: "dest-jaipur-123",
+          name: "Jaipur",
+          region: "Rajasthan",
+        },
+      };
+
+      const mapped = mapDatabaseCircuitToAdminTrip(dbRow);
+      expect(mapped.id).toBe("c11ac10b-58cc-4372-a567-0e02b2c3d479");
+      expect(mapped.title).toBe("Jaipur Royal Forts & Heritage Luxury Circuit");
+      expect(mapped.days).toBe(4);
+      expect(mapped.nights).toBe(3);
+      expect(mapped.base_price_per_person).toBe(10999);
+      expect(mapped.is_active).toBe(true);
+      expect(mapped.destination_name).toBe("Jaipur");
+      expect(mapped.image_url).toBe("https://images.unsplash.com/photo-1599661046289-e31897846e41");
+    });
+
+    it("validates circuit deletion payload via adminDeleteCircuitSchema", async () => {
+      const { adminDeleteCircuitSchema } = await import("../validations/actions");
+      const valid = adminDeleteCircuitSchema.safeParse({
+        circuitId: "c11ac10b-58cc-4372-a567-0e02b2c3d479",
+        reason: "Discontinued seasonal package",
+      });
+      expect(valid.success).toBe(true);
+    });
+  });
+
+  describe("External Pasted Image URL Resolution (TASK 3)", () => {
+    it("returns raw URLs untouched if starting with http://, https://, data:, or /", async () => {
+      const { resolveCatalogImageUrl } = await import("../data/images");
+
+      // HTTPS External URL (e.g. Unsplash, Wikimedia)
+      const unsplashUrl = "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=800";
+      expect(resolveCatalogImageUrl(unsplashUrl)).toBe(unsplashUrl);
+
+      // HTTP External URL
+      const httpUrl = "http://example.com/images/fort.jpg";
+      expect(resolveCatalogImageUrl(httpUrl)).toBe(httpUrl);
+
+      // Data URI
+      const dataUri = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
+      expect(resolveCatalogImageUrl(dataUri)).toBe(dataUri);
+
+      // Local absolute path
+      const localPath = "/images/destinations/jaipur.jpg";
+      expect(resolveCatalogImageUrl(localPath)).toBe(localPath);
+
+      // Storage bucket relative path -> should resolve through Supabase public bucket
+      const storageKey = "circuits/amber-fort.webp";
+      const resolved = resolveCatalogImageUrl(storageKey);
+      expect(resolved).toContain("/storage/v1/object/public/catalog-images/circuits/amber-fort.webp");
+      expect(resolved).not.toContain("catalog-images/https://");
+    });
+  });
 });
 

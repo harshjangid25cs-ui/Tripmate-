@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { Upload, Link as LinkIcon, CheckCircle2, AlertCircle, Loader2, Image as ImageIcon } from "lucide-react";
 import { adminUploadCatalogImageAction } from "@/lib/actions/admin-ops";
+import { resolveCatalogImageUrl } from "@/lib/data/images";
 
 interface CatalogImageUploadProps {
   value?: string;
@@ -20,6 +21,7 @@ export function CatalogImageUpload({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [mode, setMode] = useState<"upload" | "url">("upload");
+  const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,7 +122,17 @@ export function CatalogImageUpload({
           <input
             type="url"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e) => {
+              setImageError(false);
+              onChange(e.target.value);
+            }}
+            onPaste={(e) => {
+              const pastedText = e.clipboardData.getData("text");
+              if (pastedText) {
+                setImageError(false);
+                onChange(pastedText.trim());
+              }
+            }}
             placeholder="https://example.com/image.jpg"
             className="w-full rounded-xl border border-slate-300 pl-8 pr-3 py-2 text-xs focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
           />
@@ -130,17 +142,20 @@ export function CatalogImageUpload({
       {/* Image Preview & Current Value */}
       {value ? (
         <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-300 flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={value}
-              alt="Preview"
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.currentTarget as HTMLImageElement).style.display = "none";
-              }}
-            />
-            <ImageIcon className="h-5 w-5 text-slate-400" />
+          <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-300 flex items-center justify-center relative">
+            {!imageError ? (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                key={value}
+                src={resolveCatalogImageUrl(value) || value}
+                alt="Preview"
+                className="w-full h-full object-cover"
+                onError={() => setImageError(true)}
+                onLoad={() => setImageError(false)}
+              />
+            ) : (
+              <ImageIcon className="h-5 w-5 text-slate-400" />
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-700">
@@ -151,7 +166,10 @@ export function CatalogImageUpload({
           </div>
           <button
             type="button"
-            onClick={() => onChange("")}
+            onClick={() => {
+              setImageError(false);
+              onChange("");
+            }}
             className="text-[11px] font-bold text-rose-600 hover:text-rose-700 px-2 py-1"
           >
             Remove

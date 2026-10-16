@@ -26,9 +26,9 @@ export function BookingConfirmationView({ details }: BookingConfirmationViewProp
   const destinationName = destination?.name || "Jaipur";
   const stateName = destination?.region || "Rajasthan";
   const hotelName = hotel?.hotel?.name || "Shahpura Haveli & Heritage Suites";
-  const vehicleName = vehicle?.vehicle?.name || "Maruti Suzuki Dzire (AC Sedan)";
-  const driverName = vehicle?.driver?.full_name || "Rajesh Kumar";
-  const driverPhone = vehicle?.driver?.phone || "+91 98765 43210";
+  const vehicleName = vehicle?.vehicle?.name || "No vehicle selected (Own/Independent Transport)";
+  const driverName = vehicle?.driver?.full_name || null;
+  const driverPhone = vehicle?.driver?.phone || null;
   const primaryStop = stops[0]?.stop?.name || "Neemrana Fort-Palace Day Pass";
   const roomsCount = hotel?.rooms || 1;
 
@@ -156,10 +156,12 @@ export function BookingConfirmationView({ details }: BookingConfirmationViewProp
                 </span>
                 <div className="flex-1">
                   <span className="font-semibold text-text-primary block">
-                    {vehicleName}
+                    {vehicle ? vehicleName : "No vehicle selected (Own/Independent Transport)"}
                   </span>
                   <span className="text-text-secondary text-[11px]">
-                    Chauffeur: {driverName} • {driverPhone}
+                    {vehicle && driverName
+                      ? `Chauffeur: ${driverName} • ${driverPhone || "Assigned on dispatch"}`
+                      : "Self-arranged / independent travel to destination"}
                   </span>
                 </div>
               </div>

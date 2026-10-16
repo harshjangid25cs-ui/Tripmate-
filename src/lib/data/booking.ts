@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
@@ -142,6 +143,7 @@ function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 5000): Promise<T> {
 export async function getHotelsForDestination(
   destinationId?: string | null
 ): Promise<Hotel[]> {
+  noStore();
   try {
     const supabase = await createClient();
     let query = supabase.from("hotels").select("*").eq("is_active", true);
@@ -161,6 +163,7 @@ export async function getHotelsForDestination(
 export async function getVehicles(
   type?: "car" | "bike"
 ): Promise<Vehicle[]> {
+  noStore();
   try {
     const supabase = await createClient();
     let query = supabase.from("vehicles").select("*").eq("is_active", true);
@@ -182,6 +185,7 @@ export async function getVehicles(
 export async function getStopsForDestination(
   destinationId?: string | null
 ): Promise<Stop[]> {
+  noStore();
   try {
     const supabase = await createClient();
     const query = supabase

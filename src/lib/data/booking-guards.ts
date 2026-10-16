@@ -179,9 +179,7 @@ export async function getValidatedDraftTrip(
     if (!hotel) {
       redirect(`/book/${tripId}/hotel`);
     }
-    if (!vehicle) {
-      redirect(`/book/${tripId}/vehicle`);
-    }
+    // Vehicle selection is optional (customer may bring own vehicle or skip)
   } else if (targetStep === "review") {
     if (!trip.start_date || !trip.end_date || !trip.traveler_count) {
       redirect(`/book/${tripId}/duration`);
@@ -189,28 +187,26 @@ export async function getValidatedDraftTrip(
     if (!hotel) {
       redirect(`/book/${tripId}/hotel`);
     }
-    if (!vehicle) {
-      redirect(`/book/${tripId}/vehicle`);
-    }
+    // Vehicle selection is optional (customer may bring own vehicle or skip)
   } else if (targetStep === "travellers") {
-    if (!hotel || !vehicle) {
-      const earliest = determineEarliestIncompleteStep({
-        trip,
-        hotel,
-        vehicle,
-        passengers,
-      });
-      redirect(`/book/${tripId}/${earliest}`);
+    if (!trip.start_date || !trip.end_date || !trip.traveler_count) {
+      redirect(`/book/${tripId}/duration`);
+    }
+    if (!hotel) {
+      redirect(`/book/${tripId}/hotel`);
     }
   } else if (targetStep === "checkout") {
-    const earliest = determineEarliestIncompleteStep({
-      trip,
-      hotel,
-      vehicle,
-      passengers,
-    });
-    if (earliest !== "checkout") {
-      redirect(`/book/${tripId}/${earliest}`);
+    if (!trip.start_date || !trip.end_date || !trip.traveler_count) {
+      redirect(`/book/${tripId}/duration`);
+    }
+    if (!hotel) {
+      redirect(`/book/${tripId}/hotel`);
+    }
+    const validLead = passengers.find(
+      (p) => p.is_lead && Boolean(p.full_name?.trim()) && Boolean(p.phone?.trim())
+    );
+    if (passengers.length < trip.traveler_count || !validLead) {
+      redirect(`/book/${tripId}/travellers`);
     }
   }
 

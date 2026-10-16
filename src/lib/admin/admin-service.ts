@@ -540,6 +540,23 @@ export class AdminService {
     return currentState.coupons[idx];
   }
 
+  static deleteCoupon(actor: AdminActor, couponId: string, reason: string) {
+    const idx = currentState.coupons.findIndex((c) => c.id === couponId);
+    if (idx < 0) return false;
+    const removed = currentState.coupons.splice(idx, 1)[0];
+    this.writeAudit(
+      actor,
+      "delete",
+      "coupon",
+      couponId,
+      removed as unknown as Record<string, unknown>,
+      null,
+      reason
+    );
+    this.notify();
+    return true;
+  }
+
   // --- Destinations (W1 Publish Checklist) ---
   static getDestinations(): DestinationAdmin[] {
     return [...currentState.destinations];
@@ -673,6 +690,23 @@ export class AdminService {
     return newDest;
   }
 
+  static deleteDestination(actor: AdminActor, destinationId: string, reason: string) {
+    const idx = currentState.destinations.findIndex((d) => d.id === destinationId);
+    if (idx < 0) return false;
+    const removed = currentState.destinations.splice(idx, 1)[0];
+    this.writeAudit(
+      actor,
+      "delete",
+      "destination",
+      destinationId,
+      removed as unknown as Record<string, unknown>,
+      null,
+      reason
+    );
+    this.notify();
+    return true;
+  }
+
   // --- Trips / Circuits ---
   static getCircuits(): CircuitAdmin[] {
     return [...currentState.circuits];
@@ -734,6 +768,23 @@ export class AdminService {
     return newCirc;
   }
 
+  static deleteCircuit(actor: AdminActor, circuitId: string, reason: string) {
+    const idx = currentState.circuits.findIndex((c) => c.id === circuitId);
+    if (idx < 0) return false;
+    const removed = currentState.circuits.splice(idx, 1)[0];
+    this.writeAudit(
+      actor,
+      "delete",
+      "circuit",
+      circuitId,
+      removed as unknown as Record<string, unknown>,
+      null,
+      reason
+    );
+    this.notify();
+    return true;
+  }
+
   // --- Hotels ---
   static getHotels(): HotelAdmin[] {
     return [...currentState.hotels];
@@ -783,6 +834,23 @@ export class AdminService {
     );
     this.notify();
     return newHotel;
+  }
+
+  static deleteHotel(actor: AdminActor, hotelId: string, reason: string) {
+    const idx = currentState.hotels.findIndex((h) => h.id === hotelId);
+    if (idx < 0) return false;
+    const removed = currentState.hotels.splice(idx, 1)[0];
+    this.writeAudit(
+      actor,
+      "delete",
+      "hotel",
+      hotelId,
+      removed as unknown as Record<string, unknown>,
+      null,
+      reason
+    );
+    this.notify();
+    return true;
   }
 
   // --- Vehicles ---
@@ -836,6 +904,23 @@ export class AdminService {
     return newVehicle;
   }
 
+  static deleteVehicle(actor: AdminActor, vehicleId: string, reason: string) {
+    const idx = currentState.vehicles.findIndex((v) => v.id === vehicleId);
+    if (idx < 0) return false;
+    const removed = currentState.vehicles.splice(idx, 1)[0];
+    this.writeAudit(
+      actor,
+      "delete",
+      "vehicle",
+      vehicleId,
+      removed as unknown as Record<string, unknown>,
+      null,
+      reason
+    );
+    this.notify();
+    return true;
+  }
+
   // --- Drivers ---
   static getDrivers(): DriverAdmin[] {
     return [...currentState.drivers];
@@ -885,6 +970,23 @@ export class AdminService {
     );
     this.notify();
     return newDriver;
+  }
+
+  static deleteDriver(actor: AdminActor, driverId: string, reason: string) {
+    const idx = currentState.drivers.findIndex((d) => d.id === driverId);
+    if (idx < 0) return false;
+    const removed = currentState.drivers.splice(idx, 1)[0];
+    this.writeAudit(
+      actor,
+      "delete",
+      "driver",
+      driverId,
+      removed as unknown as Record<string, unknown>,
+      null,
+      reason
+    );
+    this.notify();
+    return true;
   }
 
   // --- Stops ---
@@ -938,6 +1040,23 @@ export class AdminService {
     return newStop;
   }
 
+  static deleteStop(actor: AdminActor, stopId: string, reason: string) {
+    const idx = currentState.stops.findIndex((s) => s.id === stopId);
+    if (idx < 0) return false;
+    const removed = currentState.stops.splice(idx, 1)[0];
+    this.writeAudit(
+      actor,
+      "delete",
+      "stop",
+      stopId,
+      removed as unknown as Record<string, unknown>,
+      null,
+      reason
+    );
+    this.notify();
+    return true;
+  }
+
   // --- Bookings & Ops ---
   static getBookings(): BookingAdmin[] {
     return [...currentState.bookings];
@@ -951,6 +1070,23 @@ export class AdminService {
   ) {
     const booking = currentState.bookings.find((b) => b.id === tripId);
     if (!booking) return { ok: false, error: "Booking not found" };
+
+    if (!driverId || driverId === "none") {
+      const before = { driver_id: booking.driver_id };
+      booking.driver_id = null;
+      booking.driver = undefined;
+      this.writeAudit(
+        actor,
+        "unassign_driver",
+        "booking",
+        tripId,
+        before,
+        { driver_id: null },
+        reason
+      );
+      this.notify();
+      return { ok: true, booking };
+    }
 
     const driver = currentState.drivers.find((d) => d.id === driverId);
     if (!driver || !driver.is_active) {
@@ -1015,6 +1151,29 @@ export class AdminService {
     );
     this.notify();
     return note;
+  }
+
+  static updateBookingStatus(
+    actor: AdminActor,
+    tripId: string,
+    newStatus: BookingAdmin["status"],
+    reason: string
+  ): { ok: boolean; error?: string } {
+    const booking = currentState.bookings.find((b) => b.id === tripId);
+    if (!booking) return { ok: false, error: "Booking not found" };
+    const before = { status: booking.status };
+    booking.status = newStatus;
+    this.writeAudit(
+      actor,
+      "update_status",
+      "booking",
+      tripId,
+      before,
+      { status: newStatus },
+      reason
+    );
+    this.notify();
+    return { ok: true };
   }
 
   static cancelBooking(

@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
@@ -70,6 +71,7 @@ function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 5000): Promise<T> {
 }
 
 export async function getDestinations(category?: string): Promise<Destination[]> {
+  noStore();
   try {
     const supabase = createClient();
     let query = supabase
@@ -122,6 +124,7 @@ export async function getDestinations(category?: string): Promise<Destination[]>
 export async function getDestinationBySlug(
   slug: string
 ): Promise<{ destination: Destination | null; highlights: DestinationHighlight[] }> {
+  noStore();
   try {
     const supabase = createClient();
     const { data: rawD, error } = await withTimeout(
@@ -200,6 +203,7 @@ export async function searchCircuits(params: {
   category?: string;
   sort?: string;
 }): Promise<Circuit[]> {
+  noStore();
   const { query, category, sort } = params;
   try {
     const supabase = createClient();
@@ -261,6 +265,7 @@ export async function searchCircuits(params: {
 }
 
 export async function getFeaturedCircuits(): Promise<Circuit[]> {
+  noStore();
   try {
     const supabase = createClient();
     const { data, error } = await withTimeout(

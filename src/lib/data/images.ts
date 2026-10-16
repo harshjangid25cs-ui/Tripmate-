@@ -69,13 +69,34 @@ const FALLBACK_STOPS: Record<string, string> = {
     "https://lh3.googleusercontent.com/aida-public/AB6AXuD5vQEunytb-x1PtTP0adQrR6odomlU_mv5YLW0PnZjgYjRZ5PvFp30RhAWA5YMjfAgx0ivy_kDu8Oco3KlZ_EbY1tmmZlfzfDm-7wkZZ1-JpcxzI80oIt619B9SVsqfSe-WMtrGj4y977vT-jmp4uZKdPepfMuR1MVcQO75Kh5OGjuwQsdJBTICGuKpY7wuguNOAYiFy8cl_i4qeO1Kt4cpsY0KNtKqxgAD-FHc7nSPf0Yj1P8Ddq7KQ",
 };
 
+/**
+ * Resolves a stored catalog image path or URL.
+ * If the string starts with http://, https://, data:, or /, returns it untouched.
+ * Never prepends catalog-images/ to already valid external or absolute URLs.
+ */
+export function resolveCatalogImageUrl(imagePath?: string | null): string | null {
+  if (!imagePath) return null;
+  const trimmed = imagePath.trim();
+  if (!trimmed) return null;
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("data:") ||
+    trimmed.startsWith("/")
+  ) {
+    return trimmed;
+  }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  return `${supabaseUrl}/storage/v1/object/public/catalog-images/${trimmed}`;
+}
+
 export function getDestinationImageUrl(
   slug: string,
   imagePath?: string | null
 ): string {
-  if (imagePath) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    return `${supabaseUrl}/storage/v1/object/public/catalog-images/${imagePath}`;
+  const resolved = resolveCatalogImageUrl(imagePath);
+  if (resolved) {
+    return resolved;
   }
   const normalizedSlug = slug.toLowerCase();
   return (
@@ -88,9 +109,9 @@ export function getCircuitImageUrl(
   circuitId?: string | null,
   imagePath?: string | null
 ): string {
-  if (imagePath) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    return `${supabaseUrl}/storage/v1/object/public/catalog-images/${imagePath}`;
+  const resolved = resolveCatalogImageUrl(imagePath);
+  if (resolved) {
+    return resolved;
   }
   if (circuitId) {
     if (circuitId.startsWith("c1")) return FALLBACK_CIRCUITS["c1"]!;
@@ -113,9 +134,9 @@ export function getHotelImageUrl(
   nameOrId: string,
   imagePath?: string | null
 ): string {
-  if (imagePath) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    return `${supabaseUrl}/storage/v1/object/public/catalog-images/${imagePath}`;
+  const resolved = resolveCatalogImageUrl(imagePath);
+  if (resolved) {
+    return resolved;
   }
   const lower = nameOrId.toLowerCase();
   if (lower.includes("shahpura") || lower.startsWith("h1")) return FALLBACK_HOTELS["shahpura"]!;
@@ -129,9 +150,9 @@ export function getVehicleImageUrl(
   nameOrId: string,
   imagePath?: string | null
 ): string {
-  if (imagePath) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    return `${supabaseUrl}/storage/v1/object/public/catalog-images/${imagePath}`;
+  const resolved = resolveCatalogImageUrl(imagePath);
+  if (resolved) {
+    return resolved;
   }
   const lower = nameOrId.toLowerCase();
   if (lower.includes("dzire") || lower.startsWith("v1")) return FALLBACK_VEHICLES["dzire"]!;
@@ -147,9 +168,9 @@ export function getStopImageUrl(
   nameOrId: string,
   imagePath?: string | null
 ): string {
-  if (imagePath) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    return `${supabaseUrl}/storage/v1/object/public/catalog-images/${imagePath}`;
+  const resolved = resolveCatalogImageUrl(imagePath);
+  if (resolved) {
+    return resolved;
   }
   const lower = nameOrId.toLowerCase();
   if (lower.includes("neemrana") || lower.startsWith("s1")) return FALLBACK_STOPS["neemrana"]!;

@@ -333,6 +333,7 @@ export function HomeView({
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
+                      unoptimized
                     />
 
                     {/* Badge */}
@@ -493,6 +494,7 @@ export function HomeView({
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                         sizes="(max-width: 768px) 100vw, 220px"
+                        unoptimized
                       />
                       <div className="absolute top-2.5 left-2.5 bg-urgency-amber text-on-primary font-label-badge text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
                         <span className="material-symbols-outlined text-[13px]">bolt</span>
@@ -575,6 +577,7 @@ export function HomeView({
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
+                      unoptimized
                     />
 
                     {/* Urgency Badge */}

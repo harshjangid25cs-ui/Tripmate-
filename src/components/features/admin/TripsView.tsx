@@ -7,10 +7,12 @@ import type { CircuitAdmin } from "@/lib/admin/types";
 import {
   adminUpsertCircuitAction,
   adminToggleCircuitStatusAction,
+  adminDeleteCircuitAction,
 } from "@/lib/actions/admin-ops";
 import {
   Plus,
   Edit2,
+  Trash2,
   Hotel,
   Car,
   Compass,
@@ -40,6 +42,50 @@ export function TripsView() {
   useEffect(() => {
     return AdminService.subscribe(refresh);
   }, []);
+
+  const handleAddNewTrip = () => {
+    if (!canWrite) {
+      toast("Restricted: Catalog Manager or Super Admin role required", "error");
+      return;
+    }
+    setFormData({
+      title: "",
+      destination_id: destinations[0]?.id || "",
+      days: 3,
+      nights: 2,
+      base_price_per_person: 8499,
+      badge: "Best Seller",
+      summary: "",
+      description: "",
+      image_url: "",
+      is_active: true,
+      hotel_ids: [],
+      vehicle_ids: [],
+      stop_ids: [],
+    });
+    setIsEditing(true);
+  };
+
+  const handleDeleteCircuit = (circuit: CircuitAdmin) => {
+    if (!canWrite) {
+      toast("Restricted: Catalog Manager or Super Admin role required", "error");
+      return;
+    }
+    requestReasonModal(
+      "Delete Trip / Circuit",
+      `Are you sure you want to permanently delete circuit '${circuit.title}'? This action cannot be undone.`,
+      async (reason) => {
+        AdminService.deleteCircuit(currentAdmin, circuit.id, reason);
+        await adminDeleteCircuitAction({ circuitId: circuit.id, reason });
+        toast(`Trip ${circuit.title} has been deleted.`, "success");
+        if (isEditing && formData.id === circuit.id) {
+          setIsEditing(false);
+        }
+        refresh();
+        await refreshOperationalData();
+      }
+    );
+  };
 
   const handleToggleActive = (circuit: CircuitAdmin) => {
     if (!canWrite) {
@@ -132,7 +178,7 @@ export function TripsView() {
               description: formData.description || "",
               image_url: formData.image_url || "/images/placeholder.jpg",
               is_featured: Boolean(formData.is_featured),
-              is_active: true,
+              is_active: formData.is_active ?? true,
               allow_car: formData.allow_car ?? null,
               allow_bike: formData.allow_bike ?? null,
               vehicle_required: formData.vehicle_required ?? null,
@@ -166,25 +212,11 @@ export function TripsView() {
         {canWrite && (
           <button
             type="button"
-            onClick={() => {
-              setFormData({
-                title: "",
-                destination_id: destinations[0]?.id || "",
-                days: 3,
-                base_price_per_person: 8499,
-                badge: "Best Seller",
-                summary: "",
-                description: "",
-                hotel_ids: [],
-                vehicle_ids: [],
-                stop_ids: [],
-              });
-              setIsEditing(true);
-            }}
-            className="flex items-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all"
+            onClick={handleAddNewTrip}
+            className="flex items-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all"
           >
             <Plus className="h-4 w-4" />
-            <span>Create Circuit</span>
+            <span>+ Add New Trip</span>
           </button>
         )}
       </div>
@@ -274,7 +306,7 @@ export function TripsView() {
               </div>
 
               {/* Actions */}
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -288,19 +320,32 @@ export function TripsView() {
                   <span>Configure</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleToggleActive(circ)}
-                  disabled={!canWrite}
-                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
-                    circ.is_active
-                      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
-                  } disabled:opacity-50`}
-                >
-                  {circ.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  <span>{circ.is_active ? "Hide" : "Activate"}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleActive(circ)}
+                    disabled={!canWrite}
+                    className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                      circ.is_active
+                        ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    } disabled:opacity-50`}
+                  >
+                    {circ.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    <span>{circ.is_active ? "Hide" : "Activate"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCircuit(circ)}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                    title="Delete Circuit"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete</span>
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -335,6 +380,11 @@ export function TripsView() {
                   placeholder="e.g. Jaipur Heritage & Forts Circuit"
                   required
                 />
+                {formData.title && (
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    URL Slug: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-700">/{formData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}</code>
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -412,6 +462,30 @@ export function TripsView() {
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Route Highlights & Description</label>
+                <textarea
+                  value={formData.description || ""}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                  placeholder="Key highlights, itinerary notes, recommended stops..."
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="circuit-active-status"
+                  checked={formData.is_active ?? true}
+                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                  className="h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                />
+                <label htmlFor="circuit-active-status" className="text-xs font-bold text-slate-700 cursor-pointer">
+                  Active (visible in public customer catalog)
+                </label>
+              </div>
+
               <CatalogImageUpload
                 value={formData.image_url || ""}
                 onChange={(url) => setFormData({ ...formData, image_url: url })}
@@ -487,20 +561,33 @@ export function TripsView() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setIsEditing(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
-                >
-                  Save Circuit
-                </button>
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                {formData.id ? (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteCircuit(formData as CircuitAdmin)}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Delete Trip</span>
+                  </button>
+                ) : <div />}
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  >
+                    Save Circuit
+                  </button>
+                </div>
               </div>
             </form>
           </div>

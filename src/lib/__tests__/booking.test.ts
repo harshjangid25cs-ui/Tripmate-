@@ -177,3 +177,68 @@ describe("Traveller Privacy & Document Rules (BUILD_PLAN M4 & FEATURES §4.6)", 
   });
 });
 
+describe("Optional Vehicle Selection in Customer Booking Flow (TASK 2)", () => {
+  it("allows selecting null or empty vehicleId in selectTripVehicleSchema", async () => {
+    const { selectTripVehicleSchema } = await import("../validations/actions");
+
+    // Null vehicle (skipping vehicle / own transport)
+    const nullVeh = selectTripVehicleSchema.safeParse({
+      tripId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      vehicleId: null,
+    });
+    expect(nullVeh.success).toBe(true);
+
+    // Undefined vehicle
+    const undefVeh = selectTripVehicleSchema.safeParse({
+      tripId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+    });
+    expect(undefVeh.success).toBe(true);
+
+    // Empty string vehicle
+    const emptyVeh = selectTripVehicleSchema.safeParse({
+      tripId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      vehicleId: "",
+    });
+    expect(emptyVeh.success).toBe(true);
+
+    // Valid vehicle UUID
+    const validVeh = selectTripVehicleSchema.safeParse({
+      tripId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+      vehicleId: "a11ac10b-58cc-4372-a567-0e02b2c3d479",
+    });
+    expect(validVeh.success).toBe(true);
+  });
+
+  it("exports clearTripVehicleAction for skipping car/bike", async () => {
+    const { clearTripVehicleAction, selectTripVehicle } = await import("../actions/trips");
+    expect(typeof clearTripVehicleAction).toBe("function");
+    expect(typeof selectTripVehicle).toBe("function");
+  });
+
+  it("calculates booking subtotal with ₹0 vehicle cost when vehicle is skipped", () => {
+    const nights = 3;
+    const hotelRooms = 1;
+    const hotelPricePerNight = 4200;
+    const hotelSubtotal = hotelPricePerNight * hotelRooms * nights; // 12,600
+
+    // Vehicle skipped: 0 cost
+    const vehicleSubtotal = 0;
+
+    const travelers = 2;
+    const stopPricePerPerson = 1850;
+    const stopSubtotal = stopPricePerPerson * travelers; // 3,700
+
+    const subtotal = hotelSubtotal + vehicleSubtotal + stopSubtotal;
+    expect(subtotal).toBe(16300);
+
+    const serviceFee = 999;
+    const gstRate = 0.18;
+    const taxAmount = Math.round(gstRate * (subtotal + serviceFee));
+    expect(taxAmount).toBe(3114);
+
+    const discountAmount = 2000;
+    const totalAmount = subtotal + serviceFee + taxAmount - discountAmount;
+    expect(totalAmount).toBe(18413);
+  });
+});
+

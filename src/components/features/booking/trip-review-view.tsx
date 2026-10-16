@@ -46,7 +46,7 @@ export function TripReviewView({ tripData, highlights }: TripReviewViewProps) {
 
   // Breakdown figures from DB columns
   const staySubtotal = hotel ? Number(hotel.subtotal) : 12600;
-  const vehicleSubtotal = vehicle ? Number(vehicle.subtotal) : 7596;
+  const vehicleSubtotal = vehicle ? Number(vehicle.subtotal) : 0;
   const stopsSubtotal = stops.reduce((acc, s) => acc + Number(s.subtotal), 0);
   const serviceFee = Number(trip.service_fee ?? 999);
   const taxAmount = Number(trip.tax_amount ?? 4481);
@@ -66,7 +66,7 @@ export function TripReviewView({ tripData, highlights }: TripReviewViewProps) {
     router.push(`/book/${trip.id}/travellers`);
   };
 
-  const vehicleName = vehicle?.vehicle?.name ?? "Maruti Suzuki Dzire";
+  const vehicleName = vehicle?.vehicle?.name ?? "No vehicle selected (Own/Independent Transport)";
   const hotelName = hotel?.hotel?.name ?? "Shahpura Haveli & Heritage Suites";
   const primaryStop = stops[0]?.stop ?? null;
 
@@ -287,24 +287,42 @@ export function TripReviewView({ tripData, highlights }: TripReviewViewProps) {
                       </span>
                     </div>
                     <h3 className="font-title-md text-title-md text-text-primary mt-1.5">
-                      Private Chauffeur Pickup
+                      {vehicle ? "Private Chauffeur Pickup" : "Self-Arranged Arrival"}
                     </h3>
                     <p className="font-body-sm text-body-sm text-text-secondary mt-0.5">
-                      Doorstep pickup in sanitized {vehicleName}. Refreshing mint wet wipes &amp; chilled mineral water onboard.
+                      {vehicle
+                        ? `Doorstep pickup in sanitized ${vehicleName}. Refreshing mint wet wipes & chilled mineral water onboard.`
+                        : "Independent travel to destination. Your curated road trip itinerary begins upon hotel arrival."}
                     </p>
-                    <div className="mt-space-sm flex items-center gap-2 p-2 bg-surface rounded-lg border border-border-hairline/60">
-                      <span className="material-symbols-outlined text-[20px] text-text-secondary">
-                        local_taxi
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-label-md text-label-md text-text-primary truncate">
-                          Assigned Chauffeur: Rajesh Kumar
-                        </div>
-                        <div className="font-body-sm text-body-sm text-text-secondary truncate">
-                          DL 1Y AA 4088 • 4.96 ★ (180+ trips)
+                    {vehicle ? (
+                      <div className="mt-space-sm flex items-center gap-2 p-2 bg-surface rounded-lg border border-border-hairline/60">
+                        <span className="material-symbols-outlined text-[20px] text-text-secondary">
+                          local_taxi
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-label-md text-label-md text-text-primary truncate">
+                            Assigned Chauffeur: Rajesh Kumar
+                          </div>
+                          <div className="font-body-sm text-body-sm text-text-secondary truncate">
+                            DL 1Y AA 4088 • 4.96 ★ (180+ trips)
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div className="mt-space-sm flex items-center gap-2 p-2 bg-surface rounded-lg border border-border-hairline/60">
+                        <span className="material-symbols-outlined text-[20px] text-text-secondary">
+                          directions_car
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-label-md text-label-md text-text-primary truncate">
+                            Own / Independent Transit
+                          </div>
+                          <div className="font-body-sm text-body-sm text-text-secondary truncate">
+                            ₹0 Transport Fee • No driver assigned
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </article>
 
                   {/* Stop 2: En Route Rest Stop */}
@@ -486,10 +504,12 @@ export function TripReviewView({ tripData, highlights }: TripReviewViewProps) {
                   directions_car
                 </span>
                 <span className="font-label-md text-xs font-semibold text-text-primary mt-1">
-                  Private Fleet &amp; Fuel
+                  {vehicle ? "Private Fleet & Fuel" : "Transit Planning"}
                 </span>
                 <span className="font-body-sm text-[11px] text-text-secondary">
-                  Dedicated {vehicleName} with toll passes
+                  {vehicle
+                    ? `Dedicated ${vehicleName} with toll passes`
+                    : "No vehicle selected (Own/Independent Transport)"}
                 </span>
               </div>
               <div className="p-3 rounded-lg bg-surface-container-low border border-border-hairline/60 flex flex-col gap-1">
@@ -548,7 +568,7 @@ export function TripReviewView({ tripData, highlights }: TripReviewViewProps) {
               </div>
               <div className="flex justify-between items-center text-text-secondary">
                 <span>
-                  {vehicleName} ({totalDays} Days)
+                  {vehicle ? `${vehicleName} (${totalDays} Days)` : "Vehicle: Own/Independent Transport"}
                 </span>
                 <span className="font-semibold text-text-primary">
                   {formatCurrency(vehicleSubtotal)}

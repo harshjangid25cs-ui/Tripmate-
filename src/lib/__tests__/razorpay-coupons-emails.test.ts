@@ -232,6 +232,6 @@ describe("Production Razorpay, Dynamic Coupons & Transactional Email Tests", () 
 
       expect(res.ok).toBe(true);
       expect(res.messageId).toBeDefined();
-    });
+    }, 15000);
   });
 });

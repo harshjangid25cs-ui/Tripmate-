@@ -8,7 +8,7 @@ import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
 import type { Vehicle } from "@/lib/data/booking";
 import { getVehicleImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
-import { selectTripVehicle } from "@/lib/actions/trips";
+import { selectTripVehicle, clearTripVehicleAction } from "@/lib/actions/trips";
 import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface VehicleSelectionViewProps {
@@ -32,9 +32,7 @@ export function VehicleSelectionView({
   const [mode, setMode] = React.useState<ModeFilter>("car");
   const [specFilter, setSpecFilter] = React.useState<SpecFilter>("all");
   const [selectedVehicleId, setSelectedVehicleId] = React.useState<string | null>(
-    selectedTripVehicle?.vehicle_id ??
-      vehicles.find((v) => v.type === "car")?.id ??
-      null
+    selectedTripVehicle?.vehicle_id ?? null
   );
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
@@ -61,8 +59,19 @@ export function VehicleSelectionView({
   const selectedVehicle = vehicles.find((v) => v.id === selectedVehicleId);
 
   const handleSelectVehicle = async (vehicleId: string) => {
-    setSelectedVehicleId(vehicleId);
     setErrorMsg(null);
+    if (selectedVehicleId === vehicleId) {
+      // Toggle off / deselect
+      setSelectedVehicleId(null);
+      try {
+        await clearTripVehicleAction(trip.id);
+      } catch {
+        setErrorMsg("Failed to remove vehicle selection.");
+      }
+      return;
+    }
+
+    setSelectedVehicleId(vehicleId);
     try {
       const res = await selectTripVehicle({
         tripId: trip.id,
@@ -76,25 +85,48 @@ export function VehicleSelectionView({
     }
   };
 
-  const handleContinue = async () => {
-    if (!selectedVehicleId) {
-      setErrorMsg("Please select a ride before proceeding.");
-      return;
-    }
-
+  const handleSkipVehicle = async () => {
     setIsSubmitting(true);
     setErrorMsg(null);
+    setSelectedVehicleId(null);
     try {
-      const res = await selectTripVehicle({
-        tripId: trip.id,
-        vehicleId: selectedVehicleId,
-      });
-
+      const res = await clearTripVehicleAction(trip.id);
       if (res.ok) {
         router.push(`/book/${trip.id}/stops`);
       } else {
-        setErrorMsg(res.error ?? "Failed to save vehicle.");
+        setErrorMsg(res.error ?? "Failed to update vehicle choice.");
         setIsSubmitting(false);
+      }
+    } catch {
+      setErrorMsg("Failed to clear vehicle choice.");
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleContinue = async () => {
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    try {
+      if (selectedVehicleId) {
+        const res = await selectTripVehicle({
+          tripId: trip.id,
+          vehicleId: selectedVehicleId,
+        });
+
+        if (res.ok) {
+          router.push(`/book/${trip.id}/stops`);
+        } else {
+          setErrorMsg(res.error ?? "Failed to save vehicle.");
+          setIsSubmitting(false);
+        }
+      } else {
+        const res = await clearTripVehicleAction(trip.id);
+        if (res.ok) {
+          router.push(`/book/${trip.id}/stops`);
+        } else {
+          setErrorMsg(res.error ?? "Failed to clear vehicle.");
+          setIsSubmitting(false);
+        }
       }
     } catch {
       setErrorMsg("An unexpected network error occurred.");
@@ -108,7 +140,7 @@ export function VehicleSelectionView({
       : (selectedVehicle.capacity ?? 0) >= 6
       ? "SUV Selected"
       : "Sedan Selected"
-    : "No Vehicle Selected";
+    : "No Vehicle Selected (Own Transport)";
 
   const selectedSummaryPrice = selectedVehicle
     ? formatCurrency(selectedVehicle.price * totalDays)
@@ -337,6 +369,63 @@ export function VehicleSelectionView({
             </div>
           )}
 
+          {/* Skip Vehicle / Independent Transit Option */}
+          <div className="px-margin-mobile mb-4">
+            <div
+              className={`p-4 rounded-2xl border transition-all ${
+                !selectedVehicleId
+                  ? "bg-slate-100 border-slate-400 ring-2 ring-slate-400/20"
+                  : "bg-surface-container-low border-border-hairline hover:border-slate-300"
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center shrink-0 mt-0.5">
+                    <span className="material-symbols-outlined text-[20px] text-text-secondary">
+                      directions_walk
+                    </span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-title-sm text-sm font-bold text-text-primary">
+                        No Vehicle Needed / Own Transport
+                      </h3>
+                      {!selectedVehicleId && (
+                        <span className="px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 text-[10px] font-bold uppercase">
+                          Active Choice
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-text-secondary mt-0.5 leading-relaxed">
+                      Traveling via your own car, bike, or self-arranged transit? Continue with ₹0 vehicle cost.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={handleSkipVehicle}
+                    className="px-4 py-2 rounded-xl bg-surface-dark hover:bg-black text-card-surface font-label-md text-xs font-bold uppercase transition-all active:scale-95 shadow-sm"
+                  >
+                    Skip Vehicle / Own Transport
+                  </button>
+                  {selectedVehicleId && (
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={() => handleSelectVehicle(selectedVehicleId)}
+                      className="px-3 py-2 rounded-xl border border-border-hairline bg-card-surface text-text-secondary hover:text-error text-xs font-semibold transition-all"
+                    >
+                      Deselect
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Vehicle Cards Stack */}
           <div className="px-margin-mobile flex flex-col gap-space-md">
             {filteredVehicles.map((vehicle) => {
@@ -360,6 +449,7 @@ export function VehicleSelectionView({
                       alt={vehicle.name}
                       fill
                       priority
+                      unoptimized
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
                     />
@@ -498,7 +588,7 @@ export function VehicleSelectionView({
             <div className="mb-3 max-w-md mx-auto bg-card-surface/95 backdrop-blur-xl rounded-2xl p-3.5 shadow-xl border border-border-hairline flex items-center justify-between">
               <div className="flex flex-col min-w-0 pr-2">
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-success-green animate-pulse" />
+                  <span className={`w-2 h-2 rounded-full ${selectedVehicleId ? "bg-success-green" : "bg-slate-400"} animate-pulse`} />
                   <span className="font-label-badge text-label-badge text-text-secondary uppercase truncate">
                     {selectedSummaryName}
                   </span>
@@ -511,17 +601,17 @@ export function VehicleSelectionView({
                     {selectedSummaryPrice}
                   </span>
                   <span className="font-body-sm text-body-sm text-text-secondary">
-                    • {totalDays} days
+                    {selectedVehicleId ? `• ${totalDays} days` : "• Own Transport"}
                   </span>
                 </div>
               </div>
               <button
                 type="button"
-                disabled={!selectedVehicleId || isSubmitting}
+                disabled={isSubmitting}
                 onClick={handleContinue}
                 className="bg-primary-container hover:bg-primary active:scale-[0.98] transition-all text-on-primary font-label-lg text-label-lg uppercase px-5 py-3 rounded-xl flex items-center gap-2 shadow-md shrink-0 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <span>{isSubmitting ? "Saving..." : "Continue"}</span>
+                <span>{isSubmitting ? "Saving..." : selectedVehicleId ? "Continue to Stops" : "Continue without Vehicle"}</span>
                 <span className="material-symbols-outlined text-[18px]">
                   arrow_forward
                 </span>

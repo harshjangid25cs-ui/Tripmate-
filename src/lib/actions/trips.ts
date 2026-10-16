@@ -312,7 +312,7 @@ export async function selectTripVehicle({
   quantity = 1,
 }: {
   tripId: string;
-  vehicleId: string;
+  vehicleId?: string | null;
   quantity?: number;
 }): Promise<ActionResult> {
   try {
@@ -343,6 +343,15 @@ export async function selectTripVehicle({
       return { ok: false, error: "Draft not found or access denied." };
     }
 
+    // Delete existing vehicle row
+    await supabase.from("trip_vehicles").delete().eq("trip_id", tripId);
+
+    // If no vehicle selected (skipped), revalidate and return success
+    if (!vehicleId) {
+      revalidatePath(`/book/${tripId}`, "layout");
+      return { ok: true };
+    }
+
     const tripRow = trip as TripRow;
     const totalDays = tripRow.total_days ?? 4;
 
@@ -353,9 +362,6 @@ export async function selectTripVehicle({
       .single();
 
     const unitPrice = vehicleData ? Number(vehicleData.price) : 1899;
-
-    // Delete existing vehicle row
-    await supabase.from("trip_vehicles").delete().eq("trip_id", tripId);
 
     const { error: insertError } = await supabase.from("trip_vehicles").insert({
       trip_id: tripId,
@@ -376,6 +382,10 @@ export async function selectTripVehicle({
     const message = err instanceof Error ? err.message : "Unexpected error";
     return { ok: false, error: message };
   }
+}
+
+export async function clearTripVehicleAction(tripId: string): Promise<ActionResult> {
+  return selectTripVehicle({ tripId, vehicleId: null });
 }
 
 export async function toggleTripStop({
