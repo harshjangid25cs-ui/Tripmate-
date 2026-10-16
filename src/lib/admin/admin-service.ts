@@ -69,6 +69,15 @@ const INITIAL_REFUND_RULES: RefundRule[] = [
 
 const INITIAL_ADMINS: AdminUser[] = [
   {
+    id: "admin-super",
+    email: "tripmateoffical007@gmail.com",
+    full_name: "Super Administrator",
+    role: "super_admin",
+    is_active: true,
+    mfa_enabled: true,
+    created_at: "2026-09-01T10:00:00Z",
+  },
+  {
     id: "admin-1",
     email: "superadmin@tripmate.in",
     full_name: "Aaditya Singhania",
@@ -115,798 +124,6 @@ const INITIAL_ADMINS: AdminUser[] = [
   },
 ];
 
-const INITIAL_DESTINATIONS: DestinationAdmin[] = [
-  {
-    id: "dest-jaipur",
-    slug: "jaipur",
-    name: "Jaipur",
-    region: "Rajasthan",
-    tagline: "The Pink City",
-    description: "Royal palaces, formidable hill forts, vibrant bazaars, and opulent heritage hotels.",
-    hero_image_path: "/images/jaipur-hero.jpg",
-    starting_price: 8499,
-    rating: 4.88,
-    review_count: 1420,
-    recommended_days: "3–4 Days",
-    best_season: "Oct–Mar",
-    badge: "Trending this week",
-    categories: ["heritage", "popular", "weekend_getaways"],
-    origin_label: "Delhi NCR",
-    drive_hours: 6.5,
-    drive_km: 270,
-    is_featured: true,
-    is_bookable: true,
-    is_active: true,
-    allow_car: true,
-    allow_bike: true,
-    vehicle_required: true,
-    min_days: 2,
-    max_days: 7,
-    max_travellers: 10,
-    highlights: [
-      { id: "hl-1", destination_id: "dest-jaipur", title: "Amber Fort & Palace Tour", sort_order: 1 },
-      { id: "hl-2", destination_id: "dest-jaipur", title: "Hawa Mahal & City Palace Walk", sort_order: 2 },
-      { id: "hl-3", destination_id: "dest-jaipur", title: "Sunset at Nahargarh Fort", sort_order: 3 },
-      { id: "hl-4", destination_id: "dest-jaipur", title: "Johri Bazaar Gem & Textile Walk", sort_order: 4 },
-    ],
-  },
-  {
-    id: "dest-udaipur",
-    slug: "udaipur",
-    name: "Udaipur",
-    region: "Rajasthan",
-    tagline: "City of Lakes",
-    description: "Serene lakeside promenades, marble palace architecture, and stunning sunsets over Lake Pichola.",
-    hero_image_path: "/images/udaipur-hero.jpg",
-    starting_price: 12499,
-    rating: 4.92,
-    review_count: 980,
-    recommended_days: "3–4 Days",
-    best_season: "Sep–Mar",
-    badge: "Romantic Choice",
-    categories: ["heritage", "popular"],
-    origin_label: "Delhi NCR",
-    drive_hours: 11.5,
-    drive_km: 660,
-    is_featured: true,
-    is_bookable: true,
-    is_active: true,
-    allow_car: true,
-    allow_bike: false,
-    vehicle_required: true,
-    min_days: 3,
-    max_days: 8,
-    max_travellers: 8,
-  },
-  {
-    id: "dest-munnar",
-    slug: "munnar",
-    name: "Munnar",
-    region: "Kerala",
-    tagline: "Misty Tea Highlands",
-    description: "Endless rolling green tea plantations, cool mountain breeze, waterfalls, and spice trails.",
-    hero_image_path: "/images/munnar-hero.jpg",
-    starting_price: 9999,
-    rating: 4.82,
-    review_count: 730,
-    recommended_days: "4–5 Days",
-    best_season: "Sep–May",
-    badge: null,
-    categories: ["nature", "weekend_getaways"],
-    origin_label: "Kochi",
-    drive_hours: 4.0,
-    drive_km: 130,
-    is_featured: false,
-    is_bookable: false, // Coming soon in seed
-    is_active: true,
-    allow_car: true,
-    allow_bike: true,
-    vehicle_required: false,
-    min_days: 2,
-    max_days: 6,
-    max_travellers: 10,
-  },
-  {
-    id: "dest-hampi",
-    slug: "hampi",
-    name: "Hampi",
-    region: "Karnataka",
-    tagline: "Boulders & Ruins of Vijayanagara",
-    description: "UNESCO World Heritage site with monolithic monuments, riverside temple trails, and surreal landscapes.",
-    hero_image_path: "/images/hampi-hero.jpg",
-    starting_price: 7499,
-    rating: 4.85,
-    review_count: 512,
-    recommended_days: "3–4 Days",
-    best_season: "Nov–Feb",
-    badge: null,
-    categories: ["heritage", "hidden_gems"],
-    origin_label: "Bengaluru",
-    drive_hours: 6.5,
-    drive_km: 340,
-    is_featured: false,
-    is_bookable: false,
-    is_active: true,
-    allow_car: true,
-    allow_bike: true,
-    vehicle_required: true,
-    min_days: 2,
-    max_days: 5,
-    max_travellers: 8,
-  },
-];
-
-const INITIAL_CIRCUITS: CircuitAdmin[] = [
-  {
-    id: "circ-1",
-    destination_id: "dest-jaipur",
-    destination_name: "Jaipur",
-    title: "Jaipur Heritage & Forts Circuit",
-    days: 3,
-    nights: 2,
-    base_price_per_person: 8499,
-    rating: 4.9,
-    badge: "Best Seller",
-    categories: ["heritage", "popular"],
-    summary: "Complete classic circuit covering royal havelis, Amber Fort, and authentic Rajasthani dining.",
-    description: "An immersive 3-day royal journey designed for travelers who appreciate architectural heritage and boutique comfort.",
-    image_url: "/images/jaipur-circuit-1.jpg",
-    is_featured: true,
-    is_active: true,
-    allow_car: true,
-    allow_bike: true,
-    vehicle_required: true,
-    hotel_ids: ["hotel-1", "hotel-2"],
-    vehicle_ids: ["veh-1", "veh-2", "veh-3"],
-    stop_ids: ["stop-1", "stop-2"],
-  },
-  {
-    id: "circ-2",
-    destination_id: "dest-jaipur",
-    destination_name: "Jaipur",
-    title: "Royal Rajputana Palaces Express",
-    days: 4,
-    nights: 3,
-    base_price_per_person: 11499,
-    rating: 4.85,
-    badge: null,
-    categories: ["heritage"],
-    summary: "Extended stay with private museum tours, Chokhi Dhani cultural village, and stepwell exploration.",
-    description: "Deeper exploration into Jaipur's hidden courtyards, artisan textile workshops, and Nahargarh astronomy.",
-    image_url: "/images/jaipur-circuit-2.jpg",
-    is_featured: false,
-    is_active: true,
-    allow_car: true,
-    allow_bike: false,
-    vehicle_required: true,
-    hotel_ids: ["hotel-1", "hotel-3"],
-    vehicle_ids: ["veh-1", "veh-2"],
-    stop_ids: ["stop-1"],
-  },
-  {
-    id: "circ-3",
-    destination_id: "dest-udaipur",
-    destination_name: "Udaipur",
-    title: "Udaipur Lakeside Retreat",
-    days: 3,
-    nights: 2,
-    base_price_per_person: 12499,
-    rating: 4.95,
-    badge: "Trending Alternative",
-    categories: ["heritage", "popular"],
-    summary: "Private boat safari on Lake Pichola, Bagore Ki Haveli folk dance, and Jagdish Temple.",
-    description: "Romantic and peaceful lakeside escape with luxury boutique accommodation overlooking the illuminated ghats.",
-    image_url: "/images/udaipur-circuit-1.jpg",
-    is_featured: true,
-    is_active: true,
-    allow_car: true,
-    allow_bike: false,
-    vehicle_required: true,
-    hotel_ids: [],
-    vehicle_ids: ["veh-2"],
-    stop_ids: [],
-  },
-];
-
-const INITIAL_HOTELS: HotelAdmin[] = [
-  {
-    id: "hotel-1",
-    destination_id: "dest-jaipur",
-    destination_name: "Jaipur",
-    name: "Shahpura Haveli & Heritage Suites",
-    rating: 4.9,
-    neighborhood: "Old City, Jaipur",
-    distance_text: "2.5 km from City Palace",
-    price_per_night: 4200,
-    amenities: ["Rooftop Pool", "Free High-Speed Wi-Fi", "Royal Breakfast Included", "Spa & Wellness"],
-    image_url: "/images/shahpura-haveli.jpg",
-    badge: "Operator Pick",
-    is_active: true,
-  },
-  {
-    id: "hotel-2",
-    destination_id: "dest-jaipur",
-    destination_name: "Jaipur",
-    name: "Diggi Palace Heritage Hotel",
-    rating: 4.8,
-    neighborhood: "C-Scheme, Jaipur",
-    distance_text: "3.1 km from Hawa Mahal",
-    price_per_night: 3600,
-    amenities: ["Lush Courtyard Gardens", "Free Wi-Fi", "Swimming Pool", "Heritage Dining"],
-    image_url: "/images/diggi-palace.jpg",
-    badge: null,
-    is_active: true,
-  },
-  {
-    id: "hotel-3",
-    destination_id: "dest-jaipur",
-    destination_name: "Jaipur",
-    name: "Alsisar Haveli",
-    rating: 4.85,
-    neighborhood: "Sansar Chandra Road",
-    distance_text: "1.8 km from Jaipur Junction",
-    price_per_night: 4800,
-    amenities: ["Carved Marble Pool", "Cocktail Bar", "Free Wi-Fi", "Valet Parking"],
-    image_url: "/images/alsisar-haveli.jpg",
-    badge: "Luxury Heritage",
-    is_active: true,
-  },
-];
-
-const INITIAL_VEHICLES: VehicleAdmin[] = [
-  {
-    id: "veh-1",
-    type: "car",
-    name: "Maruti Suzuki Dzire",
-    subtitle: "Compact Sedan · AC · Ideal for 2–3 Travellers",
-    capacity: 4,
-    luggage_capacity: 2,
-    features: ["Air Conditioning", "Bluetooth Audio", "Commercial Permit", "Fastag Included"],
-    fuel_policy: "Driver Provided · Fuel Included in Base",
-    driver_type: "Professional Chauffeur",
-    price_per_day: 2400,
-    image_url: "/images/dzire.jpg",
-    is_active: true,
-  },
-  {
-    id: "veh-2",
-    type: "car",
-    name: "Toyota Innova Crysta",
-    subtitle: "Premium SUV · Captain Seats · Ideal for Families",
-    capacity: 6,
-    luggage_capacity: 4,
-    features: ["Dual-zone AC", "Leather Captain Seats", "Spacious Legroom", "USB Fast Chargers"],
-    fuel_policy: "Driver Provided · Fuel Included in Base",
-    driver_type: "Professional Chauffeur",
-    price_per_day: 3900,
-    image_url: "/images/innova.jpg",
-    is_active: true,
-  },
-  {
-    id: "veh-3",
-    type: "bike",
-    name: "Royal Enfield Classic 350",
-    subtitle: "Thumper Cruiser · Self-Ride · Solo or Couple",
-    capacity: 2,
-    luggage_capacity: 1,
-    features: ["Dual Disc ABS", "Pannier Mounts", "Twin Helmets Provided", "Crash Guards"],
-    fuel_policy: "Self-Fuel · Security Deposit Required",
-    driver_type: "Self-Ride",
-    price_per_day: 1400,
-    image_url: "/images/enfield.jpg",
-    is_active: true,
-  },
-  {
-    id: "veh-4",
-    type: "bus",
-    name: "Volvo 9600 Luxury Coach",
-    subtitle: "Corporate Fleet · 45 Pushback Seats · Restroom Onboard",
-    capacity: 45,
-    luggage_capacity: 40,
-    features: ["Air Suspension", "PA System", "Individual AC Vents", "Clean Restroom"],
-    fuel_policy: "Commercial Chauffeur + Conductor Included",
-    driver_type: "Heavy Commercial Crew",
-    price_per_day: 38500,
-    image_url: "/images/volvo-bus.jpg",
-    is_active: true,
-  },
-  {
-    id: "veh-5",
-    type: "bus",
-    name: "BharatBenz Executive Glider",
-    subtitle: "Corporate Fleet · 32 Executive Leather Seats",
-    capacity: 32,
-    luggage_capacity: 28,
-    features: ["Panoramic Windows", "LED Mood Lighting", "USB Ports on Every Seat"],
-    fuel_policy: "Commercial Chauffeur Included",
-    driver_type: "Heavy Commercial Crew",
-    price_per_day: 28000,
-    image_url: "/images/bharatbenz-bus.jpg",
-    is_active: true,
-  },
-  {
-    id: "veh-6",
-    type: "bus",
-    name: "Force Urbania Executive Mini",
-    subtitle: "Executive Commuter · 17 Plush Recliner Seats",
-    capacity: 17,
-    luggage_capacity: 15,
-    features: ["Individual AC", "High Roof Walk-in", "Smooth Monocoque Chassis"],
-    fuel_policy: "Commercial Chauffeur Included",
-    driver_type: "Heavy Commercial Crew",
-    price_per_day: 18500,
-    image_url: "/images/urbania-bus.jpg",
-    is_active: true,
-  },
-];
-
-const INITIAL_DRIVERS: DriverAdmin[] = [
-  {
-    id: "drv-1",
-    name: "Rajesh Kumar",
-    phone: "+91 98765 43210",
-    license_plate: "DL 1Y AA 4088",
-    rating: 4.96,
-    is_active: true,
-  },
-  {
-    id: "drv-2",
-    name: "Harish Chandra",
-    phone: "+91 98112 34567",
-    license_plate: "RJ 14 TB 8821",
-    rating: 4.89,
-    is_active: true,
-  },
-  {
-    id: "drv-3",
-    name: "Vikramaditya Gurjar",
-    phone: "+91 97234 56789",
-    license_plate: "RJ 14 TA 1290",
-    rating: 4.92,
-    is_active: true,
-  },
-];
-
-const INITIAL_STOPS: StopAdmin[] = [
-  {
-    id: "stop-1",
-    destination_id: "dest-jaipur",
-    destination_name: "Jaipur",
-    name: "Neemrana Fort-Palace Buffet & Ramparts",
-    price: 1850,
-    pricing_unit: "per_person",
-    distance_text: "122 km from Delhi on NH48",
-    turnaround_text: "Direct entry ramp from highway",
-    amenities: ["Gourmet Royal Buffet", "Stepwell Views", "Spotless Restrooms", "Zip-line Arena"],
-    is_active: true,
-  },
-  {
-    id: "stop-2",
-    destination_id: "dest-jaipur",
-    destination_name: "Jaipur",
-    name: "Highway King Boutique & Food Court",
-    price: 499,
-    pricing_unit: "per_person",
-    distance_text: "190 km from Delhi on NH48",
-    turnaround_text: "Express service plaza with fuel",
-    amenities: ["Clean Restrooms", "Artisan Chai Lounge", "Handloom Souvenirs", "EV Superchargers"],
-    is_active: true,
-  },
-];
-
-const INITIAL_COUPONS: Coupon[] = [
-  {
-    id: "cp-1",
-    code: "EXPLOREINDIA",
-    description: "Welcome road tripper discount (Auto-applied to standard bookings)",
-    discount_type: "flat",
-    value: 2000,
-    max_discount: null,
-    min_subtotal: 5000,
-    valid_from: "2026-01-01T00:00:00Z",
-    valid_to: "2026-12-31T23:59:59Z",
-    usage_limit_total: null,
-    usage_limit_per_user: 1,
-    usage_count: 142,
-    applies_to: "normal",
-    destination_id: null,
-    circuit_id: null,
-    auto_apply: true,
-    is_active: true,
-    created_at: "2026-01-01T00:00:00Z",
-  },
-  {
-    id: "cp-2",
-    code: "FESTIVE25",
-    description: "Diwali & Winter Festival Special (25% off up to ₹3,500)",
-    discount_type: "percent",
-    value: 25,
-    max_discount: 3500,
-    min_subtotal: 10000,
-    valid_from: "2026-10-01T00:00:00Z",
-    valid_to: "2026-11-30T23:59:59Z",
-    usage_limit_total: 500,
-    usage_limit_per_user: 1,
-    usage_count: 89,
-    applies_to: "normal",
-    destination_id: null,
-    circuit_id: null,
-    auto_apply: false,
-    is_active: true,
-    created_at: "2026-10-01T00:00:00Z",
-  },
-  {
-    id: "cp-3",
-    code: "VIPCORP",
-    description: "Commercial Fleet Executive rebate (Flat ₹5,000 for corporate bookings)",
-    discount_type: "flat",
-    value: 5000,
-    max_discount: null,
-    min_subtotal: 50000,
-    valid_from: "2026-01-01T00:00:00Z",
-    valid_to: null,
-    usage_limit_total: 100,
-    usage_limit_per_user: null,
-    usage_count: 14,
-    applies_to: "commercial",
-    destination_id: null,
-    circuit_id: null,
-    auto_apply: false,
-    is_active: true,
-    created_at: "2026-02-15T00:00:00Z",
-  },
-];
-
-const INITIAL_BOOKINGS: BookingAdmin[] = [
-  {
-    id: "trip-001",
-    booking_ref: "TM-008821",
-    user_id: "usr-1",
-    customer_name: "Aarav Sharma",
-    customer_email: "aarav.sharma@gmail.com",
-    customer_phone: "+91 98200 12345",
-    kind: "normal",
-    destination_name: "Jaipur",
-    circuit_name: "Jaipur Heritage & Forts Circuit",
-    start_date: "2026-11-10",
-    end_date: "2026-11-12",
-    days: 3,
-    traveler_count: 2,
-    subtotal_amount: 24200,
-    service_fee: 999,
-    tax_amount: 4177,
-    discount_amount: 2000,
-    coupon_code: "EXPLOREINDIA",
-    total_amount: 27376,
-    status: "confirmed",
-    driver: INITIAL_DRIVERS[0] ?? null,
-    driver_id: INITIAL_DRIVERS[0]?.id ?? null,
-    travellers: [
-      {
-        id: "pax-1",
-        full_name: "Aarav Sharma",
-        phone: "+91 98200 12345",
-        seat_label: "1A",
-        id_doc_type: "Aadhaar Card",
-        id_doc_path: "usr-1/trip-001/pax-1.jpg",
-        id_doc_status: "approved",
-        ticket_revoked: false,
-        ticket_code: "TKT-TM882101",
-      },
-      {
-        id: "pax-2",
-        full_name: "Ananya Sharma",
-        phone: "+91 98200 12346",
-        seat_label: "1B",
-        id_doc_type: "Passport",
-        id_doc_path: "usr-1/trip-001/pax-2.jpg",
-        id_doc_status: "approved",
-        ticket_revoked: false,
-        ticket_code: "TKT-TM882102",
-      },
-    ],
-    notes: [
-      {
-        id: "nt-1",
-        trip_id: "trip-001",
-        author_id: "admin-3",
-        author_name: "Devendra Rathore",
-        note: "Customer requested child booster seat if possible. Driver Rajesh informed.",
-        created_at: "2026-10-12T11:00:00Z",
-      },
-    ],
-    created_at: "2026-10-10T14:22:10Z",
-  },
-  {
-    id: "trip-002",
-    booking_ref: "TM-009104",
-    user_id: "usr-2",
-    customer_name: "Meera Nair",
-    customer_email: "meera.nair@outlook.com",
-    customer_phone: "+91 99341 55210",
-    kind: "normal",
-    destination_name: "Jaipur",
-    circuit_name: "Royal Rajputana Palaces Express",
-    start_date: "2026-10-25",
-    end_date: "2026-10-28",
-    days: 4,
-    traveler_count: 3,
-    subtotal_amount: 38400,
-    service_fee: 999,
-    tax_amount: 6732,
-    discount_amount: 2000,
-    coupon_code: "EXPLOREINDIA",
-    total_amount: 44131,
-    status: "confirmed",
-    driver: null,
-    driver_id: null,
-    travellers: [
-      {
-        id: "pax-3",
-        full_name: "Meera Nair",
-        phone: "+91 99341 55210",
-        seat_label: "Front Left",
-        id_doc_type: "Driving License",
-        id_doc_path: "usr-2/trip-002/pax-3.png",
-        id_doc_status: "pending",
-        ticket_revoked: false,
-        ticket_code: "TKT-TM910401",
-      },
-      {
-        id: "pax-4",
-        full_name: "Karan Nair",
-        phone: "+91 99341 55211",
-        seat_label: "Rear Right",
-        id_doc_type: "Aadhaar Card",
-        id_doc_path: "usr-2/trip-002/pax-4.jpg",
-        id_doc_status: "pending",
-        ticket_revoked: false,
-        ticket_code: "TKT-TM910402",
-      },
-    ],
-    notes: [],
-    created_at: "2026-10-14T09:12:45Z",
-  },
-  {
-    id: "trip-003",
-    booking_ref: "TM-009412",
-    user_id: "usr-3",
-    customer_name: "Vikramaditya Oberoi",
-    customer_email: "v.oberoi@acmetech.com",
-    customer_phone: "+91 98101 99882",
-    kind: "commercial",
-    destination_name: "Jaipur",
-    circuit_name: "Jaipur Heritage & Forts Circuit",
-    start_date: "2026-11-20",
-    end_date: "2026-11-24",
-    days: 5,
-    traveler_count: 28,
-    subtotal_amount: 192500,
-    service_fee: 0,
-    tax_amount: 34650,
-    discount_amount: 0,
-    coupon_code: null,
-    total_amount: 227150,
-    status: "pending_approval",
-    company_name: "Acme Tech Pvt Ltd",
-    driver: null,
-    driver_id: null,
-    travellers: [
-      {
-        id: "pax-5",
-        full_name: "Vikramaditya Oberoi",
-        phone: "+91 98101 99882",
-        seat_label: "1A",
-        id_doc_type: "Voter ID",
-        id_doc_path: "usr-3/trip-003/pax-5.jpg",
-        id_doc_status: "pending",
-        ticket_revoked: false,
-        ticket_code: "TKT-TMCORP0412",
-      },
-    ],
-    notes: [
-      {
-        id: "nt-2",
-        trip_id: "trip-003",
-        author_id: "admin-3",
-        author_name: "Devendra Rathore",
-        note: "Corporate annual retreat. Exceeds standard approval threshold of ₹1,50,000.",
-        created_at: "2026-10-14T16:00:00Z",
-      },
-    ],
-    created_at: "2026-10-14T15:30:20Z",
-  },
-];
-
-const INITIAL_ID_REVIEWS: IdReviewItem[] = [
-  {
-    id: "rev-1",
-    trip_id: "trip-002",
-    passenger_id: "pax-3",
-    booking_ref: "TM-009104",
-    customer_name: "Meera Nair",
-    customer_email: "meera.nair@outlook.com",
-    passenger_name: "Meera Nair",
-    doc_type: "Driving License",
-    doc_url: "https://images.unsplash.com/photo-1544717305-2782549b5136?w=600&auto=format&fit=crop&q=80",
-    status: "pending",
-    submitted_at: "2026-10-14T09:15:00Z",
-  },
-  {
-    id: "rev-2",
-    trip_id: "trip-002",
-    passenger_id: "pax-4",
-    booking_ref: "TM-009104",
-    customer_name: "Meera Nair",
-    customer_email: "meera.nair@outlook.com",
-    passenger_name: "Karan Nair",
-    doc_type: "Aadhaar Card",
-    doc_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80",
-    status: "pending",
-    submitted_at: "2026-10-14T09:18:00Z",
-  },
-];
-
-const INITIAL_USERS: UserAdmin[] = [
-  {
-    id: "usr-1",
-    email: "aarav.sharma@gmail.com",
-    full_name: "Aarav Sharma",
-    phone: "+91 98200 12345",
-    total_bookings: 3,
-    total_spent: 78240,
-    is_suspended: false,
-    suspended_reason: null,
-    suspended_at: null,
-    created_at: "2026-06-15T12:00:00Z",
-  },
-  {
-    id: "usr-2",
-    email: "meera.nair@outlook.com",
-    full_name: "Meera Nair",
-    phone: "+91 99341 55210",
-    total_bookings: 1,
-    total_spent: 44131,
-    is_suspended: false,
-    suspended_reason: null,
-    suspended_at: null,
-    created_at: "2026-09-20T14:10:00Z",
-  },
-  {
-    id: "usr-3",
-    email: "v.oberoi@acmetech.com",
-    full_name: "Vikramaditya Oberoi",
-    phone: "+91 98101 99882",
-    total_bookings: 2,
-    total_spent: 312000,
-    is_suspended: false,
-    suspended_reason: null,
-    suspended_at: null,
-    created_at: "2026-07-01T08:30:00Z",
-  },
-  {
-    id: "usr-4",
-    email: "fraud.test@example.com",
-    full_name: "Test Flagged User",
-    phone: "+91 99999 00000",
-    total_bookings: 0,
-    total_spent: 0,
-    is_suspended: true,
-    suspended_reason: "Repeated chargeback threats and fraudulent identity upload attempts.",
-    suspended_at: "2026-10-08T17:00:00Z",
-    created_at: "2026-10-05T09:00:00Z",
-  },
-];
-
-const INITIAL_COMPANIES: CompanyAdmin[] = [
-  {
-    id: "comp-1",
-    name: "Acme Tech Pvt Ltd",
-    gst_number: "07AAAAA0000A1Z5",
-    is_active: true,
-    approval_limit: 150000,
-    member_count: 32,
-    members: [
-      {
-        id: "mem-1",
-        company_id: "comp-1",
-        profile_id: "usr-3",
-        full_name: "Vikramaditya Oberoi",
-        email: "v.oberoi@acmetech.com",
-        role: "admin",
-        employee_id: "ACME-001",
-        designation: "VP People & Culture",
-      },
-    ],
-    created_at: "2026-05-10T10:00:00Z",
-  },
-  {
-    id: "comp-2",
-    name: "Infosprint Solutions LLP",
-    gst_number: "29BBBBB1111B2Z4",
-    is_active: true,
-    approval_limit: 80000,
-    member_count: 14,
-    members: [],
-    created_at: "2026-08-14T11:20:00Z",
-  },
-];
-
-const INITIAL_EMAIL_LOGS: EmailLogEntry[] = [
-  {
-    id: "em-1",
-    to_email: "aarav.sharma@gmail.com",
-    template: "booking_updated",
-    subject: "Driver Assigned for Trip TM-008821 to Jaipur",
-    content: "Your driver Rajesh Kumar (+91 98765 43210, DL 1Y AA 4088) has been assigned to your booking.",
-    related_booking_ref: "TM-008821",
-    sent_by: "ops@tripmate.in",
-    status: "sent",
-    provider_message_id: "msg_9821381230",
-    created_at: "2026-10-10T14:30:00Z",
-  },
-];
-
-const INITIAL_PAYMENTS: PaymentInvoiceRecord[] = [
-  {
-    id: "pay-1",
-    trip_id: "trip-001",
-    booking_ref: "TM-008821",
-    customer_name: "Aarav Sharma",
-    invoice_number: "INV-2026-00412",
-    amount: 27376,
-    gst_amount: 4177,
-    method: "demo_pay",
-    status: "completed",
-    itc_qualified: false,
-    created_at: "2026-10-10T14:22:15Z",
-  },
-  {
-    id: "pay-2",
-    trip_id: "trip-002",
-    booking_ref: "TM-009104",
-    customer_name: "Meera Nair",
-    invoice_number: "INV-2026-00413",
-    amount: 44131,
-    gst_amount: 6732,
-    method: "upi",
-    status: "completed",
-    itc_qualified: false,
-    created_at: "2026-10-14T09:12:50Z",
-  },
-];
-
-const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
-  {
-    id: "aud-1",
-    actor_id: "admin-1",
-    actor_name: "Aaditya Singhania",
-    actor_role: "super_admin",
-    action: "create",
-    entity_type: "coupon",
-    entity_id: "cp-1",
-    before: null,
-    after: { code: "EXPLOREINDIA", value: 2000, discount_type: "flat", auto_apply: true },
-    reason: "Seeded mandatory auto-apply demo coupon EXPLOREINDIA per DATABASE §11 & §7.",
-    created_at: "2026-10-01T09:00:00Z",
-  },
-  {
-    id: "aud-2",
-    actor_id: "admin-3",
-    actor_name: "Devendra Rathore",
-    actor_role: "ops_manager",
-    action: "assign_driver",
-    entity_type: "booking",
-    entity_id: "trip-001",
-    before: { driver_id: null },
-    after: { driver_id: "drv-1", driver_name: "Rajesh Kumar" },
-    reason: "Assigned verified VIP driver for Jaipur Heritage route.",
-    created_at: "2026-10-10T14:28:00Z",
-  },
-];
-
-const STORAGE_KEY = "tripmate_admin_state_v1";
-
 interface AdminState {
   settings: AppSettings;
   pricing: PricingConfig;
@@ -930,102 +147,33 @@ interface AdminState {
   admins: AdminUser[];
 }
 
-function loadState(): AdminState {
-  if (typeof window === "undefined") {
-    return {
-      settings: INITIAL_APP_SETTINGS,
-      pricing: INITIAL_PRICING_CONFIG,
-      refundRules: INITIAL_REFUND_RULES,
-      destinations: INITIAL_DESTINATIONS,
-      circuits: INITIAL_CIRCUITS,
-      hotels: INITIAL_HOTELS,
-      vehicles: INITIAL_VEHICLES,
-      drivers: INITIAL_DRIVERS,
-      stops: INITIAL_STOPS,
-      coupons: INITIAL_COUPONS,
-      redemptions: [],
-      bookings: INITIAL_BOOKINGS,
-      idReviews: INITIAL_ID_REVIEWS,
-      correctionRequests: [],
-      users: INITIAL_USERS,
-      companies: INITIAL_COMPANIES,
-      emails: INITIAL_EMAIL_LOGS,
-      payments: INITIAL_PAYMENTS,
-      auditLogs: INITIAL_AUDIT_LOGS,
-      admins: INITIAL_ADMINS,
-    };
-  }
-
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return saveAndReturnDefault();
-    const parsed = JSON.parse(raw) as Partial<AdminState>;
-    return {
-      settings: parsed.settings || INITIAL_APP_SETTINGS,
-      pricing: parsed.pricing || INITIAL_PRICING_CONFIG,
-      refundRules: parsed.refundRules || INITIAL_REFUND_RULES,
-      destinations: parsed.destinations || INITIAL_DESTINATIONS,
-      circuits: parsed.circuits || INITIAL_CIRCUITS,
-      hotels: parsed.hotels || INITIAL_HOTELS,
-      vehicles: parsed.vehicles || INITIAL_VEHICLES,
-      drivers: parsed.drivers || INITIAL_DRIVERS,
-      stops: parsed.stops || INITIAL_STOPS,
-      coupons: parsed.coupons || INITIAL_COUPONS,
-      redemptions: parsed.redemptions || [],
-      bookings: parsed.bookings || INITIAL_BOOKINGS,
-      idReviews: parsed.idReviews || INITIAL_ID_REVIEWS,
-      correctionRequests: parsed.correctionRequests || [],
-      users: parsed.users || INITIAL_USERS,
-      companies: parsed.companies || INITIAL_COMPANIES,
-      emails: parsed.emails || INITIAL_EMAIL_LOGS,
-      payments: parsed.payments || INITIAL_PAYMENTS,
-      auditLogs: parsed.auditLogs || INITIAL_AUDIT_LOGS,
-      admins: parsed.admins || INITIAL_ADMINS,
-    };
-  } catch {
-    return saveAndReturnDefault();
-  }
-}
-
-function saveAndReturnDefault(): AdminState {
-  const def: AdminState = {
+function createDefaultState(): AdminState {
+  return {
     settings: INITIAL_APP_SETTINGS,
     pricing: INITIAL_PRICING_CONFIG,
     refundRules: INITIAL_REFUND_RULES,
-    destinations: INITIAL_DESTINATIONS,
-    circuits: INITIAL_CIRCUITS,
-    hotels: INITIAL_HOTELS,
-    vehicles: INITIAL_VEHICLES,
-    drivers: INITIAL_DRIVERS,
-    stops: INITIAL_STOPS,
-    coupons: INITIAL_COUPONS,
+    destinations: [],
+    circuits: [],
+    hotels: [],
+    vehicles: [],
+    drivers: [],
+    stops: [],
+    coupons: [],
     redemptions: [],
-    bookings: INITIAL_BOOKINGS,
-    idReviews: INITIAL_ID_REVIEWS,
+    bookings: [],
+    idReviews: [],
     correctionRequests: [],
-    users: INITIAL_USERS,
-    companies: INITIAL_COMPANIES,
-    emails: INITIAL_EMAIL_LOGS,
-    payments: INITIAL_PAYMENTS,
-    auditLogs: INITIAL_AUDIT_LOGS,
+    users: [],
+    companies: [],
+    emails: [],
+    payments: [],
+    auditLogs: [],
     admins: INITIAL_ADMINS,
   };
-  saveState(def);
-  return def;
 }
 
-function saveState(state: AdminState) {
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch {
-      // storage quota or incognito
-    }
-  }
-}
-
-// Global in-memory cache
-const currentState: AdminState = loadState();
+// Global in-memory cache strictly initialized with empty collections
+const currentState: AdminState = createDefaultState();
 
 export class AdminService {
   private static subscribers: Array<() => void> = [];
@@ -1038,16 +186,14 @@ export class AdminService {
   }
 
   private static notify() {
-    saveState(currentState);
     for (const sub of this.subscribers) {
       sub();
     }
   }
 
   /**
-   * Hydrates the AdminService state with live records from Supabase.
-   * Real Supabase records are merged at the top of collections.
-   * Mock records are retained as a fallback seed for unmigrated views or demos.
+   * Hydrates the AdminService state strictly with live records from Supabase.
+   * Completely overwrites collections with live rows; NEVER merges fake mock records.
    */
   static hydrateOperationalData(snapshot: {
     bookings?: BookingAdmin[];
@@ -1057,47 +203,40 @@ export class AdminService {
     hotels?: HotelAdmin[];
     stops?: StopAdmin[];
     destinations?: DestinationAdmin[];
+    users?: UserAdmin[];
+    companies?: CompanyAdmin[];
+    payments?: PaymentInvoiceRecord[];
+    approvals?: CommercialApprovalItem[];
   }) {
-    if (snapshot.bookings && snapshot.bookings.length > 0) {
-      const liveBookingIds = new Set(snapshot.bookings.map((b) => b.id));
-      const fallbackMocks = currentState.bookings.filter((b) => !liveBookingIds.has(b.id));
-      currentState.bookings = [...snapshot.bookings, ...fallbackMocks];
+    if (snapshot.bookings !== undefined) {
+      currentState.bookings = [...snapshot.bookings];
     }
-
-    if (snapshot.circuits && snapshot.circuits.length > 0) {
-      const liveCircuitIds = new Set(snapshot.circuits.map((c) => c.id));
-      const fallbackMocks = currentState.circuits.filter((c) => !liveCircuitIds.has(c.id));
-      currentState.circuits = [...snapshot.circuits, ...fallbackMocks];
+    if (snapshot.circuits !== undefined) {
+      currentState.circuits = [...snapshot.circuits];
     }
-
-    if (snapshot.vehicles && snapshot.vehicles.length > 0) {
-      const liveVehicleIds = new Set(snapshot.vehicles.map((v) => v.id));
-      const fallbackMocks = currentState.vehicles.filter((v) => !liveVehicleIds.has(v.id));
-      currentState.vehicles = [...snapshot.vehicles, ...fallbackMocks];
+    if (snapshot.vehicles !== undefined) {
+      currentState.vehicles = [...snapshot.vehicles];
     }
-
-    if (snapshot.drivers && snapshot.drivers.length > 0) {
-      const liveDriverIds = new Set(snapshot.drivers.map((d) => d.id));
-      const fallbackMocks = currentState.drivers.filter((d) => !liveDriverIds.has(d.id));
-      currentState.drivers = [...snapshot.drivers, ...fallbackMocks];
+    if (snapshot.drivers !== undefined) {
+      currentState.drivers = [...snapshot.drivers];
     }
-
-    if (snapshot.hotels && snapshot.hotels.length > 0) {
-      const liveHotelIds = new Set(snapshot.hotels.map((h) => h.id));
-      const fallbackMocks = currentState.hotels.filter((h) => !liveHotelIds.has(h.id));
-      currentState.hotels = [...snapshot.hotels, ...fallbackMocks];
+    if (snapshot.hotels !== undefined) {
+      currentState.hotels = [...snapshot.hotels];
     }
-
-    if (snapshot.stops && snapshot.stops.length > 0) {
-      const liveStopIds = new Set(snapshot.stops.map((s) => s.id));
-      const fallbackMocks = currentState.stops.filter((s) => !liveStopIds.has(s.id));
-      currentState.stops = [...snapshot.stops, ...fallbackMocks];
+    if (snapshot.stops !== undefined) {
+      currentState.stops = [...snapshot.stops];
     }
-
-    if (snapshot.destinations && snapshot.destinations.length > 0) {
-      const liveDestinationIds = new Set(snapshot.destinations.map((d) => d.id));
-      const fallbackMocks = currentState.destinations.filter((d) => !liveDestinationIds.has(d.id));
-      currentState.destinations = [...snapshot.destinations, ...fallbackMocks];
+    if (snapshot.destinations !== undefined) {
+      currentState.destinations = [...snapshot.destinations];
+    }
+    if (snapshot.users !== undefined) {
+      currentState.users = [...snapshot.users];
+    }
+    if (snapshot.companies !== undefined) {
+      currentState.companies = [...snapshot.companies];
+    }
+    if (snapshot.payments !== undefined) {
+      currentState.payments = [...snapshot.payments];
     }
 
     this.notify();

@@ -7,6 +7,7 @@ import type { Destination, Circuit } from "@/lib/data/destinations";
 import { getDestinationImageUrl, getCircuitImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { toggleSavedItem } from "@/lib/data/saved-items";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface HomeViewProps {
   initialDestinations: Destination[];
@@ -39,6 +40,10 @@ export function HomeView({
   const [savedIds, setSavedIds] = React.useState<Set<string>>(new Set());
   const [comingSoonToast, setComingSoonToast] = React.useState<string | null>(null);
   const [showNotifications, setShowNotifications] = React.useState(false);
+
+  // Live Supabase Realtime synchronization for catalog additions/edits
+  const realtimeTables = React.useMemo(() => ["destinations", "circuits"], []);
+  useRealtimeTableSync(realtimeTables);
 
   // Sync with search/filter
   const isSearchActive = searchQuery.trim().length > 0;

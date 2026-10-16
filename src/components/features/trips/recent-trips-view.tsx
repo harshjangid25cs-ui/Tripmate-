@@ -8,6 +8,7 @@ import type { UserTripSummary } from "@/lib/data/trips-list";
 import { cancelTripBooking } from "@/lib/actions/trips";
 import { formatCurrency, formatDateRange } from "@/lib/format";
 import { getHotelImageUrl } from "@/lib/data/images";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface RecentTripsViewProps {
   initialTrips: UserTripSummary[];
@@ -16,6 +17,15 @@ interface RecentTripsViewProps {
 export function RecentTripsView({ initialTrips }: RecentTripsViewProps) {
   const searchParams = useSearchParams();
   const [trips, setTrips] = React.useState<UserTripSummary[]>(initialTrips);
+
+  // Sync state whenever server re-renders fresh initialTrips
+  React.useEffect(() => {
+    setTrips(initialTrips);
+  }, [initialTrips]);
+
+  // Realtime subscription for immediate cross-screen status changes
+  const realtimeTables = React.useMemo(() => ["trips", "trip_vehicles"], []);
+  useRealtimeTableSync(realtimeTables);
 
   // Filter state: All, Upcoming, Completed, Cancelled (DECISIONS D17)
   const [statusFilter, setStatusFilter] = React.useState<"all" | "upcoming" | "completed" | "cancelled">("all");

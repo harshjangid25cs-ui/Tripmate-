@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { getValidatedDraftTrip } from "@/lib/data/booking-guards";
 import { getStopsForDestination } from "@/lib/data/booking";
 import { StopsSelectionView } from "@/components/features/booking/stops-selection-view";

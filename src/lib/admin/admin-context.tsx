@@ -5,6 +5,19 @@ import type { AdminRole, AdminUser, AdminCapability, AdminOperationalSnapshot } 
 import { hasAdminPermission, ADMIN_ROLES } from "./permissions";
 import { AdminService } from "./admin-service";
 import { fetchAdminOperationalSnapshot } from "@/lib/actions/admin-ops";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
+
+const ADMIN_SYNC_TABLES = [
+  "trips",
+  "commercial_bookings",
+  "payments",
+  "circuits",
+  "vehicles",
+  "drivers",
+  "hotels",
+  "stops",
+  "destinations",
+];
 
 interface AdminContextType {
   currentAdmin: AdminUser;
@@ -99,6 +112,14 @@ export function AdminProvider({
       // Graceful fallback
     }
   };
+
+  // Instant Supabase Realtime synchronization for Admin Portal
+  useRealtimeTableSync(ADMIN_SYNC_TABLES, {
+    onEvent: () => {
+      refreshOperationalData();
+    },
+    debounceMs: 400,
+  });
 
   const switchRole = (newRole: AdminRole) => {
     setCurrentRole(newRole);

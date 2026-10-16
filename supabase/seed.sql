@@ -463,7 +463,7 @@ ON CONFLICT (id) DO UPDATE SET
   pricing_unit = EXCLUDED.pricing_unit,
   is_active = EXCLUDED.is_active;
 
--- 8. DRIVERS (1 row per Screen 13 & 14)
+-- 8. DRIVERS (Verified Rajasthan Fleet Operators per Screen 13 & 14)
 INSERT INTO public.drivers (
   id, full_name, phone, plate_number, rating, trips_count, is_active
 ) VALUES
@@ -471,9 +471,36 @@ INSERT INTO public.drivers (
     'd1111111-1111-1111-1111-111111111111',
     'Rajesh Kumar',
     '+91 98765 43210',
-    'DL 1Y AA 4088',
+    'RJ 14 TA 4088',
     4.96,
     180,
+    true
+  ),
+  (
+    'd2222222-2222-2222-2222-222222222222',
+    'Vikram Singh Rathore',
+    '+91 98290 12345',
+    'RJ 14 PA 8821',
+    4.92,
+    245,
+    true
+  ),
+  (
+    'd3333333-3333-3333-3333-333333333333',
+    'Mahendra Gurjar',
+    '+91 94140 67890',
+    'RJ 27 UA 3190',
+    4.88,
+    140,
+    true
+  ),
+  (
+    'd4444444-4444-4444-4444-444444444444',
+    'Suresh Meena',
+    '+91 97840 54321',
+    'RJ 14 TA 7762',
+    4.95,
+    310,
     true
   )
 ON CONFLICT (id) DO UPDATE SET

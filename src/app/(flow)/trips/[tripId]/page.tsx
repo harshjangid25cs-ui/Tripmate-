@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { redirect } from "next/navigation";
 import { getConfirmedTripDetails } from "@/lib/data/booking";
 import { TripItineraryDetailView } from "@/components/features/trips/trip-itinerary-detail-view";

@@ -432,6 +432,9 @@ export interface AdminOperationalSnapshot {
   drivers?: DriverAdmin[];
   hotels?: HotelAdmin[];
   stops?: StopAdmin[];
+  users?: UserAdmin[];
+  companies?: CompanyAdmin[];
+  payments?: PaymentInvoiceRecord[];
   metrics: {
     totalRevenue: number;
     pendingApprovalsCount: number;

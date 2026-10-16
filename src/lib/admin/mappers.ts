@@ -9,6 +9,9 @@ import type {
   AdminDestination,
   DriverAdmin,
   TravellerAdmin,
+  UserAdmin,
+  CompanyAdmin,
+  PaymentInvoiceRecord,
 } from "./types";
 
 export type DbRecord = Record<string, unknown>;
@@ -277,5 +280,79 @@ export function mapDatabaseDestinationToAdminDestination(d: DbRecord): AdminDest
     min_days: 2,
     max_days: 7,
     max_travellers: 20,
+  };
+}
+
+/**
+ * Maps a Supabase `profiles` row to `UserAdmin`.
+ */
+export function mapDatabaseProfileToAdminUser(p: DbRecord): UserAdmin {
+  return {
+    id: String(p.id || ""),
+    email: String(p.email || "guest@tripmate.io"),
+    full_name: String(p.full_name || "Traveler"),
+    phone: String(p.phone || "+91 98000 00000"),
+    total_bookings: Number(p.total_bookings) || 0,
+    total_spent: Number(p.total_spent) || 0,
+    is_suspended: Boolean(p.is_suspended),
+    suspended_reason: p.suspended_reason ? String(p.suspended_reason) : null,
+    suspended_at: p.suspended_at ? String(p.suspended_at) : null,
+    created_at: String(p.created_at || new Date().toISOString()),
+  };
+}
+
+/**
+ * Maps a Supabase `companies` row (with joined company_members) to `CompanyAdmin`.
+ */
+export function mapDatabaseCompanyToAdminCompany(c: DbRecord): CompanyAdmin {
+  const members = Array.isArray(c.company_members)
+    ? (c.company_members as DbRecord[]).map((m) => ({
+        id: String(m.id || ""),
+        company_id: String(m.company_id || c.id || ""),
+        profile_id: String(m.profile_id || ""),
+        full_name: String(m.full_name || "Corporate Member"),
+        email: String(m.email || ""),
+        role: (m.role === "admin" ? "admin" : "member") as "admin" | "member",
+        employee_id: m.employee_id ? String(m.employee_id) : undefined,
+        department: m.department ? String(m.department) : undefined,
+        designation: m.designation ? String(m.designation) : undefined,
+      }))
+    : [];
+
+  return {
+    id: String(c.id || ""),
+    name: String(c.name || "Corporate Partner"),
+    gst_number: c.gst_number ? String(c.gst_number) : null,
+    is_active: Boolean(c.is_active ?? true),
+    approval_limit: c.approval_limit !== null && c.approval_limit !== undefined ? Number(c.approval_limit) : null,
+    member_count: members.length || Number(c.member_count) || 0,
+    members,
+    created_at: String(c.created_at || new Date().toISOString()),
+  };
+}
+
+/**
+ * Maps a Supabase `payments` row (with joined trips and invoices) to `PaymentInvoiceRecord`.
+ */
+export function mapDatabasePaymentToAdminPayment(p: DbRecord): PaymentInvoiceRecord {
+  const trip = asRecord(p.trips);
+  const invoice = asRecord(p.invoices);
+  const amount = Number(p.amount) || Number(trip.total_amount) || 0;
+  const gstAmount = Math.round((amount * 0.18) / 1.18);
+
+  return {
+    id: String(p.id || ""),
+    trip_id: String(p.trip_id || trip.id || ""),
+    booking_ref: String(trip.booking_ref || "TM-LIVE"),
+    customer_name: String(p.customer_name || trip.customer_name || "Verified Traveler"),
+    invoice_number: String(invoice.invoice_number || `INV-${String(p.id || "0").slice(0, 6)}`),
+    amount,
+    gst_amount: gstAmount,
+    method: ((p.payment_method || "card") as string).toLowerCase() as "upi" | "card" | "netbanking" | "demo_pay",
+    status: (p.status === "succeeded" || p.status === "completed" ? "completed" : p.status === "refunded" ? "refunded" : "failed") as "completed" | "refunded" | "failed",
+    itc_qualified: Boolean(p.itc_qualified ?? true),
+    company_name: p.company_name ? String(p.company_name) : undefined,
+    gst_number: p.gst_number ? String(p.gst_number) : undefined,
+    created_at: String(p.created_at || new Date().toISOString()),
   };
 }

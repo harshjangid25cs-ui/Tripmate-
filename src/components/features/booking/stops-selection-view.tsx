@@ -9,6 +9,7 @@ import type { Stop } from "@/lib/data/booking";
 import { getStopImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { toggleTripStop } from "@/lib/actions/trips";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface StopsSelectionViewProps {
   tripData: ValidatedDraftTrip;
@@ -18,6 +19,9 @@ interface StopsSelectionViewProps {
 export function StopsSelectionView({ tripData, stops }: StopsSelectionViewProps) {
   const router = useRouter();
   const { trip, stops: selectedTripStops, destination } = tripData;
+
+  const realtimeTables = React.useMemo(() => ["stops"], []);
+  useRealtimeTableSync(realtimeTables);
 
   const [selectedStopIds, setSelectedStopIds] = React.useState<Set<string>>(
     new Set(selectedTripStops.map((s) => s.stop_id))

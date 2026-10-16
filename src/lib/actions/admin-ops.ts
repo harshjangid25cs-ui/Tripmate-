@@ -17,6 +17,9 @@ import {
   mapDatabaseHotelToAdminHotel,
   mapDatabaseStopToAdminStop,
   mapDatabaseDestinationToAdminDestination,
+  mapDatabaseProfileToAdminUser,
+  mapDatabaseCompanyToAdminCompany,
+  mapDatabasePaymentToAdminPayment,
   type DbRecord,
 } from "@/lib/admin/mappers";
 import type { Database, Json } from "@/types/database";
@@ -117,6 +120,17 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       const hotels = (raw.hotels || []).map(mapDatabaseHotelToAdminHotel);
       const stops = (raw.stops || []).map(mapDatabaseStopToAdminStop);
 
+      // In parallel, fetch live companies, profiles (users), and payments
+      const [compRes, profRes, payRes] = await Promise.all([
+        supabase.from("companies").select("*, company_members(*)").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+        supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
+      ]);
+
+      const companies = (compRes.data || []).map((c) => mapDatabaseCompanyToAdminCompany(c as unknown as DbRecord));
+      const users = (profRes.data || []).map((p) => mapDatabaseProfileToAdminUser(p as unknown as DbRecord));
+      const payments = (payRes.data || []).map((p) => mapDatabasePaymentToAdminPayment(p as unknown as DbRecord));
+
       return {
         ok: true,
         data: {
@@ -128,6 +142,9 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
           drivers,
           hotels,
           stops,
+          users,
+          companies,
+          payments,
           metrics: {
             totalRevenue: raw.metrics?.totalRevenue ?? 0,
             pendingApprovalsCount: raw.metrics?.pendingApprovalsCount ?? 0,
@@ -246,6 +263,9 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         drivers,
         hotels,
         stops,
+        users: [],
+        companies: [],
+        payments: [],
         metrics: {
           totalRevenue,
           pendingApprovalsCount,
@@ -266,6 +286,9 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         drivers: [],
         hotels: [],
         stops: [],
+        users: [],
+        companies: [],
+        payments: [],
         metrics: {
           totalRevenue: 0,
           pendingApprovalsCount: 0,

@@ -9,6 +9,7 @@ import type { Vehicle } from "@/lib/data/booking";
 import { getVehicleImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { selectTripVehicle } from "@/lib/actions/trips";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface VehicleSelectionViewProps {
   tripData: ValidatedDraftTrip;
@@ -24,6 +25,9 @@ export function VehicleSelectionView({
 }: VehicleSelectionViewProps) {
   const router = useRouter();
   const { trip, vehicle: selectedTripVehicle, destination } = tripData;
+
+  const realtimeTables = React.useMemo(() => ["vehicles"], []);
+  useRealtimeTableSync(realtimeTables);
 
   const [mode, setMode] = React.useState<ModeFilter>("car");
   const [specFilter, setSpecFilter] = React.useState<SpecFilter>("all");

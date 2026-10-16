@@ -12,7 +12,6 @@ import {
   type ConfirmedCommercialTripData,
   type PublicTicketResult,
   FALLBACK_COMPANY,
-  FALLBACK_BUSES,
 } from "./commercial-types";
 
 // Re-export all types and utilities for convenience
@@ -83,7 +82,7 @@ export async function getBusInventory(): Promise<BusFleetItem[]> {
       .order("price", { ascending: false });
 
     if (error || !data || data.length === 0) {
-      return FALLBACK_BUSES;
+      return [];
     }
 
     return (data as VehicleRow[]).map((row) => ({
@@ -100,7 +99,7 @@ export async function getBusInventory(): Promise<BusFleetItem[]> {
       imagePath: row.image_path,
     }));
   } catch {
-    return FALLBACK_BUSES;
+    return [];
   }
 }
 

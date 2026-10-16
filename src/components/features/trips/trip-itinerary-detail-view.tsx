@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import type { ConfirmedTripDetails } from "@/lib/data/booking";
 import { formatCurrency, formatDateRange } from "@/lib/format";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface TripItineraryDetailViewProps {
   details: ConfirmedTripDetails;
@@ -11,6 +12,10 @@ interface TripItineraryDetailViewProps {
 
 export function TripItineraryDetailView({ details }: TripItineraryDetailViewProps) {
   const { trip, hotel, vehicle, passengers, destination, invoice, itineraryItems } = details;
+
+  // Realtime subscription for instant driver/vehicle/status sync
+  const realtimeTables = React.useMemo(() => ["trips", "trip_vehicles", "trip_hotels"], []);
+  useRealtimeTableSync(realtimeTables);
 
   const [activeDay, setActiveDay] = React.useState(1);
   const [copiedLink, setCopiedLink] = React.useState(false);

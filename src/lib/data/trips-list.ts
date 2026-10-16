@@ -60,6 +60,13 @@ export function check48HourRefundEligibility(
   };
 }
 
+interface RawTripWithRelations extends TripRow {
+  destinations?: DestinationRow | null;
+  trip_hotels?: { hotels?: HotelRow | null }[];
+  trip_vehicles?: { vehicles?: VehicleRow | null }[];
+  trip_stops?: { stops?: StopRow | null }[];
+}
+
 export async function getUserTrips(
   kindFilter?: "all" | "commercial" | "normal"
 ): Promise<UserTripSummary[]> {
@@ -72,7 +79,7 @@ export async function getUserTrips(
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return getFallbackTrips(todayStr, kindFilter);
+      return [];
     }
 
     let query = supabase
@@ -89,68 +96,80 @@ export async function getUserTrips(
     const { data, error } = await query;
 
     if (error || !data || data.length === 0) {
-      return getFallbackTrips(todayStr, kindFilter);
+      return [];
     }
 
-interface RawTripWithRelations extends TripRow {
-  destinations?: DestinationRow | null;
-  trip_hotels?: { hotels?: HotelRow | null }[];
-  trip_vehicles?: { vehicles?: VehicleRow | null }[];
-  trip_stops?: { stops?: StopRow | null }[];
-}
+    const rows = data as unknown as RawTripWithRelations[];
 
-    // Map database rows into view summaries
-    const mapped: UserTripSummary[] = (data as unknown as RawTripWithRelations[]).map((row) => {
-      const derived = computeDerivedStatus(row.status, row.start_date, row.end_date, todayStr);
-      const totalDays = row.total_days || 4;
-      const nights = Math.max(1, totalDays - 1);
-      const dest = row.destinations;
-      const hotel = row.trip_hotels?.[0]?.hotels;
-      const vehicle = row.trip_vehicles?.[0]?.vehicles;
-      const stop = row.trip_stops?.[0]?.stops;
+    const mapped: UserTripSummary[] = rows.map((trip) => {
+      const derivedStatus = computeDerivedStatus(
+        trip.status,
+        trip.start_date,
+        trip.end_date,
+        todayStr
+      );
 
+      const refundEligibility = check48HourRefundEligibility(trip.start_date);
+
+      // Only confirmed and upcoming trips can be cancelled by user (D8)
+      const canCancel =
+        trip.status === "confirmed" &&
+        (derivedStatus === "Upcoming" || derivedStatus === "Ongoing");
+
+      // Extract inclusions from child records
       const inclusions: string[] = [];
-      const hotelPart = hotel?.name ? hotel.name.split("&")[0] : null;
-      if (hotelPart) inclusions.push(hotelPart.trim());
-      const vehiclePart = vehicle?.name ? vehicle.name.split("(")[0] : null;
-      if (vehiclePart) inclusions.push(vehiclePart.trim());
-      if (stop?.name) inclusions.push(stop.name.trim());
-
-      let daysRemainingText: string | null = null;
-      if (derived === "Upcoming" && row.start_date) {
-        const diffDays = Math.ceil(
-          (new Date(row.start_date).getTime() - new Date(todayStr).getTime()) /
-            (1000 * 60 * 60 * 24)
-        );
-        daysRemainingText = diffDays === 1 ? "Starts Tomorrow" : `In ${diffDays} Days`;
-      } else if (derived === "Ongoing") {
-        daysRemainingText = "Live Today";
+      if (trip.trip_hotels?.[0]?.hotels?.name) {
+        inclusions.push(trip.trip_hotels[0].hotels.name);
+      }
+      if (trip.trip_vehicles?.[0]?.vehicles?.name) {
+        inclusions.push(trip.trip_vehicles[0].vehicles.name);
+      }
+      if (trip.trip_stops && trip.trip_stops.length > 0) {
+        const stopName = trip.trip_stops[0]?.stops?.name;
+        if (stopName) inclusions.push(stopName);
       }
 
-      const refundEligibility = check48HourRefundEligibility(row.start_date);
-      const canCancel =
-        (row.status === "confirmed" || row.status === "pending_approval") &&
-        Boolean(row.start_date && row.start_date >= todayStr);
+      // Compute days remaining text
+      let daysRemainingText: string | null = null;
+      if (derivedStatus === "Upcoming" && trip.start_date) {
+        const diffDays = Math.ceil(
+          (new Date(`${trip.start_date}T00:00:00+05:30`).getTime() - Date.now()) /
+            (1000 * 60 * 60 * 24)
+        );
+        if (diffDays > 0) {
+          daysRemainingText = `In ${diffDays} Day${diffDays > 1 ? "s" : ""}`;
+        }
+      }
+
+      const totalDays = trip.start_date && trip.end_date
+        ? Math.max(
+            1,
+            Math.ceil(
+              (new Date(trip.end_date).getTime() - new Date(trip.start_date).getTime()) /
+                (1000 * 60 * 60 * 24)
+            ) + 1
+          )
+        : 3;
 
       return {
-        id: row.id,
-        bookingRef: row.booking_ref,
-        title: row.title || `${dest?.name || "Jaipur"} Tour`,
-        bookingKind: row.booking_kind,
-        status: row.status,
-        derivedStatus: derived,
-        startDate: row.start_date,
-        endDate: row.end_date,
+        id: trip.id,
+        bookingRef: trip.booking_ref,
+        title: trip.title || "Custom Rajasthan Tour",
+        bookingKind: trip.booking_kind as "normal" | "commercial",
+        status: trip.status as UserTripSummary["status"],
+        derivedStatus,
+        startDate: trip.start_date,
+        endDate: trip.end_date,
         totalDays,
-        nights,
-        travelerCount: row.traveler_count,
-        totalAmount: Number(row.total_amount),
-        refundAmount: row.refund_amount ? Number(row.refund_amount) : null,
-        cancellationReason: row.cancellation_reason,
-        destinationName: dest?.name || "Jaipur",
-        destinationSlug: dest?.slug || "jaipur",
-        imagePath: dest?.hero_image_path || "destinations/jaipur.jpg",
-        inclusions: inclusions.length > 0 ? inclusions : ["Heritage Stay", "Private Sedan", "Fort Pass"],
+        nights: Math.max(1, totalDays - 1),
+        travelerCount: trip.traveler_count,
+        totalAmount: Number(trip.total_amount),
+        refundAmount: trip.refund_amount ? Number(trip.refund_amount) : null,
+        cancellationReason: trip.cancellation_reason,
+        destinationName: trip.destinations?.name || "Rajasthan",
+        destinationSlug: trip.destinations?.slug || "jaipur",
+        imagePath: trip.destinations?.hero_image_path || "destinations/jaipur.jpg",
+        inclusions,
         daysRemainingText,
         isFullRefundEligible: refundEligibility.isFullRefund,
         canCancel,
@@ -159,89 +178,6 @@ interface RawTripWithRelations extends TripRow {
 
     return mapped;
   } catch {
-    return getFallbackTrips(todayStr, kindFilter);
+    return [];
   }
-}
-
-function getFallbackTrips(
-  todayStr: string,
-  kindFilter?: "all" | "commercial" | "normal"
-): UserTripSummary[] {
-  const fallbacks: UserTripSummary[] = [
-    {
-      id: "trip-jaipur-upcoming",
-      bookingRef: "TM-008829",
-      title: "Jaipur Heritage & Forts Circuit",
-      bookingKind: "normal",
-      status: "confirmed",
-      derivedStatus: "Upcoming",
-      startDate: "2026-11-14",
-      endDate: "2026-11-18",
-      totalDays: 4,
-      nights: 3,
-      travelerCount: 2,
-      totalAmount: 27376,
-      refundAmount: null,
-      cancellationReason: null,
-      destinationName: "Jaipur",
-      destinationSlug: "jaipur",
-      imagePath: "destinations/jaipur.jpg",
-      inclusions: ["Shahpura Haveli", "Maruti Dzire", "Neemrana Stop"],
-      daysRemainingText: "In 12 Days",
-      isFullRefundEligible: true,
-      canCancel: true,
-    },
-    {
-      id: "trip-udaipur-completed",
-      bookingRef: "TM-004120",
-      title: "Udaipur Lakes & Heritage Retreat",
-      bookingKind: "normal",
-      status: "confirmed",
-      derivedStatus: "Completed",
-      startDate: "2026-09-02",
-      endDate: "2026-09-05",
-      totalDays: 3,
-      nights: 2,
-      travelerCount: 2,
-      totalAmount: 34500,
-      refundAmount: null,
-      cancellationReason: null,
-      destinationName: "Udaipur",
-      destinationSlug: "udaipur",
-      imagePath: "destinations/udaipur.jpg",
-      inclusions: ["Taj Lake Palace", "Self-Drive Thar"],
-      daysRemainingText: null,
-      isFullRefundEligible: false,
-      canCancel: false,
-    },
-    {
-      id: "trip-munnar-completed",
-      bookingRef: "TM-002980",
-      title: "Munnar Misty Hills Escape",
-      bookingKind: "normal",
-      status: "confirmed",
-      derivedStatus: "Completed",
-      startDate: "2026-08-15",
-      endDate: "2026-08-18",
-      totalDays: 4,
-      nights: 3,
-      travelerCount: 4,
-      totalAmount: 18900,
-      refundAmount: null,
-      cancellationReason: null,
-      destinationName: "Munnar",
-      destinationSlug: "munnar",
-      imagePath: "destinations/munnar.jpg",
-      inclusions: ["Plantation Resort", "Private Cab"],
-      daysRemainingText: null,
-      isFullRefundEligible: false,
-      canCancel: false,
-    },
-  ];
-
-  if (kindFilter && kindFilter !== "all") {
-    return fallbacks.filter((t) => t.bookingKind === kindFilter);
-  }
-
-  return fallbacks;
 }

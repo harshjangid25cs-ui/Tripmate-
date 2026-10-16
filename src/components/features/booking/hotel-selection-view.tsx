@@ -10,6 +10,7 @@ import { getHotelImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { toggleSavedItem } from "@/lib/data/saved-items";
 import { selectTripHotel } from "@/lib/actions/trips";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface HotelSelectionViewProps {
   tripData: ValidatedDraftTrip;
@@ -21,6 +22,9 @@ type FilterKey = "all" | "price" | "rating" | "haveli" | "pool" | "budget";
 export function HotelSelectionView({ tripData, hotels }: HotelSelectionViewProps) {
   const router = useRouter();
   const { trip, hotel: selectedTripHotel, destination } = tripData;
+
+  const realtimeTables = React.useMemo(() => ["hotels"], []);
+  useRealtimeTableSync(realtimeTables);
 
   const [activeFilter, setActiveFilter] = React.useState<FilterKey>("all");
   const [selectedHotelId, setSelectedHotelId] = React.useState<string | null>(

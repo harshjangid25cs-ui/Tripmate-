@@ -67,185 +67,9 @@ export interface Stop {
   isActive: boolean;
 }
 
-export const FALLBACK_HOTELS: Hotel[] = [
-  {
-    id: "b1111111-1111-1111-1111-111111111111",
-    destinationId: "11111111-1111-1111-1111-111111111111",
-    name: "Shahpura Haveli & Heritage Suites",
-    description:
-      "Regal 300-year-old restored royal mansion featuring traditional pink sandstone courtyards, marble suites, and rooftop terrace views.",
-    rating: 4.82,
-    reviewCount: 320,
-    neighborhood: "Amer Road",
-    distanceText: "2.1 km from center",
-    badge: "Only 2 rooms left",
-    pricePerNight: 4200,
-    imagePaths: [],
-    amenities: [
-      "Free WiFi",
-      "Heritage Pool",
-      "Royal Breakfast",
-      "Valet Parking",
-      "AC",
-    ],
-    isActive: true,
-  },
-  {
-    id: "b2222222-2222-2222-2222-222222222222",
-    destinationId: "11111111-1111-1111-1111-111111111111",
-    name: "Diggi Palace Heritage Hotel",
-    description:
-      "Peaceful heritage oasis with sprawling banyan gardens, resident peacocks, and vintage Rajasthani architecture in central Jaipur.",
-    rating: 4.7,
-    reviewCount: 210,
-    neighborhood: "C-Scheme",
-    distanceText: "1.5 km from center",
-    badge: "High Demand",
-    pricePerNight: 3600,
-    imagePaths: [],
-    amenities: ["Free WiFi", "Garden Restaurant", "AC", "Room Service"],
-    isActive: true,
-  },
-  {
-    id: "b3333333-3333-3333-3333-333333333333",
-    destinationId: "11111111-1111-1111-1111-111111111111",
-    name: "Alsisar Haveli",
-    description:
-      "Opulent heritage mansion adorned with intricate multi-foil arches, royal fresco murals, chandeliers, and canopy beds.",
-    rating: 4.88,
-    reviewCount: 450,
-    neighborhood: "Sansar Chandra Road",
-    distanceText: "1.2 km from center",
-    badge: "Boutique",
-    pricePerNight: 5400,
-    imagePaths: [],
-    amenities: [
-      "Free WiFi",
-      "Heritage Pool",
-      "Multi-cuisine Dining",
-      "Bar",
-      "Spa",
-    ],
-    isActive: true,
-  },
-];
 
-export const FALLBACK_VEHICLES: Vehicle[] = [
-  {
-    id: "e1111111-1111-1111-1111-111111111111",
-    type: "car",
-    name: "Maruti Suzuki Dzire",
-    subtitle: "AC Sedan • Dedicated Commercial Fleet",
-    description:
-      "Comfortable and fuel-efficient 4-passenger sedan ideal for highway cruising and city navigation.",
-    capacity: 4,
-    luggageCapacity: 2,
-    features: [
-      "Air Conditioning",
-      "Chauffeur Driven",
-      "Sanitized",
-      "Toll Passes",
-    ],
-    fuelPolicy: "Fuel included",
-    driverType: "chauffeur",
-    rating: 4.75,
-    badge: "Economical",
-    price: 1899,
-    imagePath: null,
-    isActive: true,
-  },
-  {
-    id: "e2222222-2222-2222-2222-222222222222",
-    type: "car",
-    name: "Toyota Innova Crysta",
-    subtitle: "Premium MPV • Spacious Captain Seats",
-    description:
-      "Spacious 7-seater luxury highway cruiser with plush captain chairs, rear AC vents, and generous luggage volume.",
-    capacity: 7,
-    luggageCapacity: 4,
-    features: [
-      "Captain Chairs",
-      "Chauffeur Driven",
-      "Mineral Water Onboard",
-      "High Clearance",
-    ],
-    fuelPolicy: "Fuel included",
-    driverType: "chauffeur",
-    rating: 4.9,
-    badge: "Most Popular",
-    price: 1899,
-    imagePath: null,
-    isActive: true,
-  },
-  {
-    id: "e3333333-3333-3333-3333-333333333333",
-    type: "bike",
-    name: "Royal Enfield Classic 350",
-    subtitle: "Iconic Cruiser • Highway Touring",
-    description:
-      "Timeless thumper motorcycle designed for leisurely road exploration, featuring dual-channel ABS and comfortable cruiser ergonomics.",
-    capacity: 2,
-    luggageCapacity: 1,
-    features: [
-      "Dual ABS",
-      "Helmets Provided",
-      "Phone Mount",
-      "Roadside Assistance",
-    ],
-    fuelPolicy: "Full to Full",
-    driverType: "self_drive",
-    rating: 4.8,
-    badge: "Adventure",
-    price: 899,
-    imagePath: null,
-    isActive: true,
-  },
-];
 
-export const FALLBACK_STOPS: Stop[] = [
-  {
-    id: "f1111111-1111-1111-1111-111111111111",
-    destinationId: "11111111-1111-1111-1111-111111111111",
-    name: "Neemrana Fort-Palace",
-    description:
-      "15th-century heritage midway fort on Delhi-Jaipur NH48 offering royal breakfast buffets, stepwells, and historic rampart walks.",
-    locationText: "NH48, Neemrana, Rajasthan",
-    distanceText: "122 km from Delhi (~2.5 hrs)",
-    amenities: [
-      "Royal Buffet",
-      "Clean Restrooms",
-      "Scenic Viewpoint",
-      "Valet Parking",
-    ],
-    badge: "Heritage Stop",
-    turnaroundText: "Quick 45m Turnaround",
-    imagePath: null,
-    price: 1850,
-    pricingUnit: "per_person",
-    isActive: true,
-  },
-  {
-    id: "f2222222-2222-2222-2222-222222222222",
-    destinationId: "11111111-1111-1111-1111-111111111111",
-    name: "Highway King Boutique & Food Court",
-    description:
-      "Premium verified highway midway in Kotputli with multi-cuisine dining, sanitized modern washrooms, and EV fast-charging.",
-    locationText: "NH48, Kotputli, Rajasthan",
-    distanceText: "160 km from Delhi (~3.2 hrs)",
-    amenities: [
-      "Air Conditioned Food Court",
-      "Clean Restroom Seal",
-      "EV Fast Charger",
-      "Fuel Station",
-    ],
-    badge: "Highway Partner",
-    turnaroundText: "Quick 30m Turnaround",
-    imagePath: null,
-    price: 499,
-    pricingUnit: "per_person",
-    isActive: true,
-  },
-];
+
 
 function mapHotel(row: HotelRow): Hotel {
   return {
@@ -326,15 +150,11 @@ export async function getHotelsForDestination(
     }
     const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
-      return destinationId
-        ? FALLBACK_HOTELS.filter((h) => h.destinationId === destinationId)
-        : FALLBACK_HOTELS;
+      return [];
     }
     return (data as HotelRow[]).map(mapHotel);
   } catch {
-    return destinationId
-      ? FALLBACK_HOTELS.filter((h) => h.destinationId === destinationId)
-      : FALLBACK_HOTELS;
+    return [];
   }
 }
 
@@ -351,15 +171,11 @@ export async function getVehicles(
     }
     const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
-      return type
-        ? FALLBACK_VEHICLES.filter((v) => v.type === type)
-        : FALLBACK_VEHICLES.filter((v) => v.type === "car" || v.type === "bike");
+      return [];
     }
     return (data as VehicleRow[]).map(mapVehicle);
   } catch {
-    return type
-      ? FALLBACK_VEHICLES.filter((v) => v.type === type)
-      : FALLBACK_VEHICLES.filter((v) => v.type === "car" || v.type === "bike");
+    return [];
   }
 }
 
@@ -374,7 +190,7 @@ export async function getStopsForDestination(
       .eq("is_active", true);
     const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
-      return FALLBACK_STOPS;
+      return [];
     }
     const mapped = (data as StopRow[]).map(mapStop);
     if (destinationId) {
@@ -384,7 +200,7 @@ export async function getStopsForDestination(
     }
     return mapped;
   } catch {
-    return FALLBACK_STOPS;
+    return [];
   }
 }
 

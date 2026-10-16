@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { getValidatedDraftTrip } from "@/lib/data/booking-guards";
 import { getHotelsForDestination } from "@/lib/data/booking";
 import { HotelSelectionView } from "@/components/features/booking/hotel-selection-view";
