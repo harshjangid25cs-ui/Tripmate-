@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
@@ -443,6 +444,17 @@ function LoginForm() {
               100% verified &amp; secure booking
             </span>
           </div>
+
+          {/* KYC Legal Footer Links */}
+          <footer className="mt-5 text-center text-[11px] text-text-secondary space-x-2">
+            <Link href="/terms" className="hover:underline">Terms</Link>
+            <span>•</span>
+            <Link href="/privacy" className="hover:underline">Privacy</Link>
+            <span>•</span>
+            <Link href="/refund-policy" className="hover:underline">Refund Policy</Link>
+            <span>•</span>
+            <Link href="/contact" className="hover:underline">Contact</Link>
+          </footer>
         </div>
       </main>
     </div>

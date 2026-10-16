@@ -6,6 +6,7 @@ import { useAdmin } from "@/lib/admin/admin-context";
 import type { StopAdmin } from "@/lib/admin/types";
 import { adminUpsertStopAction } from "@/lib/actions/admin-ops";
 import { Plus, Edit2, EyeOff, Eye } from "lucide-react";
+import { CatalogImageUpload } from "./CatalogImageUpload";
 
 export function StopsView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
@@ -290,6 +291,13 @@ export function StopsView() {
                   required
                 />
               </div>
+
+              <CatalogImageUpload
+                value={formData.image_url || ""}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                label="Stop Photo"
+                helperText="Uploaded to Supabase catalog-images bucket and displayed on highway rest stop cards."
+              />
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
                 <button

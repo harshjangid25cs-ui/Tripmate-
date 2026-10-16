@@ -12,6 +12,11 @@ import type {
   UserAdmin,
   CompanyAdmin,
   PaymentInvoiceRecord,
+  Coupon,
+  PricingConfig,
+  EmailLogEntry,
+  AuditLogEntry,
+  AdminRole,
 } from "./types";
 
 export type DbRecord = Record<string, unknown>;
@@ -354,5 +359,83 @@ export function mapDatabasePaymentToAdminPayment(p: DbRecord): PaymentInvoiceRec
     company_name: p.company_name ? String(p.company_name) : undefined,
     gst_number: p.gst_number ? String(p.gst_number) : undefined,
     created_at: String(p.created_at || new Date().toISOString()),
+  };
+}
+
+/**
+ * Maps a Supabase `coupons` row to `Coupon`.
+ */
+export function mapDatabaseCouponToAdminCoupon(c: DbRecord): Coupon {
+  return {
+    id: String(c.id || ""),
+    code: String(c.code || "").toUpperCase(),
+    description: String(c.description || ""),
+    discount_type: (c.discount_type === "percent" ? "percent" : "flat") as "flat" | "percent",
+    value: Number(c.discount_value) || 0,
+    max_discount: c.max_discount != null ? Number(c.max_discount) : null,
+    min_subtotal: Number(c.min_order_amount) || 0,
+    valid_from: c.created_at ? String(c.created_at) : null,
+    valid_to: c.valid_until ? String(c.valid_until) : null,
+    usage_limit_total: c.usage_limit != null ? Number(c.usage_limit) : null,
+    usage_limit_per_user: null,
+    usage_count: Number(c.used_count) || 0,
+    applies_to: "both",
+    destination_id: null,
+    circuit_id: null,
+    auto_apply: false,
+    is_active: Boolean(c.is_active ?? true),
+    created_at: String(c.created_at || new Date().toISOString()),
+  };
+}
+
+/**
+ * Maps a Supabase `pricing_config` row to `PricingConfig`.
+ */
+export function mapDatabasePricingToAdminPricing(p: DbRecord): PricingConfig {
+  return {
+    id: Number(p.id) || 1,
+    service_fee: Number(p.service_fee) || 999,
+    gst_rate: Number(p.gst_rate) || 0.18,
+    demo_coupon_code: String(p.demo_coupon_code || "EXPLOREINDIA"),
+    demo_coupon_discount: Number(p.demo_coupon_discount) || 2000,
+  };
+}
+
+/**
+ * Maps a Supabase `email_logs` row to `EmailLogEntry`.
+ */
+export function mapDatabaseEmailToAdminEmail(e: DbRecord): EmailLogEntry {
+  return {
+    id: String(e.id || ""),
+    to_email: String(e.to_email || ""),
+    template: String(e.template || "custom_message"),
+    subject: String(e.subject || ""),
+    content: String(e.content || ""),
+    related_trip_id: e.related_trip_id ? String(e.related_trip_id) : undefined,
+    related_booking_ref: e.related_booking_ref ? String(e.related_booking_ref) : undefined,
+    sent_by: String(e.sent_by || "system"),
+    status: (e.status === "sent" || e.status === "failed" ? e.status : "queued") as "sent" | "queued" | "failed",
+    provider_message_id: e.provider_message_id ? String(e.provider_message_id) : undefined,
+    error: e.error ? String(e.error) : undefined,
+    created_at: String(e.created_at || new Date().toISOString()),
+  };
+}
+
+/**
+ * Maps a Supabase `admin_audit_logs` row to `AuditLogEntry`.
+ */
+export function mapDatabaseAuditToAdminAudit(a: DbRecord): AuditLogEntry {
+  return {
+    id: String(a.id || ""),
+    actor_id: String(a.actor_id || "admin"),
+    actor_name: String(a.actor_name || "Admin"),
+    actor_role: (a.actor_role as AdminRole) || "superadmin",
+    action: String(a.action || "UNKNOWN"),
+    entity_type: String(a.entity_type || "general"),
+    entity_id: a.entity_id ? String(a.entity_id) : undefined,
+    before: (a.before as Record<string, unknown>) || null,
+    after: (a.after as Record<string, unknown>) || null,
+    reason: a.reason ? String(a.reason) : null,
+    created_at: String(a.created_at || new Date().toISOString()),
   };
 }

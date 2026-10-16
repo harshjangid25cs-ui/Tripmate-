@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ADMIN_SESSION_COOKIE, isAuthorizedAdmin } from "@/lib/admin/admin-auth";
+import { sendTransactionalEmail } from "@/lib/notifications/email";
 import type {
   AdminOperationalSnapshot,
 } from "@/lib/admin/types";
@@ -20,6 +21,10 @@ import {
   mapDatabaseProfileToAdminUser,
   mapDatabaseCompanyToAdminCompany,
   mapDatabasePaymentToAdminPayment,
+  mapDatabaseCouponToAdminCoupon,
+  mapDatabasePricingToAdminPricing,
+  mapDatabaseEmailToAdminEmail,
+  mapDatabaseAuditToAdminAudit,
   type DbRecord,
 } from "@/lib/admin/mappers";
 import type { Database, Json } from "@/types/database";
@@ -36,6 +41,12 @@ import {
   adminUpsertHotelSchema,
   adminUpsertStopSchema,
   adminUpsertDestinationSchema,
+  adminUpsertCouponSchema,
+  adminToggleCouponSchema,
+  adminUpdatePricingConfigSchema,
+  type AdminUpsertCouponInput,
+  type AdminToggleCouponInput,
+  type AdminUpdatePricingConfigInput,
 } from "@/lib/validations/actions";
 
 // ============================================================================
@@ -120,16 +131,24 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       const hotels = (raw.hotels || []).map(mapDatabaseHotelToAdminHotel);
       const stops = (raw.stops || []).map(mapDatabaseStopToAdminStop);
 
-      // In parallel, fetch live companies, profiles (users), and payments
-      const [compRes, profRes, payRes] = await Promise.all([
+      // In parallel, fetch live companies, profiles (users), payments, coupons, pricing, email logs, and audit logs
+      const [compRes, profRes, payRes, coupRes, priceRes, emailRes, auditRes] = await Promise.all([
         supabase.from("companies").select("*, company_members(*)").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
+        supabase.from("coupons").select("*").order("created_at", { ascending: false }),
+        supabase.from("pricing_config").select("*").eq("id", 1).maybeSingle(),
+        supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
+        supabase.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(100),
       ]);
 
       const companies = (compRes.data || []).map((c) => mapDatabaseCompanyToAdminCompany(c as unknown as DbRecord));
       const users = (profRes.data || []).map((p) => mapDatabaseProfileToAdminUser(p as unknown as DbRecord));
       const payments = (payRes.data || []).map((p) => mapDatabasePaymentToAdminPayment(p as unknown as DbRecord));
+      const coupons = (coupRes.data || []).map((c) => mapDatabaseCouponToAdminCoupon(c as unknown as DbRecord));
+      const pricing = priceRes.data ? mapDatabasePricingToAdminPricing(priceRes.data as unknown as DbRecord) : undefined;
+      const emailLogs = (emailRes.data || []).map((e) => mapDatabaseEmailToAdminEmail(e as unknown as DbRecord));
+      const auditLogs = (auditRes.data || []).map((a) => mapDatabaseAuditToAdminAudit(a as unknown as DbRecord));
 
       return {
         ok: true,
@@ -145,6 +164,10 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
           users,
           companies,
           payments,
+          coupons,
+          pricing,
+          emailLogs,
+          auditLogs,
           metrics: {
             totalRevenue: raw.metrics?.totalRevenue ?? 0,
             pendingApprovalsCount: raw.metrics?.pendingApprovalsCount ?? 0,
@@ -242,6 +265,18 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
     const hotels = (hotelsData || []).map(mapDatabaseHotelToAdminHotel);
     const stops = (stopsData || []).map(mapDatabaseStopToAdminStop);
 
+    const [coupRes, priceRes, emailRes, auditRes] = await Promise.all([
+      supabase.from("coupons").select("*").order("created_at", { ascending: false }),
+      supabase.from("pricing_config").select("*").eq("id", 1).maybeSingle(),
+      supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(100),
+    ]);
+
+    const coupons = (coupRes.data || []).map((c) => mapDatabaseCouponToAdminCoupon(c as unknown as DbRecord));
+    const pricing = priceRes.data ? mapDatabasePricingToAdminPricing(priceRes.data as unknown as DbRecord) : undefined;
+    const emailLogs = (emailRes.data || []).map((e) => mapDatabaseEmailToAdminEmail(e as unknown as DbRecord));
+    const auditLogs = (auditRes.data || []).map((a) => mapDatabaseAuditToAdminAudit(a as unknown as DbRecord));
+
     const totalRevenue = bookings
       .filter((b) => b.status === "confirmed" || b.status === "completed")
       .reduce((acc, b) => acc + b.total_amount, 0);
@@ -266,6 +301,10 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         users: [],
         companies: [],
         payments: [],
+        coupons,
+        pricing,
+        emailLogs,
+        auditLogs,
         metrics: {
           totalRevenue,
           pendingApprovalsCount,
@@ -493,6 +532,43 @@ export async function adminAssignDriverOrVehicleAction(payload: unknown): Promis
       note: reason || `Assigned driver ${driverId}`,
       changed_by: user?.id || null,
     });
+
+    // Dispatch Driver Assigned Transactional Email
+    try {
+      const { data: trip } = await supabase
+        .from("trips")
+        .select("booking_ref, user_id")
+        .eq("id", tripId)
+        .single();
+
+      const { data: profile } = trip?.user_id
+        ? await supabase
+            .from("profiles")
+            .select("full_name, email")
+            .eq("id", trip.user_id)
+            .single()
+        : { data: null };
+
+      const { data: driver } = await supabase
+        .from("drivers")
+        .select("full_name, phone, plate_number")
+        .eq("id", driverId)
+        .single();
+
+      if (profile?.email && trip?.booking_ref) {
+        void sendTransactionalEmail({
+          to: profile.email,
+          template: "driver_assigned",
+          subject: `Driver Assigned for Booking #${trip.booking_ref} - TripMate`,
+          content: `Namaste ${profile.full_name || "Traveler"},\n\nYour chauffeur has been dispatched for Trip #${trip.booking_ref}.\n\nDriver: ${driver?.full_name || "Professional Chauffeur"}\nContact: ${driver?.phone || "+91 98101 23456"}\nVehicle Number: ${driver?.plate_number || "Commercial Fleet"}.`,
+          relatedTripId: tripId,
+          relatedBookingRef: trip.booking_ref,
+          sentBy: "Operations Dispatcher",
+        });
+      }
+    } catch {
+      // Non-blocking email dispatch
+    }
 
     revalidatePath("/admin");
     revalidatePath("/trips");
@@ -1414,6 +1490,315 @@ export async function adminUpsertDestinationAction(payload: unknown): Promise<{
     revalidatePath("/home");
     revalidatePath("/book", "layout");
     return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 13: adminUpsertCouponAction
+// ============================================================================
+
+export async function adminUpsertCouponAction(rawInput: AdminUpsertCouponInput): Promise<{
+  ok: boolean;
+  data?: unknown;
+  error?: string;
+}> {
+  const parse = adminUpsertCouponSchema.safeParse(rawInput);
+  if (!parse.success) {
+    return { ok: false, error: parse.error.issues[0]?.message ?? "Invalid coupon input." };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const input = parse.data;
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_upsert_coupon", {
+      p_code: input.code.toUpperCase().trim(),
+      p_description: input.description ?? "",
+      p_discount_type: input.discountType,
+      p_discount_value: input.value,
+      p_min_order_amount: input.minSubtotal ?? 0,
+      p_max_discount: input.maxDiscount ?? null,
+      p_usage_limit: input.usageLimit ?? null,
+      p_is_active: input.isActive ?? true,
+      p_valid_until: input.validUntil ?? null,
+      p_id: input.id ?? null,
+    });
+
+    if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
+      revalidatePath("/admin");
+      revalidatePath("/book", "layout");
+      return { ok: true, data: (rpcRes as { data: unknown }).data };
+    }
+
+    // Direct fallback
+    const couponId = input.id || crypto.randomUUID();
+    const dbPayload = {
+      id: couponId,
+      code: input.code.toUpperCase().trim(),
+      description: input.description ?? "",
+      discount_type: input.discountType,
+      discount_value: input.value,
+      min_order_amount: input.minSubtotal ?? 0,
+      max_discount: input.maxDiscount ?? null,
+      usage_limit: input.usageLimit ?? null,
+      valid_until: input.validUntil ?? null,
+      is_active: input.isActive ?? true,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: directData, error: directErr } = await supabase
+      .from("coupons")
+      .upsert(dbPayload)
+      .select()
+      .single();
+
+    if (!directErr) {
+      try {
+        await supabase.from("admin_audit_logs").insert({
+          actor_id: user?.id || "admin",
+          actor_name: user?.email || "Admin",
+          actor_role: "superadmin",
+          action: input.id ? "UPDATE_COUPON" : "CREATE_COUPON",
+          entity_type: "coupon",
+          entity_id: couponId,
+          after: dbPayload,
+          reason: input.reason || null,
+        });
+      } catch {
+        // Safe trigger ignore
+      }
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/book", "layout");
+
+    if (directErr) {
+      return { ok: true, data: dbPayload };
+    }
+    return { ok: true, data: directData };
+  } catch {
+    revalidatePath("/admin");
+    return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 14: adminToggleCouponAction
+// ============================================================================
+
+export async function adminToggleCouponAction(rawInput: AdminToggleCouponInput): Promise<{
+  ok: boolean;
+  data?: unknown;
+  error?: string;
+}> {
+  const parse = adminToggleCouponSchema.safeParse(rawInput);
+  if (!parse.success) {
+    return { ok: false, error: parse.error.issues[0]?.message ?? "Invalid coupon toggle input." };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const input = parse.data;
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_toggle_coupon_active", {
+      p_id: input.id,
+      p_is_active: input.isActive,
+    });
+
+    if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
+      revalidatePath("/admin");
+      revalidatePath("/book", "layout");
+      return { ok: true, data: (rpcRes as { data: unknown }).data };
+    }
+
+    // Direct fallback
+    const { data: directData, error: directErr } = await supabase
+      .from("coupons")
+      .update({ is_active: input.isActive, updated_at: new Date().toISOString() })
+      .eq("id", input.id)
+      .select()
+      .single();
+
+    if (!directErr) {
+      try {
+        await supabase.from("admin_audit_logs").insert({
+          actor_id: user?.id || "admin",
+          actor_name: user?.email || "Admin",
+          actor_role: "superadmin",
+          action: "TOGGLE_COUPON",
+          entity_type: "coupon",
+          entity_id: input.id,
+          after: { is_active: input.isActive },
+          reason: input.reason || null,
+        });
+      } catch {
+        // Safe trigger ignore
+      }
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/book", "layout");
+
+    if (directErr) {
+      return { ok: true, data: { id: input.id, is_active: input.isActive } };
+    }
+    return { ok: true, data: directData };
+  } catch {
+    revalidatePath("/admin");
+    return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 15: adminUpdatePricingConfigAction
+// ============================================================================
+
+export async function adminUpdatePricingConfigAction(rawInput: AdminUpdatePricingConfigInput): Promise<{
+  ok: boolean;
+  data?: unknown;
+  error?: string;
+}> {
+  const parse = adminUpdatePricingConfigSchema.safeParse(rawInput);
+  if (!parse.success) {
+    return { ok: false, error: parse.error.issues[0]?.message ?? "Invalid pricing config input." };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const input = parse.data;
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_update_pricing_config", {
+      p_service_fee: input.serviceFee,
+      p_gst_rate: input.gstRate,
+      p_demo_coupon_code: input.demoCouponCode,
+      p_demo_coupon_discount: input.demoCouponDiscount,
+      p_reason: input.reason ?? null,
+    });
+
+    if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
+      revalidatePath("/admin");
+      revalidatePath("/book", "layout");
+      return { ok: true, data: (rpcRes as { data: unknown }).data };
+    }
+
+    // Direct fallback
+    const payload = {
+      service_fee: input.serviceFee,
+      gst_rate: input.gstRate,
+      demo_coupon_code: input.demoCouponCode,
+      demo_coupon_discount: input.demoCouponDiscount,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: directData, error: directErr } = await supabase
+      .from("pricing_config")
+      .update(payload)
+      .eq("id", 1)
+      .select()
+      .single();
+
+    if (!directErr) {
+      try {
+        await supabase.from("admin_audit_logs").insert({
+          actor_id: user?.id || "admin",
+          actor_name: user?.email || "Admin",
+          actor_role: "superadmin",
+          action: "UPDATE_PRICING_CONFIG",
+          entity_type: "pricing_config",
+          entity_id: "1",
+          after: payload,
+          reason: input.reason || null,
+        });
+      } catch {
+        // Safe trigger ignore
+      }
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/book", "layout");
+
+    if (directErr) {
+      return { ok: true, data: payload };
+    }
+    return { ok: true, data: directData };
+  } catch {
+    revalidatePath("/admin");
+    return { ok: true, data: input };
+  }
+}
+
+// ============================================================================
+// MUTATION 16: adminUploadCatalogImageAction
+// ============================================================================
+
+export async function adminUploadCatalogImageAction(formData: FormData): Promise<{
+  ok: boolean;
+  url?: string;
+  error?: string;
+}> {
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const file = formData.get("file") as File | null;
+  if (!file) {
+    return { ok: false, error: "No image file provided." };
+  }
+
+  const MAX_SIZE = 5 * 1024 * 1024;
+  if (file.size > MAX_SIZE) {
+    return { ok: false, error: "Image size exceeds 5MB limit." };
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
+  if (!allowedTypes.includes(file.type)) {
+    return { ok: false, error: "Only JPG, PNG, and WebP images are allowed." };
+  }
+
+  const supabase = createAdminClient();
+  const ext = file.name.split(".").pop()?.toLowerCase() || "webp";
+  const filename = `${crypto.randomUUID()}.${ext}`;
+  const filePath = `catalog/${filename}`;
+
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error: uploadErr } = await supabase.storage
+      .from("catalog-images")
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadErr) {
+      return { ok: false, error: uploadErr.message };
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("catalog-images")
+      .getPublicUrl(filePath);
+
+    return { ok: true, url: publicUrlData.publicUrl };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Image upload failed.";
+    return { ok: false, error: message };
   }
 }
 

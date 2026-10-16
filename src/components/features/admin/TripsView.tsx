@@ -17,6 +17,7 @@ import {
   EyeOff,
   Eye,
 } from "lucide-react";
+import { CatalogImageUpload } from "./CatalogImageUpload";
 
 export function TripsView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
@@ -410,6 +411,13 @@ export function TripsView() {
                   placeholder="One sentence overview..."
                 />
               </div>
+
+              <CatalogImageUpload
+                value={formData.image_url || ""}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                label="Circuit Featured Image"
+                helperText="Uploaded to Supabase catalog-images bucket and displayed on the trip card."
+              />
 
               {/* Per-trip availability selectors (§3.B) */}
               <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200 space-y-3">

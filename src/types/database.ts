@@ -138,6 +138,7 @@ export interface Database {
           demo_coupon_code: string | null;
           demo_coupon_discount: number;
           created_at: string;
+          updated_at?: string;
         };
         Insert: {
           id?: number;
@@ -146,12 +147,14 @@ export interface Database {
           demo_coupon_code?: string | null;
           demo_coupon_discount?: number;
           created_at?: string;
+          updated_at?: string;
         };
         Update: {
           service_fee?: number;
           gst_rate?: number;
           demo_coupon_code?: string | null;
           demo_coupon_discount?: number;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -967,6 +970,117 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+
+      coupons: {
+        Row: {
+          id: string;
+          code: string;
+          description: string | null;
+          discount_type: "flat" | "percent";
+          discount_value: number;
+          min_order_amount: number;
+          max_discount: number | null;
+          usage_limit: number | null;
+          used_count: number;
+          valid_until: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          description?: string | null;
+          discount_type: "flat" | "percent";
+          discount_value: number;
+          min_order_amount?: number;
+          max_discount?: number | null;
+          usage_limit?: number | null;
+          used_count?: number;
+          valid_until?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          description?: string | null;
+          discount_type?: "flat" | "percent";
+          discount_value?: number;
+          min_order_amount?: number;
+          max_discount?: number | null;
+          usage_limit?: number | null;
+          used_count?: number;
+          valid_until?: string | null;
+          is_active?: boolean;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+
+      email_logs: {
+        Row: {
+          id: string;
+          to_email: string;
+          template: string;
+          subject: string;
+          content: string;
+          related_trip_id: string | null;
+          related_booking_ref: string | null;
+          sent_by: string;
+          status: "sent" | "queued" | "failed";
+          provider_message_id: string | null;
+          error: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          to_email: string;
+          template: string;
+          subject: string;
+          content: string;
+          related_trip_id?: string | null;
+          related_booking_ref?: string | null;
+          sent_by: string;
+          status?: "sent" | "queued" | "failed";
+          provider_message_id?: string | null;
+          error?: string | null;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
+
+      admin_audit_logs: {
+        Row: {
+          id: string;
+          actor_id: string;
+          actor_name: string;
+          actor_role: string;
+          action: string;
+          entity_type: string;
+          entity_id: string | null;
+          before: Json | null;
+          after: Json | null;
+          reason: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          actor_id: string;
+          actor_name: string;
+          actor_role: string;
+          action: string;
+          entity_type: string;
+          entity_id?: string | null;
+          before?: Json | null;
+          after?: Json | null;
+          reason?: string | null;
+          created_at?: string;
+        };
+        Update: Record<string, never>;
+        Relationships: [];
+      };
     };
 
     Views: Record<string, never>;
@@ -1214,6 +1328,44 @@ export interface Database {
           status: string;
           decision: string;
         };
+      };
+      admin_upsert_coupon: {
+        Args: {
+          p_code: string;
+          p_description?: string;
+          p_discount_type: string;
+          p_discount_value: number;
+          p_min_order_amount?: number;
+          p_max_discount?: number | null;
+          p_usage_limit?: number | null;
+          p_is_active?: boolean;
+          p_valid_until?: string | null;
+          p_id?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_toggle_coupon_active: {
+        Args: {
+          p_id: string;
+          p_is_active: boolean;
+        };
+        Returns: Json;
+      };
+      admin_update_pricing_config: {
+        Args: {
+          p_service_fee: number;
+          p_gst_rate: number;
+          p_demo_coupon_code?: string;
+          p_demo_coupon_discount?: number;
+        };
+        Returns: Json;
+      };
+      customer_apply_coupon: {
+        Args: {
+          p_trip_id: string;
+          p_coupon_code: string;
+        };
+        Returns: Json;
       };
     };
 

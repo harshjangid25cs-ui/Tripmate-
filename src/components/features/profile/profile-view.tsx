@@ -579,22 +579,22 @@ export function ProfileView({
         <p className="font-body-sm text-[11px] text-text-secondary">
           Tripmate Customer v2.4.0 (Build 8829) • Made in India
         </p>
-        <div className="flex items-center gap-4 mt-2">
-          <button
-            type="button"
-            onClick={() => setLegalModal("terms")}
-            className="font-label-md text-xs text-text-secondary hover:text-text-primary underline"
-          >
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-2 text-[11px] text-text-secondary">
+          <Link href="/terms" className="hover:text-text-primary hover:underline">
             Terms of Service
-          </button>
-          <span className="text-text-secondary text-xs">•</span>
-          <button
-            type="button"
-            onClick={() => setLegalModal("privacy")}
-            className="font-label-md text-xs text-text-secondary hover:text-text-primary underline"
-          >
+          </Link>
+          <span>•</span>
+          <Link href="/privacy" className="hover:text-text-primary hover:underline">
             Privacy Policy
-          </button>
+          </Link>
+          <span>•</span>
+          <Link href="/refund-policy" className="hover:text-text-primary hover:underline">
+            Refund Policy
+          </Link>
+          <span>•</span>
+          <Link href="/contact" className="hover:text-text-primary hover:underline">
+            Contact Us
+          </Link>
         </div>
       </div>
 

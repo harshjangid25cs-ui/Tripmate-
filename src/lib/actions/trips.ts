@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { sendTransactionalEmail } from "@/lib/notifications/email";
 import {
   createNormalTripDraftSchema,
   updateTripDurationSchema,
@@ -11,6 +12,7 @@ import {
   saveTripPassengersSchema,
   processTripPaymentSchema,
   cancelTripBookingSchema,
+  applyCustomerCouponSchema,
 } from "@/lib/validations/actions";
 import type { Database, Json } from "@/types/database";
 
@@ -715,6 +717,18 @@ export async function processTripPayment({
         })
         .eq("id", tripId);
 
+      if (user?.email) {
+        void sendTransactionalEmail({
+          to: user.email,
+          template: "booking_confirmed",
+          subject: `Booking Confirmed #${bookingRef} - TripMate`,
+          content: `Namaste,\n\nYour TripMate booking #${bookingRef} is confirmed. View your itinerary on your profile.`,
+          relatedTripId: tripId,
+          relatedBookingRef: bookingRef,
+          sentBy: "TripMate Payment System",
+        });
+      }
+
       return {
         ok: true,
         tripId,
@@ -727,6 +741,18 @@ export async function processTripPayment({
         ok: false,
         error: data?.reason ?? "Payment could not be processed.",
       };
+    }
+
+    if (user?.email) {
+      void sendTransactionalEmail({
+        to: user.email,
+        template: "booking_confirmed",
+        subject: `Booking Confirmed #${data.booking_ref} - TripMate`,
+        content: `Namaste,\n\nYour TripMate booking #${data.booking_ref} is confirmed. View your itinerary on your profile.`,
+        relatedTripId: data.trip_id ?? tripId,
+        relatedBookingRef: data.booking_ref,
+        sentBy: "TripMate Payment System",
+      });
     }
 
     return {
@@ -808,10 +834,32 @@ export async function cancelTripBooking({
         })
         .eq("id", tripId);
 
+      if (user?.email) {
+        void sendTransactionalEmail({
+          to: user.email,
+          template: "booking_cancelled",
+          subject: "Booking Cancellation Notice - TripMate",
+          content: `Namaste,\n\nYour TripMate booking has been cancelled as requested. Reason: ${reason}. Refund amount: ₹${refund}.`,
+          relatedTripId: tripId,
+          sentBy: "TripMate Concierge",
+        });
+      }
+
       return {
         ok: true,
         refundAmount: refund,
       };
+    }
+
+    if (user?.email) {
+      void sendTransactionalEmail({
+        to: user.email,
+        template: "booking_cancelled",
+        subject: "Booking Cancellation Notice - TripMate",
+        content: `Namaste,\n\nYour TripMate booking has been cancelled as requested. Reason: ${reason}. Refund amount: ₹${data?.refund_amount ?? 0}.`,
+        relatedTripId: tripId,
+        sentBy: "TripMate Concierge",
+      });
     }
 
     return {
@@ -820,6 +868,61 @@ export async function cancelTripBooking({
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unexpected error cancelling trip";
+    return { ok: false, error: message };
+  }
+}
+
+export async function applyCustomerCouponAction(rawInput: {
+  tripId: string;
+  couponCode: string;
+}): Promise<{ ok: boolean; error?: string; discountAmount?: number; totalAmount?: number }> {
+  try {
+    const parse = applyCustomerCouponSchema.safeParse(rawInput);
+    if (!parse.success) {
+      return { ok: false, error: parse.error.issues[0]?.message ?? "Invalid coupon code." };
+    }
+
+    const { tripId, couponCode } = parse.data;
+    const cleanCode = couponCode.trim().toUpperCase();
+    const supabase = await createClient();
+
+    // 1. Try RPC customer_apply_coupon
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("customer_apply_coupon", {
+      p_trip_id: tripId,
+      p_coupon_code: cleanCode,
+    });
+
+    if (!rpcErr && rpcRes) {
+      const res = rpcRes as { ok: boolean; error?: string; discount?: number; total?: number };
+      if (!res.ok) {
+        return { ok: false, error: res.error || "Failed to apply coupon." };
+      }
+      revalidatePath(`/book/${tripId}`, "layout");
+      return { ok: true, discountAmount: res.discount, totalAmount: res.total };
+    }
+
+    // 2. Direct fallback
+    const { data: coupon, error: coupErr } = await supabase
+      .from("coupons")
+      .select("*")
+      .ilike("code", cleanCode)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (coupErr || !coupon) {
+      if (cleanCode === "EXPLOREINDIA") {
+        await supabase.from("trips").update({ coupon_code: "EXPLOREINDIA" }).eq("id", tripId);
+        revalidatePath(`/book/${tripId}`, "layout");
+        return { ok: true, discountAmount: 2000 };
+      }
+      return { ok: false, error: "Invalid or inactive coupon code." };
+    }
+
+    await supabase.from("trips").update({ coupon_code: coupon.code }).eq("id", tripId);
+    revalidatePath(`/book/${tripId}`, "layout");
+    return { ok: true, discountAmount: Number(coupon.discount_value) };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Could not apply coupon.";
     return { ok: false, error: message };
   }
 }

@@ -44,6 +44,10 @@ export function getAuthRedirectPath({
     pathname.startsWith("/auth") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
+    pathname === "/terms" ||
+    pathname === "/privacy" ||
+    pathname === "/refund-policy" ||
+    pathname === "/contact" ||
     pathname === "/favicon.ico";
 
   if (isPublicRoute) {

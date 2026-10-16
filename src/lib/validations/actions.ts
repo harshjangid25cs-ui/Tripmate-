@@ -294,6 +294,51 @@ export const adminUpsertDestinationSchema = z.object({
   reason: z.string().trim().optional(),
 });
 
+export const adminUpsertCouponSchema = z.object({
+  id: z.string().min(1).optional(),
+  code: z.string().trim().min(2, "Coupon code must be at least 2 characters."),
+  description: z.string().optional(),
+  discountType: z.enum(["flat", "percent"]),
+  value: z.number().min(0, "Discount value cannot be negative."),
+  minSubtotal: z.number().min(0).optional().default(0),
+  maxDiscount: z.number().min(0).nullable().optional(),
+  usageLimit: z.number().int().min(1).nullable().optional(),
+  validUntil: z.string().nullable().optional(),
+  isActive: z.boolean().optional().default(true),
+  reason: z.string().trim().optional(),
+});
+
+export const adminToggleCouponSchema = z.object({
+  id: z.string().min(1, "Coupon ID is required."),
+  isActive: z.boolean(),
+  reason: z.string().trim().optional(),
+});
+
+export const adminUpdatePricingConfigSchema = z.object({
+  serviceFee: z.number().min(0, "Service fee cannot be negative."),
+  gstRate: z.number().min(0).max(1, "GST rate must be between 0 and 1 (e.g. 0.18)."),
+  demoCouponCode: z.string().trim().min(2).optional().default("EXPLOREINDIA"),
+  demoCouponDiscount: z.number().min(0).optional().default(2000),
+  reason: z.string().trim().optional(),
+});
+
+export const applyCustomerCouponSchema = z.object({
+  tripId: z.string().min(1, "Trip ID is required."),
+  couponCode: z.string().trim().min(2, "Coupon code must be at least 2 characters."),
+});
+
+export const createRazorpayOrderSchema = z.object({
+  tripId: z.string().min(1, "Trip ID is required."),
+});
+
+export const verifyRazorpayPaymentSchema = z.object({
+  tripId: z.string().min(1, "Trip ID is required."),
+  razorpay_order_id: z.string().min(1, "Order ID is required."),
+  razorpay_payment_id: z.string().min(1, "Payment ID is required."),
+  razorpay_signature: z.string().min(1, "Signature is required."),
+  paymentMethod: z.enum(["upi", "card", "netbanking", "emi"]).optional().default("upi"),
+});
+
 export type AdminUpdateBookingStatusInput = z.infer<typeof adminUpdateBookingStatusSchema>;
 export type AdminAssignDriverInput = z.infer<typeof adminAssignDriverSchema>;
 export type AdminResolveApprovalInput = z.infer<typeof adminResolveApprovalSchema>;
@@ -306,3 +351,9 @@ export type AdminUpsertDriverInput = z.infer<typeof adminUpsertDriverSchema>;
 export type AdminUpsertHotelInput = z.infer<typeof adminUpsertHotelSchema>;
 export type AdminUpsertStopInput = z.infer<typeof adminUpsertStopSchema>;
 export type AdminUpsertDestinationInput = z.infer<typeof adminUpsertDestinationSchema>;
+export type AdminUpsertCouponInput = z.infer<typeof adminUpsertCouponSchema>;
+export type AdminToggleCouponInput = z.infer<typeof adminToggleCouponSchema>;
+export type AdminUpdatePricingConfigInput = z.infer<typeof adminUpdatePricingConfigSchema>;
+export type ApplyCustomerCouponInput = z.infer<typeof applyCustomerCouponSchema>;
+export type CreateRazorpayOrderInput = z.infer<typeof createRazorpayOrderSchema>;
+export type VerifyRazorpayPaymentInput = z.infer<typeof verifyRazorpayPaymentSchema>;

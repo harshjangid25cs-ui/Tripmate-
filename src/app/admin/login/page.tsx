@@ -179,30 +179,36 @@ export default function AdminLoginPage() {
           </form>
         )}
 
-        {/* Quick Role Switcher for Pair Programming / Demonstration */}
-        <div className="mt-8 pt-6 border-t border-slate-100">
-          <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 text-center">
-            Operator Fast Launch (Seeded Roles)
-          </p>
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {ADMIN_ROLES.map((r) => (
-              <button
-                key={r.id}
-                type="button"
-                disabled={loading}
-                onClick={() => handleQuickLogin(r.id)}
-                className="rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 disabled:opacity-50 p-2 text-left transition-all"
-              >
-                <span className="block text-[11px] font-bold text-slate-900 leading-tight">
-                  {r.label}
-                </span>
-                <span className="text-[9px] text-slate-400 truncate block mt-0.5">
-                  Test §2 powers
-                </span>
-              </button>
-            ))}
+        {/* Quick Role Switcher for Non-Production & Playwright Testing */}
+        {(process.env.NODE_ENV !== "production" ||
+          process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN === "true" ||
+          (typeof window !== "undefined" &&
+            (window.location.hostname === "localhost" ||
+              window.location.hostname === "127.0.0.1"))) && (
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 text-center">
+              Operator Fast Launch (Seeded Roles)
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {ADMIN_ROLES.map((r) => (
+                <button
+                  key={r.id}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleQuickLogin(r.id)}
+                  className="rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 disabled:opacity-50 p-2 text-left transition-all"
+                >
+                  <span className="block text-[11px] font-bold text-slate-900 leading-tight">
+                    {r.label}
+                  </span>
+                  <span className="text-[9px] text-slate-400 truncate block mt-0.5">
+                    Test §2 powers
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

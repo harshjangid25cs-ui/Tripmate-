@@ -6,6 +6,7 @@ import { useAdmin } from "@/lib/admin/admin-context";
 import type { VehicleAdmin } from "@/lib/admin/types";
 import { adminUpsertVehicleAction } from "@/lib/actions/admin-ops";
 import { Plus, Edit2, Users, Briefcase, EyeOff, Eye } from "lucide-react";
+import { CatalogImageUpload } from "./CatalogImageUpload";
 
 export function VehiclesView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
@@ -341,6 +342,13 @@ export function VehiclesView() {
                   />
                 </div>
               </div>
+
+              <CatalogImageUpload
+                value={formData.image_url || ""}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                label="Vehicle Photo"
+                helperText="Uploaded to Supabase catalog-images bucket and displayed on fleet cards."
+              />
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
                 <button

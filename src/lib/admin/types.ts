@@ -242,6 +242,7 @@ export interface StopAdmin {
   turnaround_text: string;
   amenities: string[];
   is_active: boolean;
+  image_url?: string;
 }
 
 export interface TravellerAdmin {
@@ -385,7 +386,17 @@ export interface CompanyAdmin {
 export interface EmailLogEntry {
   id: string;
   to_email: string;
-  template: "id_correction_request" | "booking_cancelled_by_admin" | "booking_updated" | "custom_message" | "approval_decision";
+  template:
+    | "id_correction_request"
+    | "booking_cancelled_by_admin"
+    | "booking_updated"
+    | "custom_message"
+    | "approval_decision"
+    | "booking_confirmed"
+    | "gst_invoice_ready"
+    | "driver_assigned"
+    | "booking_cancelled"
+    | string;
   subject: string;
   content: string;
   related_trip_id?: string;
@@ -435,6 +446,10 @@ export interface AdminOperationalSnapshot {
   users?: UserAdmin[];
   companies?: CompanyAdmin[];
   payments?: PaymentInvoiceRecord[];
+  coupons?: Coupon[];
+  pricing?: PricingConfig;
+  emailLogs?: EmailLogEntry[];
+  auditLogs?: AuditLogEntry[];
   metrics: {
     totalRevenue: number;
     pendingApprovalsCount: number;

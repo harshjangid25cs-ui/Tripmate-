@@ -12,6 +12,7 @@ import {
   Plus,
   Edit2,
 } from "lucide-react";
+import { CatalogImageUpload } from "./CatalogImageUpload";
 
 export function DestinationsView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
@@ -448,6 +449,13 @@ export function DestinationsView() {
                   placeholder="Detailed overview shown in detail card..."
                 />
               </div>
+
+              <CatalogImageUpload
+                value={formData.hero_image_path || ""}
+                onChange={(url) => setFormData({ ...formData, hero_image_path: url })}
+                label="Destination Hero Image"
+                helperText="Uploaded to Supabase catalog-images bucket and displayed on customer cards."
+              />
 
               <div className="grid grid-cols-3 gap-3">
                 <div>

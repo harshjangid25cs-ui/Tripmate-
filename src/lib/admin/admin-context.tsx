@@ -17,6 +17,10 @@ const ADMIN_SYNC_TABLES = [
   "hotels",
   "stops",
   "destinations",
+  "coupons",
+  "pricing_config",
+  "email_logs",
+  "admin_audit_logs",
 ];
 
 interface AdminContextType {

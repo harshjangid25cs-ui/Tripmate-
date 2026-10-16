@@ -23,6 +23,11 @@ import type {
   EmailLogEntry,
   PaymentInvoiceRecord,
 } from "./types";
+import {
+  adminUpsertCouponAction,
+  adminToggleCouponAction,
+  adminUpdatePricingConfigAction,
+} from "@/lib/actions/admin-ops";
 
 // Initial seed data reflecting TripMate catalog & specs
 const INITIAL_APP_SETTINGS: AppSettings = {
@@ -207,6 +212,10 @@ export class AdminService {
     companies?: CompanyAdmin[];
     payments?: PaymentInvoiceRecord[];
     approvals?: CommercialApprovalItem[];
+    coupons?: Coupon[];
+    pricing?: PricingConfig;
+    emailLogs?: EmailLogEntry[];
+    auditLogs?: AuditLogEntry[];
   }) {
     if (snapshot.bookings !== undefined) {
       currentState.bookings = [...snapshot.bookings];
@@ -237,6 +246,18 @@ export class AdminService {
     }
     if (snapshot.payments !== undefined) {
       currentState.payments = [...snapshot.payments];
+    }
+    if (snapshot.coupons !== undefined && snapshot.coupons.length > 0) {
+      currentState.coupons = [...snapshot.coupons];
+    }
+    if (snapshot.pricing !== undefined) {
+      currentState.pricing = { ...snapshot.pricing };
+    }
+    if (snapshot.emailLogs !== undefined && snapshot.emailLogs.length > 0) {
+      currentState.emails = [...snapshot.emailLogs];
+    }
+    if (snapshot.auditLogs !== undefined && snapshot.auditLogs.length > 0) {
+      currentState.auditLogs = [...snapshot.auditLogs];
     }
 
     this.notify();
@@ -320,6 +341,19 @@ export class AdminService {
       reason
     );
     this.notify();
+
+    try {
+      void adminUpdatePricingConfigAction({
+        serviceFee: Number(currentState.pricing.service_fee),
+        gstRate: Number(currentState.pricing.gst_rate),
+        demoCouponCode: currentState.pricing.demo_coupon_code,
+        demoCouponDiscount: Number(currentState.pricing.demo_coupon_discount),
+        reason,
+      });
+    } catch {
+      // Non-blocking sync
+    }
+
     return currentState.pricing;
   }
 
@@ -425,6 +459,24 @@ export class AdminService {
       reason
     );
     this.notify();
+
+    try {
+      void adminUpsertCouponAction({
+        code: cleanCode,
+        description: newCoupon.description,
+        discountType: newCoupon.discount_type,
+        value: newCoupon.value,
+        minSubtotal: newCoupon.min_subtotal,
+        maxDiscount: newCoupon.max_discount,
+        usageLimit: newCoupon.usage_limit_total,
+        validUntil: newCoupon.valid_to,
+        isActive: newCoupon.is_active,
+        reason,
+      });
+    } catch {
+      // Non-blocking sync
+    }
+
     return { ok: true, coupon: newCoupon };
   }
 
@@ -457,6 +509,34 @@ export class AdminService {
       reason
     );
     this.notify();
+
+    try {
+      if (typeof updates.is_active === "boolean" && Object.keys(updates).length === 1) {
+        void adminToggleCouponAction({
+          id: couponId,
+          isActive: updates.is_active,
+          reason,
+        });
+      } else {
+        const item = currentState.coupons[idx];
+        void adminUpsertCouponAction({
+          id: couponId,
+          code: item.code,
+          description: item.description,
+          discountType: item.discount_type,
+          value: item.value,
+          minSubtotal: item.min_subtotal,
+          maxDiscount: item.max_discount,
+          usageLimit: item.usage_limit_total,
+          validUntil: item.valid_to,
+          isActive: item.is_active,
+          reason,
+        });
+      }
+    } catch {
+      // Non-blocking sync
+    }
+
     return currentState.coupons[idx];
   }
 

@@ -6,6 +6,7 @@ import { useAdmin } from "@/lib/admin/admin-context";
 import type { HotelAdmin } from "@/lib/admin/types";
 import { adminUpsertHotelAction } from "@/lib/actions/admin-ops";
 import { Plus, Edit2, Star, EyeOff, Eye, AlertCircle } from "lucide-react";
+import { CatalogImageUpload } from "./CatalogImageUpload";
 
 export function HotelsView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
@@ -309,6 +310,13 @@ export function HotelsView() {
                   />
                 </div>
               </div>
+
+              <CatalogImageUpload
+                value={formData.image_url || ""}
+                onChange={(url) => setFormData({ ...formData, image_url: url })}
+                label="Hotel Photo"
+                helperText="Uploaded to Supabase catalog-images bucket and displayed on customer hotel cards."
+              />
 
               <div className="rounded-2xl bg-amber-50 p-3 border border-amber-200 flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-700 mt-0.5 flex-shrink-0" />
