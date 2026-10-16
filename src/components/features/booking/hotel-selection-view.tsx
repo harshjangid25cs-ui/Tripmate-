@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import { useRouter } from "next/navigation";
 import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
 import type { Hotel } from "@/lib/data/booking";
@@ -273,7 +273,7 @@ export function HotelSelectionView({ tripData, hotels }: HotelSelectionViewProps
 
           {/* Hotel Cards Stack */}
           <div className="px-margin-mobile flex flex-col gap-space-lg">
-            {filteredHotels.map((hotel) => {
+            {filteredHotels.map((hotel, index) => {
               const isSelected = selectedHotelId === hotel.id;
               const isBookmarked = bookmarkedIds.has(hotel.id);
               const stayTotal = hotel.pricePerNight * nights * defaultRooms;
@@ -290,12 +290,11 @@ export function HotelSelectionView({ tripData, hotels }: HotelSelectionViewProps
                 >
                   {/* Image & Badges */}
                   <div className="relative w-full aspect-[4/3] bg-surface-container overflow-hidden">
-                    <Image
+                    <CatalogImage
                       src={hotelImg}
                       alt={hotel.name}
                       fill
-                      priority
-                      unoptimized
+                      priority={index === 0}
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
                     />

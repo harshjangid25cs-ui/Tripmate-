@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import type { Destination, Circuit } from "@/lib/data/destinations";
 import { getDestinationImageUrl, getCircuitImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
@@ -317,7 +317,7 @@ export function HomeView({
 
           {/* Circuit Cards List */}
           <div className="flex flex-col gap-4">
-            {filteredCircuits.map((circuit) => {
+            {filteredCircuits.map((circuit, index) => {
               const isSaved = savedIds.has(circuit.id);
               const imageUrl = getCircuitImageUrl(circuit.id, circuit.imagePath);
               return (
@@ -327,13 +327,13 @@ export function HomeView({
                 >
                   {/* 4:3 Image Container with Overlays */}
                   <div className="relative w-full aspect-[4/3] overflow-hidden bg-surface-container-high">
-                    <Image
+                    <CatalogImage
                       src={imageUrl}
                       alt={circuit.title}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
-                      unoptimized
+                      priority={index < 2}
                     />
 
                     {/* Badge */}
@@ -479,7 +479,7 @@ export function HomeView({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {featuredCircuits.slice(0, 2).map((alt) => {
+              {featuredCircuits.slice(0, 2).map((alt, index) => {
                 const altImage = getCircuitImageUrl(alt.id, alt.imagePath);
                 return (
                   <Link
@@ -488,13 +488,13 @@ export function HomeView({
                     className="bg-card-surface border border-border-hairline rounded-2xl overflow-hidden shadow-sm flex flex-col group cursor-pointer"
                   >
                     <div className="relative w-full aspect-[4/3] bg-surface-container-high overflow-hidden">
-                      <Image
+                      <CatalogImage
                         src={altImage}
                         alt={alt.title}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
                         sizes="(max-width: 768px) 100vw, 220px"
-                        unoptimized
+                        priority={index === 0}
                       />
                       <div className="absolute top-2.5 left-2.5 bg-urgency-amber text-on-primary font-label-badge text-[10px] uppercase font-bold px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
                         <span className="material-symbols-outlined text-[13px]">bolt</span>
@@ -561,7 +561,7 @@ export function HomeView({
 
           {/* Cards Vertical Grid */}
           <div className="flex flex-col gap-4">
-            {filteredDestinations.map((dest) => {
+            {filteredDestinations.map((dest, index) => {
               const imageUrl = getDestinationImageUrl(dest.slug, dest.heroImagePath);
               const isSaved = savedIds.has(dest.id);
               return (
@@ -571,13 +571,13 @@ export function HomeView({
                 >
                   {/* 4:3 Image Container with Overlays */}
                   <div className="relative w-full aspect-[4/3] bg-surface-container-highest overflow-hidden">
-                    <Image
+                    <CatalogImage
                       src={imageUrl}
                       alt={dest.name}
                       fill
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
-                      unoptimized
+                      priority={index < 2}
                     />
 
                     {/* Urgency Badge */}

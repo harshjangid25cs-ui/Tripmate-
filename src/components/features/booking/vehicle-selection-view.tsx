@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import { useRouter } from "next/navigation";
 import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
 import type { Vehicle } from "@/lib/data/booking";
@@ -428,7 +428,7 @@ export function VehicleSelectionView({
 
           {/* Vehicle Cards Stack */}
           <div className="px-margin-mobile flex flex-col gap-space-md">
-            {filteredVehicles.map((vehicle) => {
+            {filteredVehicles.map((vehicle, index) => {
               const isSelected = selectedVehicleId === vehicle.id;
               const vehicleImg = getVehicleImageUrl(vehicle.name, vehicle.imagePath);
               const totalVehiclePrice = vehicle.price * totalDays;
@@ -444,12 +444,11 @@ export function VehicleSelectionView({
                 >
                   {/* Media Module */}
                   <div className="relative w-full aspect-[4/3] bg-surface-container overflow-hidden">
-                    <Image
+                    <CatalogImage
                       src={vehicleImg}
                       alt={vehicle.name}
                       fill
-                      priority
-                      unoptimized
+                      priority={index === 0}
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
                     />

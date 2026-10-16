@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import { useRouter } from "next/navigation";
 import type { Destination, DestinationHighlight } from "@/lib/data/destinations";
 import { getDestinationImageUrl, getHighlightImageUrl } from "@/lib/data/images";
@@ -112,12 +112,11 @@ export function DestinationDetailView({
       <main className="w-full max-w-md mx-auto pt-16 pb-28 flex flex-col">
         {/* Hero Section */}
         <div className="relative w-full aspect-[4/3] bg-surface-container overflow-hidden">
-          <Image
+          <CatalogImage
             src={heroImage}
             alt={`${destination.name} - ${destination.tagline}`}
             fill
             priority
-            unoptimized
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 448px"
           />
@@ -258,11 +257,10 @@ export function DestinationDetailView({
                   className="w-[72%] max-w-[280px] flex-shrink-0 bg-card-surface rounded-2xl border border-border-hairline overflow-hidden flex flex-col shadow-sm"
                 >
                   <div className="relative w-full aspect-[4/3] bg-surface-container">
-                    <Image
+                    <CatalogImage
                       src={hImage}
                       alt={h.title}
                       fill
-                      unoptimized
                       className="object-cover"
                       sizes="(max-width: 768px) 72vw, 280px"
                     />

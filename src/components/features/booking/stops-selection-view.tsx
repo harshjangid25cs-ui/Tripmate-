@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import { useRouter } from "next/navigation";
 import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
 import type { Stop } from "@/lib/data/booking";
@@ -210,7 +210,7 @@ export function StopsSelectionView({ tripData, stops }: StopsSelectionViewProps)
 
           {/* Cards Container */}
           <div className="flex flex-col gap-space-lg">
-            {stops.map((stop) => {
+            {stops.map((stop, index) => {
               const isSelected = selectedStopIds.has(stop.id);
               const isBusy = togglingId === stop.id;
               const stopImg = getStopImageUrl(stop.name, stop.imagePath);
@@ -225,12 +225,11 @@ export function StopsSelectionView({ tripData, stops }: StopsSelectionViewProps)
                   }`}
                 >
                   <div className="relative w-full aspect-[4/3] bg-surface-container overflow-hidden">
-                    <Image
+                    <CatalogImage
                       src={stopImg}
                       alt={stop.name}
                       fill
-                      priority
-                      unoptimized
+                      priority={index === 0}
                       className="object-cover"
                       sizes="(max-width: 768px) 100vw, 448px"
                     />

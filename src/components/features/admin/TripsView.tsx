@@ -19,7 +19,18 @@ import {
   EyeOff,
   Eye,
 } from "lucide-react";
-import { CatalogImageUpload } from "./CatalogImageUpload";
+import dynamic from "next/dynamic";
+
+const CatalogImageUpload = dynamic(
+  () => import("./CatalogImageUpload").then((m) => m.CatalogImageUpload),
+  {
+    loading: () => (
+      <div className="h-32 rounded-xl border border-dashed border-border-hairline bg-surface-container flex items-center justify-center text-xs text-text-secondary">
+        Loading image uploader...
+      </div>
+    ),
+  }
+);
 
 export function TripsView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();

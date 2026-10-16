@@ -7,6 +7,7 @@ import { resolveCatalogImageUrl } from "@/lib/data/images";
 export interface CatalogImageProps extends Omit<ImageProps, "src"> {
   src: string | null | undefined;
   fallbackSrc?: string;
+  priority?: boolean;
 }
 
 /**
@@ -14,12 +15,15 @@ export interface CatalogImageProps extends Omit<ImageProps, "src"> {
  * Automatically resolves Supabase storage paths vs external/direct URLs.
  * Sets unoptimized={true} and fast loading on external URLs to avoid proxy delay
  * and domain configuration blocking.
+ * Supports smart priority, lazy loading, async decoding, and flat background placeholder to prevent CLS.
  */
 export function CatalogImage({
   src,
   alt,
   fallbackSrc = "/images/placeholder.jpg",
+  priority = false,
   unoptimized,
+  className,
   onError,
   ...props
 }: CatalogImageProps) {
@@ -31,11 +35,17 @@ export function CatalogImage({
     typeof resolvedUrl === "string" &&
     (resolvedUrl.startsWith("http://") || resolvedUrl.startsWith("https://"));
 
+  const combinedClassName = `bg-slate-100 ${className || ""}`.trim();
+
   return (
     <Image
       {...props}
       src={resolvedUrl}
       alt={alt || "TripMate Catalog Asset"}
+      className={combinedClassName}
+      priority={priority}
+      loading={priority ? "eager" : "lazy"}
+      decoding="async"
       unoptimized={unoptimized ?? isExternal}
       onError={(e) => {
         setHasError(true);
