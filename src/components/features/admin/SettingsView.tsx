@@ -35,32 +35,32 @@ export function SettingsView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl font-black text-text-primary tracking-tight">
             Application Settings & Global Flags
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             Emergency maintenance mode, ID retention schedules, and customer contacts (§3.F, §11.1)
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-2xl bg-purple-50 px-3.5 py-1.5 border border-purple-200 text-xs font-bold text-purple-900">
+        <div className="flex items-center gap-1.5 rounded-xl bg-purple-50 px-3.5 py-1.5 border border-purple-200 text-xs font-bold text-purple-900">
           <ShieldCheck className="h-4 w-4 text-purple-700" />
           <span>Super Admin Access Only</span>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs max-w-3xl">
+      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs max-w-3xl">
         <form onSubmit={handleSave} className="space-y-6">
           {/* Toggles */}
           <div className="space-y-4">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-text-secondary">
               Gateway & Feature Toggles
             </h3>
 
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface border border-border-hairline">
               <div>
-                <p className="text-xs font-bold text-slate-900">Standard Bookings Enabled</p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs font-bold text-text-primary">Standard Bookings Enabled</p>
+                <p className="text-[11px] text-text-secondary">
                   When toggled off, customers see a notice and cannot initiate or checkout bookings.
                 </p>
               </div>
@@ -69,14 +69,14 @@ export function SettingsView() {
                 checked={settings.booking_enabled}
                 onChange={(e) => setSettings({ ...settings, booking_enabled: e.target.checked })}
                 disabled={!canWrite}
-                className="h-5 w-5 rounded text-primary-600 focus:ring-primary-500"
+                className="h-5 w-5 rounded accent-primary-container focus:ring-primary-container"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface border border-border-hairline">
               <div>
-                <p className="text-xs font-bold text-slate-900">Commercial Fleet Enabled</p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs font-bold text-text-primary">Commercial Fleet Enabled</p>
+                <p className="text-[11px] text-text-secondary">
                   Allow corporate clients to book bus fleet and multi-day packages.
                 </p>
               </div>
@@ -85,14 +85,14 @@ export function SettingsView() {
                 checked={settings.commercial_enabled}
                 onChange={(e) => setSettings({ ...settings, commercial_enabled: e.target.checked })}
                 disabled={!canWrite}
-                className="h-5 w-5 rounded text-primary-600 focus:ring-primary-500"
+                className="h-5 w-5 rounded accent-primary-container focus:ring-primary-container"
               />
             </div>
 
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface border border-border-hairline">
               <div>
-                <p className="text-xs font-bold text-slate-900">Mandatory Government ID Verification</p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-xs font-bold text-text-primary">Mandatory Government ID Verification</p>
+                <p className="text-[11px] text-text-secondary">
                   Require passenger document upload before boarding pass can be generated.
                 </p>
               </div>
@@ -103,14 +103,14 @@ export function SettingsView() {
                   setSettings({ ...settings, require_id_verification: e.target.checked })
                 }
                 disabled={!canWrite}
-                className="h-5 w-5 rounded text-primary-600 focus:ring-primary-500"
+                className="h-5 w-5 rounded accent-primary-container focus:ring-primary-container"
               />
             </div>
           </div>
 
           {/* Maintenance Broadcast Banner */}
           <div className="space-y-2">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-text-secondary">
               Maintenance Broadcast Message
             </h3>
             <textarea
@@ -121,22 +121,22 @@ export function SettingsView() {
               }
               disabled={!canWrite}
               placeholder="e.g. Scheduled gateway upgrade from 02:00 to 04:00 IST. Existing reservations remain active."
-              className="w-full rounded-2xl border border-slate-300 p-3 text-xs focus:ring-2 focus:ring-primary-500/20 disabled:bg-slate-50"
+              className="w-full rounded-xl border border-border-hairline bg-surface p-3 text-xs text-text-primary focus:bg-card-surface disabled:opacity-60"
             />
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-text-secondary">
               Leave blank if operating under normal scheduled conditions. If set, an announcement banner appears in customer header.
             </p>
           </div>
 
           {/* Data Retention & Privacy (§8.4) */}
-          <div className="space-y-4 pt-3 border-t border-slate-100">
-            <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+          <div className="space-y-4 pt-3 border-t border-border-hairline">
+            <h3 className="text-xs font-extrabold uppercase tracking-wider text-text-secondary">
               Data Retention & Contacts (§8.4)
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-text-secondary mb-1">
                   ID Retention Period (Days)
                 </label>
                 <input
@@ -146,40 +146,40 @@ export function SettingsView() {
                     setSettings({ ...settings, id_retention_days: Number(e.target.value) })
                   }
                   disabled={!canWrite}
-                  className="w-full rounded-xl border border-slate-300 p-2 text-xs font-bold"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-bold font-mono text-text-primary focus:bg-card-surface"
                 />
-                <span className="text-[10px] text-slate-400 block mt-0.5">Default 90 days after trip</span>
+                <span className="text-[10px] text-text-secondary block mt-0.5">Default 90 days after trip</span>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Support Email</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Support Email</label>
                 <input
                   type="email"
                   value={settings.support_email}
                   onChange={(e) => setSettings({ ...settings, support_email: e.target.value })}
                   disabled={!canWrite}
-                  className="w-full rounded-xl border border-slate-300 p-2 text-xs font-medium"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-medium text-text-primary focus:bg-card-surface"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Support Phone</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Support Phone</label>
                 <input
                   type="text"
                   value={settings.support_phone}
                   onChange={(e) => setSettings({ ...settings, support_phone: e.target.value })}
                   disabled={!canWrite}
-                  className="w-full rounded-xl border border-slate-300 p-2 text-xs font-mono font-medium"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-mono font-medium text-text-primary focus:bg-card-surface"
                 />
               </div>
             </div>
           </div>
 
           {canWrite && (
-            <div className="pt-3 border-t border-slate-100 flex justify-end">
+            <div className="pt-3 border-t border-border-hairline flex justify-end">
               <button
                 type="submit"
-                className="rounded-xl bg-primary-600 hover:bg-primary-700 px-6 py-2.5 text-xs font-bold text-white shadow-sm transition-all"
+                className="rounded-xl bg-primary-container hover:bg-primary-container/90 px-6 py-2.5 text-xs font-bold text-white shadow-xs transition-all"
               >
                 Save & Synchronize Flags
               </button>

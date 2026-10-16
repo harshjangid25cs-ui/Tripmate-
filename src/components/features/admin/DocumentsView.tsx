@@ -125,26 +125,26 @@ export function DocumentsView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl font-black text-text-primary tracking-tight">
             Traveller ID Verification Queue
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             Review submitted government IDs, generate short-lived links, and dispatch correction emails (§3.E, §8.4)
           </p>
         </div>
 
-        <div className="flex items-center gap-2 rounded-2xl bg-amber-50 px-3.5 py-1.5 border border-amber-200 text-xs font-bold text-amber-900">
+        <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3.5 py-1.5 border border-amber-300 text-xs font-bold text-amber-900">
           <ShieldAlert className="h-4 w-4 text-amber-700" />
           <span>60-Second Short-Lived Access Enforced</span>
         </div>
       </div>
 
       {/* Review Queue Table */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
+      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
                 <th className="py-2.5">Booking Ref</th>
                 <th className="py-2.5">Passenger Name</th>
                 <th className="py-2.5">Customer Contact</th>
@@ -154,25 +154,25 @@ export function DocumentsView() {
                 <th className="py-2.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border-hairline">
               {reviews.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50/50">
+                <tr key={item.id} className="hover:bg-surface-container-low/40">
                   <td className="py-3.5">
-                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                    <span className="font-mono font-bold text-text-primary bg-surface px-2 py-0.5 rounded-lg border border-border-hairline">
                       {item.booking_ref}
                     </span>
                   </td>
 
-                  <td className="py-3.5 font-bold text-slate-900">{item.passenger_name}</td>
+                  <td className="py-3.5 font-bold text-text-primary">{item.passenger_name}</td>
 
-                  <td className="py-3.5 text-slate-600">
-                    <p>{item.customer_name}</p>
-                    <p className="text-[11px] text-slate-400">{item.customer_email}</p>
+                  <td className="py-3.5">
+                    <p className="text-text-primary font-medium">{item.customer_name}</p>
+                    <p className="text-[11px] text-text-secondary">{item.customer_email}</p>
                   </td>
 
-                  <td className="py-3.5 font-medium text-slate-700">{item.doc_type}</td>
+                  <td className="py-3.5 font-medium text-text-secondary">{item.doc_type}</td>
 
-                  <td className="py-3.5 text-slate-500 font-medium">
+                  <td className="py-3.5 text-text-secondary font-medium font-mono">
                     {new Date(item.submitted_at).toLocaleDateString([], {
                       month: "short",
                       day: "numeric",
@@ -183,18 +183,18 @@ export function DocumentsView() {
 
                   <td className="py-3.5">
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border ${
                         item.status === "approved"
-                          ? "bg-emerald-100 text-emerald-800"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                           : item.status === "rejected"
-                          ? "bg-rose-100 text-rose-800"
-                          : "bg-amber-100 text-amber-800"
+                          ? "bg-rose-50 text-rose-800 border-rose-200"
+                          : "bg-amber-50 text-amber-900 border-amber-300"
                       }`}
                     >
                       {item.status}
                     </span>
                     {item.reject_reason && (
-                      <span className="block text-[10px] text-rose-600 truncate max-w-xs mt-0.5">
+                      <span className="block text-[10px] text-rose-700 truncate max-w-xs mt-0.5">
                         {item.reject_reason}
                       </span>
                     )}
@@ -206,9 +206,9 @@ export function DocumentsView() {
                         type="button"
                         onClick={() => handleOpenPreview(item)}
                         disabled={!canView}
-                        className="flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                        className="flex items-center gap-1 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface disabled:opacity-40"
                       >
-                        <Eye className="h-3.5 w-3.5" />
+                        <Eye className="h-3.5 w-3.5 text-text-secondary" />
                         <span>View (60s)</span>
                       </button>
 
@@ -217,7 +217,7 @@ export function DocumentsView() {
                           <button
                             type="button"
                             onClick={() => handleApprove(item)}
-                            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white shadow-xs"
+                            className="rounded-xl bg-emerald-700 hover:bg-emerald-800 px-3 py-1.5 text-xs font-bold text-white shadow-xs"
                           >
                             Approve
                           </button>
@@ -241,38 +241,38 @@ export function DocumentsView() {
 
       {/* 60-Second Temporary Document Viewer Modal (§3.E, §8.4) */}
       {activePreview && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-md animate-in fade-in">
-          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-2xl rounded-2xl bg-card-surface p-6 shadow-xl border border-border-hairline">
             {/* Countdown Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-black text-slate-900">
+                  <h3 className="text-base font-black text-text-primary">
                     ID Document: {activePreview.passenger_name}
                   </h3>
-                  <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-mono text-slate-600">
+                  <span className="rounded-md bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-mono text-text-secondary">
                     {activePreview.doc_type}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-[11px] text-text-secondary mt-0.5">
                   Booking Ref: {activePreview.booking_ref} · Access Logged in Immutable Audit
                 </p>
               </div>
 
               {/* Countdown Pill */}
-              <div className="flex items-center gap-2 rounded-2xl bg-amber-50 px-3 py-1 border border-amber-300 text-xs font-mono font-bold text-amber-900">
+              <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-1 border border-amber-300 text-xs font-mono font-bold text-amber-900">
                 <Clock className="h-3.5 w-3.5 animate-spin text-amber-700" />
                 <span>Expires in {previewSecondsLeft}s</span>
               </div>
             </div>
 
             {/* Document Image Frame */}
-            <div className="mt-4 flex flex-col items-center justify-center rounded-2xl bg-slate-950 p-4 min-h-[300px] border border-slate-800">
+            <div className="mt-4 flex flex-col items-center justify-center rounded-xl bg-surface-dark p-4 min-h-[300px] border border-border-hairline">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={activePreview.doc_url}
                 alt="Government ID"
-                className="max-h-[360px] w-auto rounded-xl object-contain shadow-lg"
+                className="max-h-[360px] w-auto rounded-xl object-contain shadow-md"
               />
               <p className="mt-3 text-[10px] text-slate-400">
                 Private Vault Link • No document data or ID number is ever emailed or cached
@@ -280,11 +280,11 @@ export function DocumentsView() {
             </div>
 
             {/* Actions Footer */}
-            <div className="mt-5 flex items-center justify-between pt-3 border-t border-slate-100">
+            <div className="mt-5 flex items-center justify-between pt-3 border-t border-border-hairline">
               <button
                 type="button"
                 onClick={() => setActivePreview(null)}
-                className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                className="rounded-xl border border-border-hairline bg-surface px-4 py-2 text-xs font-bold text-text-primary hover:bg-card-surface"
               >
                 Close Link
               </button>
@@ -304,7 +304,7 @@ export function DocumentsView() {
                   <button
                     type="button"
                     onClick={() => handleApprove(activePreview)}
-                    className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 text-xs font-bold shadow-sm"
+                    className="rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white px-5 py-2 text-xs font-bold shadow-xs"
                   >
                     Approve ID
                   </button>
@@ -317,17 +317,17 @@ export function DocumentsView() {
 
       {/* Reject & Send Correction Email Modal (W4 §4) */}
       {rejectingItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-black text-rose-900 flex items-center gap-2">
-                <XCircle className="h-5 w-5 text-rose-600" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg rounded-2xl bg-card-surface p-6 shadow-xl border border-border-hairline">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+              <h3 className="text-base font-black text-rose-800 flex items-center gap-2">
+                <XCircle className="h-5 w-5 text-rose-700" />
                 Reject ID for {rejectingItem.passenger_name}
               </h3>
               <button
                 type="button"
                 onClick={() => setRejectingItem(null)}
-                className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
+                className="text-text-secondary hover:text-text-primary rounded-lg p-1"
               >
                 ✕
               </button>
@@ -335,7 +335,7 @@ export function DocumentsView() {
 
             <form onSubmit={handleConfirmReject} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-text-secondary mb-1">
                   Rejection Reason Code (W4 §4)
                 </label>
                 <select
@@ -351,7 +351,7 @@ export function DocumentsView() {
                         | "other"
                     )
                   }
-                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold text-slate-800"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs font-bold text-text-primary focus:bg-card-surface"
                 >
                   <option value="blurry">Blurry / Unreadable Photo</option>
                   <option value="name_mismatch">Name Does Not Match Traveller Ticket</option>
@@ -363,37 +363,37 @@ export function DocumentsView() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Explanatory Note for Customer <span className="text-red-500">*</span>
+                <label className="block text-xs font-bold text-text-secondary mb-1">
+                  Explanatory Note for Customer <span className="text-rose-600">*</span>
                 </label>
                 <textarea
                   rows={3}
                   value={rejectNote}
                   onChange={(e) => setRejectNote(e.target.value)}
                   placeholder="e.g. The photo was too blurry to verify date of birth. Please upload a clear color photo..."
-                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-primary-500/20"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary focus:bg-card-surface"
                   required
                 />
               </div>
 
-              <div className="rounded-2xl bg-slate-50 p-3 border border-slate-200 text-[11px] text-slate-600 space-y-1">
-                <p className="font-bold text-slate-800">Security Guarantee (§8.4):</p>
+              <div className="rounded-xl bg-surface p-3 border border-border-hairline text-[11px] text-text-secondary space-y-1">
+                <p className="font-bold text-text-primary">Security Guarantee (§8.4):</p>
                 <p>
-                  Customer {rejectingItem.customer_email} will receive an automated correction request with a direct link to <code className="bg-slate-200 px-1 rounded">/trips/{rejectingItem.trip_id}/documents</code>. No ID number or image is included in emails.
+                  Customer {rejectingItem.customer_email} will receive an automated correction request with a direct link to <code className="bg-card-surface border border-border-hairline px-1 rounded">/trips/{rejectingItem.trip_id}/documents</code>. No ID number or image is included in emails.
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-3 border-t border-border-hairline">
                 <button
                   type="button"
                   onClick={() => setRejectingItem(null)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
+                  className="rounded-xl border border-border-hairline bg-surface px-4 py-2 text-xs font-bold text-text-primary hover:bg-card-surface"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-rose-600 hover:bg-rose-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  className="rounded-xl bg-rose-700 hover:bg-rose-800 px-5 py-2 text-xs font-bold text-white shadow-xs"
                 >
                   Confirm Reject & Dispatch Email
                 </button>

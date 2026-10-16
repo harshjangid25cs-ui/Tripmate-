@@ -71,7 +71,7 @@ export function AdminSidebar({
           icon: FileCheck2,
           capability: "view_id_docs",
           badgeCount: 2,
-          badgeColor: "bg-amber-100 text-amber-850",
+          badgeColor: "bg-amber-50 text-amber-800 border border-amber-200",
         },
         {
           id: "approvals",
@@ -79,7 +79,7 @@ export function AdminSidebar({
           icon: Building2,
           capability: "commercial_approval",
           badgeCount: 1,
-          badgeColor: "bg-purple-100 text-purple-800",
+          badgeColor: "bg-purple-50 text-purple-800 border border-purple-200",
         },
       ],
     },
@@ -196,11 +196,11 @@ export function AdminSidebar({
   ];
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-slate-200 bg-slate-50/70 p-4 min-h-[calc(100vh-4rem)] flex flex-col justify-between">
+    <aside className="w-64 flex-shrink-0 border-r border-border-hairline bg-surface-container-low p-4 min-h-[calc(100vh-4rem)] flex flex-col justify-between">
       <div className="space-y-6">
         {sections.map((section) => (
           <div key={section.title}>
-            <p className="px-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+            <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-text-secondary">
               {section.title}
             </p>
             <div className="mt-1.5 space-y-0.5">
@@ -219,16 +219,16 @@ export function AdminSidebar({
                     disabled={!allowed}
                     className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
                       isSelected
-                        ? "bg-slate-900 text-white shadow-sm"
+                        ? "bg-surface-dark text-white shadow-xs"
                         : allowed
-                        ? "text-slate-600 hover:bg-white hover:text-slate-900"
-                        : "cursor-not-allowed opacity-40 text-slate-400"
+                        ? "text-text-primary/80 hover:bg-card-surface hover:text-text-primary"
+                        : "cursor-not-allowed opacity-40 text-text-secondary/50"
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <Icon
                         className={`h-4 w-4 ${
-                          isSelected ? "text-amber-400" : allowed ? "text-slate-500" : "text-slate-300"
+                          isSelected ? "text-primary-container" : allowed ? "text-text-secondary" : "text-text-secondary/40"
                         }`}
                       />
                       <span>{item.label}</span>
@@ -237,8 +237,8 @@ export function AdminSidebar({
                     <div className="flex items-center gap-1.5">
                       {item.badgeCount !== undefined && allowed && (
                         <span
-                          className={`rounded-full px-1.5 py-0.2 text-[10px] font-bold ${
-                            item.badgeColor || "bg-slate-200 text-slate-700"
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            item.badgeColor || "bg-card-surface text-text-primary border border-border-hairline"
                           }`}
                         >
                           {item.badgeCount}
@@ -246,7 +246,7 @@ export function AdminSidebar({
                       )}
                       {!allowed && (
                         <span title="Restricted by Role Matrix">
-                          <Lock className="h-3 w-3 text-slate-400" />
+                          <Lock className="h-3 w-3 text-text-secondary/60" />
                         </span>
                       )}
                     </div>
@@ -259,17 +259,17 @@ export function AdminSidebar({
       </div>
 
       {/* Role Notice at Footer */}
-      <div className="mt-6 rounded-2xl bg-white p-3 border border-slate-200/80 shadow-xs">
+      <div className="mt-6 rounded-2xl bg-card-surface p-3.5 border border-border-hairline shadow-xs">
         <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
             Current Filter
           </span>
-          <span className="text-[10px] font-bold text-primary-600 uppercase">§2 Matrix</span>
+          <span className="text-[10px] font-bold text-primary-container uppercase">§2 Matrix</span>
         </div>
-        <p className="mt-1 text-xs font-semibold text-slate-800 capitalize">
+        <p className="mt-1 text-xs font-bold text-text-primary capitalize">
           {currentRole.replace(/_/g, " ")}
         </p>
-        <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+        <p className="text-[10px] text-text-secondary mt-0.5 leading-snug">
           Buttons and views automatically enforce role boundaries.
         </p>
       </div>

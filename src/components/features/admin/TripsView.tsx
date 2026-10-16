@@ -212,10 +212,10 @@ export function TripsView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl font-bold text-text-primary tracking-tight">
             Circuits & Trips Catalog
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             Configure circuit offerings, days/nights, base prices, and per-trip availability bindings (§3.B)
           </p>
         </div>
@@ -224,7 +224,7 @@ export function TripsView() {
           <button
             type="button"
             onClick={handleAddNewTrip}
-            className="flex items-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-all"
+            className="flex items-center gap-2 rounded-xl bg-primary-container hover:bg-primary-hover px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors"
           >
             <Plus className="h-4 w-4" />
             <span>+ Add New Trip</span>
@@ -238,25 +238,25 @@ export function TripsView() {
           return (
             <div
               key={circ.id}
-              className={`rounded-3xl border bg-white p-5 shadow-xs flex flex-col justify-between transition-all ${
-                circ.is_active ? "border-slate-200" : "border-slate-200 bg-slate-50/50 opacity-80"
+              className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between transition-all ${
+                circ.is_active ? "border-border-hairline" : "border-border-hairline bg-surface/50 opacity-75"
               }`}
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-base font-black text-slate-900">{circ.title}</span>
+                      <span className="text-base font-bold text-text-primary">{circ.title}</span>
                     </div>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">
+                    <p className="text-xs font-medium text-text-secondary mt-0.5">
                       {circ.destination_name} · {circ.days}D / {circ.nights}N
                     </p>
                   </div>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
                       circ.is_active
-                        ? "bg-emerald-100 text-emerald-800"
-                        : "bg-slate-200 text-slate-700"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-surface-container text-text-secondary border-border-hairline"
                     }`}
                   >
                     {circ.is_active ? "Active" : "Hidden"}
@@ -269,37 +269,37 @@ export function TripsView() {
                   </span>
                 )}
 
-                <p className="mt-2 text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                <p className="mt-2 text-xs text-text-secondary line-clamp-2 leading-relaxed">
                   {circ.summary || circ.description}
                 </p>
 
                 {/* Per-trip availability badges (§3.B) */}
-                <div className="mt-4 rounded-2xl bg-slate-50 p-3 border border-slate-100 space-y-2 text-[11px]">
-                  <div className="flex items-center justify-between text-slate-600">
+                <div className="mt-4 rounded-xl bg-surface p-3 border border-border-hairline space-y-2 text-[11px]">
+                  <div className="flex items-center justify-between text-text-secondary">
                     <span className="flex items-center gap-1">
-                      <Hotel className="h-3 w-3 text-slate-400" /> Hotels Offered:
+                      <Hotel className="h-3 w-3 text-text-secondary/60" /> Hotels Offered:
                     </span>
-                    <span className="font-bold text-slate-800">
+                    <span className="font-bold text-text-primary">
                       {circ.hotel_ids.length > 0
                         ? `${circ.hotel_ids.length} Specific`
                         : "All Destination Hotels"}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-600">
+                  <div className="flex items-center justify-between text-text-secondary">
                     <span className="flex items-center gap-1">
-                      <Car className="h-3 w-3 text-slate-400" /> Fleet Offered:
+                      <Car className="h-3 w-3 text-text-secondary/60" /> Fleet Offered:
                     </span>
-                    <span className="font-bold text-slate-800">
+                    <span className="font-bold text-text-primary">
                       {circ.vehicle_ids.length > 0
                         ? `${circ.vehicle_ids.length} Vehicles`
                         : "All Cars & Bikes"}
                     </span>
                   </div>
-                  <div className="flex items-center justify-between text-slate-600">
+                  <div className="flex items-center justify-between text-text-secondary">
                     <span className="flex items-center gap-1">
-                      <Compass className="h-3 w-3 text-slate-400" /> Highway Stops:
+                      <Compass className="h-3 w-3 text-text-secondary/60" /> Highway Stops:
                     </span>
-                    <span className="font-bold text-slate-800">
+                    <span className="font-bold text-text-primary">
                       {circ.stop_ids.length > 0
                         ? `${circ.stop_ids.length} Stops`
                         : "Destination Stops"}
@@ -308,16 +308,16 @@ export function TripsView() {
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-semibold">Base Price:</span>
-                  <span className="text-sm font-black text-slate-900">
+                  <span className="text-text-secondary font-medium">Base Price:</span>
+                  <span className="text-sm font-bold text-text-primary tabular-nums">
                     ₹{circ.base_price_per_person.toLocaleString("en-IN")}{" "}
-                    <span className="text-[10px] text-slate-400 font-normal">/person</span>
+                    <span className="text-[10px] text-text-secondary font-normal">/person</span>
                   </span>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+              <div className="mt-5 pt-3 border-t border-border-hairline/60 flex items-center justify-between gap-2">
                 <button
                   type="button"
                   onClick={() => {
@@ -325,7 +325,7 @@ export function TripsView() {
                     setIsEditing(true);
                   }}
                   disabled={!canWrite}
-                  className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface hover:border-text-primary px-3 py-1.5 text-xs font-bold text-text-primary disabled:opacity-50 transition-colors"
                 >
                   <Edit2 className="h-3.5 w-3.5" />
                   <span>Configure</span>
@@ -336,9 +336,9 @@ export function TripsView() {
                     type="button"
                     onClick={() => handleToggleActive(circ)}
                     disabled={!canWrite}
-                    className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                    className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${
                       circ.is_active
-                        ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                        ? "bg-surface-container text-text-primary hover:bg-surface-container-high border border-border-hairline"
                         : "bg-emerald-600 text-white hover:bg-emerald-700"
                     } disabled:opacity-50`}
                   >
@@ -350,7 +350,7 @@ export function TripsView() {
                     type="button"
                     onClick={() => handleDeleteCircuit(circ)}
                     disabled={!canWrite}
-                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
                     title="Delete Circuit"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

@@ -92,16 +92,16 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center p-6 bg-slate-100/80">
-      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-xl border border-slate-200">
+    <div className="flex min-h-[calc(100vh-4rem)] w-full items-center justify-center p-6 bg-surface">
+      <div className="w-full max-w-md rounded-2xl bg-card-surface p-8 shadow-xs border border-border-hairline">
         <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-white shadow-md">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-surface-dark text-white shadow-xs">
             <Shield className="h-6 w-6 text-amber-400" />
           </div>
-          <h1 className="mt-4 text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="mt-4 text-xl font-bold text-text-primary tracking-tight">
             TripMate Admin Portal
           </h1>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-text-secondary">
             Elevated access requires Multi-Factor Authentication (AAL2) per §8.1
           </p>
         </div>
@@ -109,30 +109,34 @@ export default function AdminLoginPage() {
         {step === "credentials" ? (
           <form onSubmit={handleCredentialsSubmit} className="mt-6 space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Administrator Email</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1">
+                Administrator Email
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-semibold focus:ring-2 focus:ring-primary-500/20"
+                className="w-full rounded-xl border border-border-hairline bg-card-surface p-2.5 text-xs font-semibold text-text-primary focus:border-text-primary focus:outline-none transition-colors"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-text-secondary mb-1">
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-semibold"
+                className="w-full rounded-xl border border-border-hairline bg-card-surface p-2.5 text-xs font-semibold text-text-primary focus:border-text-primary focus:outline-none transition-colors"
                 required
               />
             </div>
 
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white py-2.5 text-xs font-bold shadow-sm transition-all"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-surface-dark hover:bg-black text-white py-2.5 text-xs font-bold transition-colors shadow-xs"
             >
               <span>Next: MFA Challenge</span>
               <ArrowRight className="h-4 w-4" />
@@ -140,7 +144,7 @@ export default function AdminLoginPage() {
           </form>
         ) : (
           <form onSubmit={handleMfaSubmit} className="mt-6 space-y-4 animate-in fade-in">
-            <div className="rounded-2xl bg-purple-50 p-3.5 border border-purple-200 text-center">
+            <div className="rounded-xl bg-purple-50 p-3.5 border border-purple-200 text-center">
               <Key className="h-6 w-6 text-purple-700 mx-auto" />
               <p className="mt-1 text-xs font-bold text-purple-900">Enter 6-Digit TOTP Code</p>
               <p className="text-[11px] text-purple-700 mt-0.5">
@@ -154,7 +158,7 @@ export default function AdminLoginPage() {
                 maxLength={6}
                 value={totpCode}
                 onChange={(e) => setTotpCode(e.target.value)}
-                className="w-full rounded-xl border border-slate-300 p-3 text-center text-lg font-mono font-black tracking-widest text-slate-900 focus:ring-2 focus:ring-primary-500/20"
+                className="w-full rounded-xl border border-border-hairline bg-card-surface p-3 text-center text-lg font-mono font-bold tracking-widest text-text-primary focus:border-text-primary focus:outline-none transition-colors"
                 placeholder="123456"
                 autoFocus
               />
@@ -163,7 +167,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white py-2.5 text-xs font-bold shadow-sm transition-all"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary-container hover:bg-primary-hover disabled:opacity-50 text-white py-2.5 text-xs font-bold transition-colors shadow-xs"
             >
               <CheckCircle2 className="h-4 w-4" />
               <span>{loading ? "Verifying..." : "Verify & Launch Operations"}</span>
@@ -172,7 +176,7 @@ export default function AdminLoginPage() {
             <button
               type="button"
               onClick={() => setStep("credentials")}
-              className="w-full text-center text-[11px] text-slate-400 hover:text-slate-600"
+              className="w-full text-center text-[11px] text-text-secondary hover:text-text-primary transition-colors"
             >
               ← Back to credentials
             </button>
@@ -185,8 +189,8 @@ export default function AdminLoginPage() {
           (typeof window !== "undefined" &&
             (window.location.hostname === "localhost" ||
               window.location.hostname === "127.0.0.1"))) && (
-          <div className="mt-8 pt-6 border-t border-slate-100">
-            <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 text-center">
+          <div className="mt-8 pt-6 border-t border-border-hairline">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-text-secondary text-center">
               Operator Fast Launch (Seeded Roles)
             </p>
             <div className="mt-3 grid grid-cols-2 gap-2">
@@ -196,12 +200,12 @@ export default function AdminLoginPage() {
                   type="button"
                   disabled={loading}
                   onClick={() => handleQuickLogin(r.id)}
-                  className="rounded-xl border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 disabled:opacity-50 p-2 text-left transition-all"
+                  className="rounded-xl border border-border-hairline bg-surface hover:bg-card-surface hover:border-text-primary disabled:opacity-50 p-2.5 text-left transition-colors"
                 >
-                  <span className="block text-[11px] font-bold text-slate-900 leading-tight">
+                  <span className="block text-[11px] font-bold text-text-primary leading-tight">
                     {r.label}
                   </span>
-                  <span className="text-[9px] text-slate-400 truncate block mt-0.5">
+                  <span className="text-[9px] text-text-secondary truncate block mt-0.5">
                     Test §2 powers
                   </span>
                 </button>

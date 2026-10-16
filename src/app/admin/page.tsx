@@ -103,8 +103,8 @@ export default function AdminPage() {
     <Suspense
       fallback={
         <div className="flex h-64 w-full items-center justify-center">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-500">
-            <span className="h-4 w-4 rounded-full border-2 border-primary-600 border-t-transparent animate-spin" />
+          <div className="flex items-center gap-2 text-sm font-bold text-text-secondary">
+            <span className="h-4 w-4 rounded-full border-2 border-primary-container border-t-transparent animate-spin" />
             <span>Loading Operations Engine...</span>
           </div>
         </div>

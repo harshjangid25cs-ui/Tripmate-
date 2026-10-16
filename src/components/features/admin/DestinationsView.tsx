@@ -239,8 +239,8 @@ export function DestinationsView() {
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">Destinations Catalog</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-xl font-bold text-text-primary tracking-tight">Destinations Catalog</h1>
+          <p className="text-xs text-text-secondary">
             Control destination parameters, availability rules, and the W1 Publish Checklist
           </p>
         </div>
@@ -271,7 +271,7 @@ export function DestinationsView() {
               });
               setIsEditing(true);
             }}
-            className="flex items-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition-all"
+            className="flex items-center gap-2 rounded-xl bg-primary-container hover:bg-primary-hover px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors"
           >
             <Plus className="h-4 w-4" />
             <span>Add Destination</span>
@@ -321,54 +321,54 @@ export function DestinationsView() {
           return (
             <div
               key={dest.id}
-              className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all"
+              className="rounded-2xl border border-border-hairline bg-card-surface p-5 shadow-xs flex flex-col justify-between hover:border-text-primary/30 transition-colors"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-base font-black text-slate-900">{dest.name}</span>
-                      <span className="text-xs text-slate-400">({dest.slug})</span>
+                      <span className="text-base font-bold text-text-primary">{dest.name}</span>
+                      <span className="text-xs text-text-secondary">({dest.slug})</span>
                     </div>
-                    <p className="text-xs font-medium text-slate-500 mt-0.5">{dest.region} · {dest.tagline}</p>
+                    <p className="text-xs font-medium text-text-secondary mt-0.5">{dest.region} · {dest.tagline}</p>
                   </div>
 
                   <span
-                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
                       dest.is_bookable
-                        ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                        : "bg-slate-100 text-slate-600 border border-slate-200"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-surface-container text-text-secondary border-border-hairline"
                     }`}
                   >
                     {dest.is_bookable ? "Bookable" : "Draft / Hidden"}
                   </span>
                 </div>
 
-                <p className="mt-3 text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                <p className="mt-3 text-xs text-text-secondary line-clamp-2 leading-relaxed">
                   {dest.description}
                 </p>
 
                 {/* Specs Pill List */}
-                <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] text-slate-600">
-                  <div className="rounded-xl bg-slate-50 p-2 border border-slate-100">
-                    <span className="text-slate-400 block text-[9px] uppercase font-bold">Starting Price</span>
-                    <span className="font-bold text-slate-900">
+                <div className="mt-4 grid grid-cols-2 gap-2 text-[11px] text-text-secondary">
+                  <div className="rounded-xl bg-surface p-2 border border-border-hairline">
+                    <span className="text-text-secondary/70 block text-[9px] uppercase font-bold">Starting Price</span>
+                    <span className="font-bold text-text-primary tabular-nums">
                       {dest.starting_price ? `₹${dest.starting_price.toLocaleString("en-IN")}` : "Not Set"}
                     </span>
                   </div>
-                  <div className="rounded-xl bg-slate-50 p-2 border border-slate-100">
-                    <span className="text-slate-400 block text-[9px] uppercase font-bold">Recommended</span>
-                    <span className="font-bold text-slate-900">{dest.recommended_days}</span>
+                  <div className="rounded-xl bg-surface p-2 border border-border-hairline">
+                    <span className="text-text-secondary/70 block text-[9px] uppercase font-bold">Recommended</span>
+                    <span className="font-bold text-text-primary">{dest.recommended_days}</span>
                   </div>
-                  <div className="rounded-xl bg-slate-50 p-2 border border-slate-100">
-                    <span className="text-slate-400 block text-[9px] uppercase font-bold">Distance / Drive</span>
-                    <span className="font-bold text-slate-900">
+                  <div className="rounded-xl bg-surface p-2 border border-border-hairline">
+                    <span className="text-text-secondary/70 block text-[9px] uppercase font-bold">Distance / Drive</span>
+                    <span className="font-bold text-text-primary tabular-nums">
                       {dest.drive_km} km ({dest.drive_hours}h)
                     </span>
                   </div>
-                  <div className="rounded-xl bg-slate-50 p-2 border border-slate-100">
-                    <span className="text-slate-400 block text-[9px] uppercase font-bold">Transport Flags</span>
-                    <span className="font-bold text-slate-900">
+                  <div className="rounded-xl bg-surface p-2 border border-border-hairline">
+                    <span className="text-text-secondary/70 block text-[9px] uppercase font-bold">Transport Flags</span>
+                    <span className="font-bold text-text-primary">
                       {dest.allow_car ? "Car" : ""}{dest.allow_bike ? " · Bike" : ""}
                       {!dest.vehicle_required ? " (Opt)" : ""}
                     </span>
@@ -376,11 +376,11 @@ export function DestinationsView() {
                 </div>
 
                 {/* Readiness status */}
-                <div className="mt-3 flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                <div className="mt-3 flex items-center justify-between text-[11px] font-semibold text-text-secondary">
                   <span>Publish Checklist:</span>
                   <span
                     className={`flex items-center gap-1 ${
-                      readiness.canPublish ? "text-emerald-600" : "text-amber-600"
+                      readiness.canPublish ? "text-emerald-700 font-bold" : "text-amber-700 font-bold"
                     }`}
                   >
                     {readiness.canPublish ? (
@@ -397,7 +397,7 @@ export function DestinationsView() {
               </div>
 
               {/* Bottom Actions */}
-              <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+              <div className="mt-5 pt-3 border-t border-border-hairline/60 flex items-center justify-between gap-2 flex-wrap">
                 <button
                   type="button"
                   onClick={() => {
@@ -405,7 +405,7 @@ export function DestinationsView() {
                     setIsEditing(true);
                   }}
                   disabled={!canWrite}
-                  className={`flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 ${
+                  className={`flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface hover:border-text-primary px-3 py-1.5 text-xs font-bold text-text-primary transition-colors ${
                     !canWrite ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
@@ -418,8 +418,8 @@ export function DestinationsView() {
                     type="button"
                     onClick={() => handleToggleActive(dest)}
                     disabled={!canWrite}
-                    className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition-all ${
-                      dest.is_active ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    className={`rounded-xl px-2.5 py-1.5 text-xs font-bold transition-colors ${
+                      dest.is_active ? "bg-surface-container text-text-primary hover:bg-surface-container-high border border-border-hairline" : "bg-emerald-600 text-white hover:bg-emerald-700"
                     }`}
                     title={dest.is_active ? "Deactivate" : "Activate"}
                   >
@@ -430,10 +430,10 @@ export function DestinationsView() {
                     type="button"
                     onClick={() => handleMakeBookable(dest, dest.is_bookable)}
                     disabled={!canWrite}
-                    className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all shadow-xs ${
+                    className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors shadow-xs ${
                       dest.is_bookable
-                        ? "bg-slate-100 text-slate-800 hover:bg-slate-200"
-                        : "bg-emerald-600 text-white hover:bg-emerald-700"
+                        ? "bg-surface-container text-text-primary hover:bg-surface-container-high border border-border-hairline"
+                        : "bg-primary-container text-white hover:bg-primary-hover"
                     } ${!canWrite ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     {dest.is_bookable ? "Unpublish" : "Make Bookable"}
@@ -443,7 +443,7 @@ export function DestinationsView() {
                     type="button"
                     onClick={() => handleDeleteDestination(dest)}
                     disabled={!canWrite}
-                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-2 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
                     title="Delete Destination"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

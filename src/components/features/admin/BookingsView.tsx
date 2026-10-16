@@ -265,10 +265,10 @@ export function BookingsView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl font-bold text-text-primary tracking-tight">
             Bookings & Fleet Dispatch
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             Search reservations, assign drivers, add internal notes, and process policy-backed cancellations (§3.D)
           </p>
         </div>
@@ -276,20 +276,20 @@ export function BookingsView() {
         {/* Search & Filter */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+            <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-text-secondary" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search reference, email, pax..."
-              className="w-64 rounded-xl border border-slate-300 pl-8 pr-3 py-2 text-xs focus:ring-2 focus:ring-primary-500/20"
+              className="w-64 rounded-xl border border-border-hairline bg-card-surface pl-8 pr-3 py-2 text-xs font-medium text-text-primary placeholder:text-text-secondary/60 focus:border-text-primary focus:outline-none transition-colors"
             />
           </div>
 
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700"
+            className="rounded-xl border border-border-hairline bg-card-surface px-3 py-2 text-xs font-semibold text-text-primary focus:border-text-primary focus:outline-none transition-colors"
           >
             <option value="all">All Statuses</option>
             <option value="confirmed">Confirmed</option>
@@ -300,11 +300,11 @@ export function BookingsView() {
       </div>
 
       {/* Bookings Table */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
+      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-border-hairline text-[11px] font-bold uppercase tracking-wider text-text-secondary">
                 <th className="py-2.5">Booking Ref</th>
                 <th className="py-2.5">Customer & Pax</th>
                 <th className="py-2.5">Trip Circuit</th>
@@ -315,47 +315,47 @@ export function BookingsView() {
                 <th className="py-2.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border-hairline/60">
               {filteredBookings.map((b) => (
-                <tr key={b.id} className="hover:bg-slate-50/50">
+                <tr key={b.id} className="hover:bg-surface-container-low/40 transition-colors">
                   <td className="py-3.5">
-                    <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                    <span className="font-mono font-bold text-text-primary bg-surface px-2 py-0.5 rounded-lg border border-border-hairline">
                       {b.booking_ref}
                     </span>
-                    <span className="block text-[10px] text-slate-400 mt-1 uppercase font-semibold">
+                    <span className="block text-[10px] text-text-secondary mt-1 uppercase font-semibold">
                       {b.kind}
                     </span>
                   </td>
 
                   <td className="py-3.5">
-                    <p className="font-bold text-slate-900">{b.customer_name}</p>
-                    <p className="text-[11px] text-slate-500">{b.customer_email}</p>
-                    <span className="text-[10px] text-slate-400 font-medium">
+                    <p className="font-bold text-text-primary">{b.customer_name}</p>
+                    <p className="text-[11px] text-text-secondary">{b.customer_email}</p>
+                    <span className="text-[10px] text-text-secondary font-medium">
                       {b.traveler_count} {b.traveler_count === 1 ? "Traveller" : "Travellers"}
                     </span>
                   </td>
 
                   <td className="py-3.5">
-                    <p className="font-bold text-slate-800">{b.destination_name}</p>
-                    <p className="text-[11px] text-slate-500 truncate max-w-xs">{b.circuit_name}</p>
+                    <p className="font-bold text-text-primary">{b.destination_name}</p>
+                    <p className="text-[11px] text-text-secondary truncate max-w-xs">{b.circuit_name}</p>
                   </td>
 
-                  <td className="py-3.5 text-slate-600 font-medium">
-                    {b.start_date} <span className="text-slate-400">to</span> {b.end_date}
-                    <span className="block text-[10px] text-slate-400">({b.days} Days)</span>
+                  <td className="py-3.5 text-text-secondary font-medium">
+                    {b.start_date} <span className="text-text-secondary/50">to</span> {b.end_date}
+                    <span className="block text-[10px] text-text-secondary/80">({b.days} Days)</span>
                   </td>
 
                   <td className="py-3.5">
-                    <span className="font-black text-slate-900">
+                    <span className="font-bold text-text-primary tabular-nums">
                       ₹{b.total_amount.toLocaleString("en-IN")}
                     </span>
                     {b.coupon_code && (
-                      <span className="block text-[10px] text-emerald-600 font-bold">
+                      <span className="block text-[10px] text-emerald-700 font-bold">
                         Coupon: {b.coupon_code} (−₹{b.discount_amount})
                       </span>
                     )}
                     {b.refund_amount !== undefined && b.refund_amount > 0 && (
-                      <span className="block text-[10px] text-rose-600 font-bold">
+                      <span className="block text-[10px] text-rose-700 font-bold">
                         Refunded: ₹{b.refund_amount.toLocaleString("en-IN")}
                       </span>
                     )}
@@ -364,28 +364,28 @@ export function BookingsView() {
                   <td className="py-3.5">
                     {b.driver ? (
                       <div>
-                        <span className="font-bold text-slate-900 flex items-center gap-1">
-                          <CheckCircle2 className="h-3 w-3 text-emerald-600" /> {b.driver.name}
+                        <span className="font-bold text-text-primary flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3 text-emerald-700" /> {b.driver.name}
                         </span>
-                        <span className="text-[10px] font-mono text-slate-400">
+                        <span className="text-[10px] font-mono text-text-secondary">
                           {b.driver.license_plate}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-amber-600 font-semibold text-[11px]">Unassigned</span>
+                      <span className="text-amber-700 font-bold text-[11px]">Unassigned</span>
                     )}
                   </td>
 
                   <td className="py-3.5">
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
                         b.status === "confirmed"
-                          ? "bg-emerald-100 text-emerald-800"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                           : b.status === "pending_approval"
-                          ? "bg-purple-100 text-purple-800"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
                           : b.status === "cancelled"
-                          ? "bg-rose-100 text-rose-800"
-                          : "bg-slate-200 text-slate-700"
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : "bg-surface-container-low text-text-secondary border-border-hairline"
                       }`}
                     >
                       {b.status.replace(/_/g, " ")}
@@ -396,7 +396,7 @@ export function BookingsView() {
                     <button
                       type="button"
                       onClick={() => setSelectedBooking(b)}
-                      className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 ml-auto"
+                      className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface hover:border-text-primary px-3 py-1.5 text-xs font-bold text-text-primary ml-auto transition-colors"
                     >
                       <Eye className="h-3.5 w-3.5" />
                       <span>Details</span>

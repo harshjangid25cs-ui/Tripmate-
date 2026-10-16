@@ -146,8 +146,8 @@ export function HotelsView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">Hotels & Heritage Stays</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-xl font-bold text-text-primary tracking-tight">Hotels & Heritage Stays</h1>
+          <p className="text-xs text-text-secondary">
             Manage hotel inventory, per-night rates, amenities, and catalog status (§3.B)
           </p>
         </div>
@@ -167,7 +167,7 @@ export function HotelsView() {
               });
               setIsEditing(true);
             }}
-            className="flex items-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 px-4 py-2 text-xs font-bold text-white shadow-sm"
+            className="flex items-center gap-2 rounded-xl bg-primary-container hover:bg-primary-hover px-4 py-2.5 text-xs font-bold text-white shadow-xs transition-colors"
           >
             <Plus className="h-4 w-4" />
             <span>Add Hotel</span>
@@ -179,21 +179,23 @@ export function HotelsView() {
         {hotels.map((h) => (
           <div
             key={h.id}
-            className={`rounded-3xl border bg-white p-5 shadow-xs flex flex-col justify-between ${
-              h.is_active ? "border-slate-200" : "border-slate-200 opacity-75 bg-slate-50/50"
+            className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between transition-colors ${
+              h.is_active ? "border-border-hairline hover:border-text-primary/30" : "border-border-hairline opacity-75 bg-surface/50"
             }`}
           >
             <div>
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-base font-black text-slate-900">{h.name}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <h3 className="text-base font-bold text-text-primary">{h.name}</h3>
+                  <p className="text-xs text-text-secondary mt-0.5">
                     {h.destination_name} · {h.neighborhood}
                   </p>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
-                    h.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"
+                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
+                    h.is_active
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-surface-container text-text-secondary border-border-hairline"
                   }`}
                 >
                   {h.is_active ? "Active" : "Disabled"}
@@ -206,31 +208,31 @@ export function HotelsView() {
                 </span>
               )}
 
-              <p className="mt-2 text-xs text-slate-500">{h.distance_text}</p>
+              <p className="mt-2 text-xs text-text-secondary">{h.distance_text}</p>
 
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {h.amenities.map((a, i) => (
                   <span
                     key={i}
-                    className="rounded-lg bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600"
+                    className="rounded-lg bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-medium text-text-secondary"
                   >
                     {a}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-slate-100">
+              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline/60">
                 <span className="flex items-center gap-1 font-bold text-amber-600">
                   <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> {h.rating}
                 </span>
-                <span className="text-sm font-black text-slate-900">
+                <span className="text-sm font-bold text-text-primary tabular-nums">
                   ₹{h.price_per_night.toLocaleString("en-IN")}{" "}
-                  <span className="text-[10px] text-slate-400 font-normal">/night</span>
+                  <span className="text-[10px] text-text-secondary font-normal">/night</span>
                 </span>
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="mt-5 pt-3 border-t border-border-hairline/60 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => {
@@ -238,7 +240,7 @@ export function HotelsView() {
                   setIsEditing(true);
                 }}
                 disabled={!canWrite}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface hover:border-text-primary px-3 py-1.5 text-xs font-bold text-text-primary disabled:opacity-50 transition-colors"
               >
                 <Edit2 className="h-3.5 w-3.5" />
                 <span>Edit</span>
@@ -249,9 +251,9 @@ export function HotelsView() {
                   type="button"
                   onClick={() => handleToggleActive(h)}
                   disabled={!canWrite}
-                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${
                     h.is_active
-                      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      ? "bg-surface-container text-text-primary hover:bg-surface-container-high border border-border-hairline"
                       : "bg-emerald-600 text-white hover:bg-emerald-700"
                   } disabled:opacity-50`}
                 >
@@ -263,7 +265,7 @@ export function HotelsView() {
                   type="button"
                   onClick={() => handleDeleteHotel(h)}
                   disabled={!canWrite}
-                  className="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                  className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
                   title="Delete Hotel"
                 >
                   <Trash2 className="h-3.5 w-3.5" />

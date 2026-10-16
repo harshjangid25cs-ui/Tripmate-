@@ -138,8 +138,8 @@ export function StopsView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">Mid-Journey Highway Stops</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-xl font-black text-text-primary tracking-tight">Mid-Journey Highway Stops</h1>
+          <p className="text-xs text-text-secondary">
             Curated highway havens, royal stepwells, and food courts (§3.B)
           </p>
         </div>
@@ -159,7 +159,7 @@ export function StopsView() {
               });
               setIsEditing(true);
             }}
-            className="flex items-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 px-4 py-2 text-xs font-bold text-white shadow-sm"
+            className="flex items-center gap-2 rounded-xl bg-primary-container hover:bg-primary-container/90 px-4 py-2 text-xs font-bold text-white shadow-xs"
           >
             <Plus className="h-4 w-4" />
             <span>Add Stop</span>
@@ -171,55 +171,57 @@ export function StopsView() {
         {stops.map((s) => (
           <div
             key={s.id}
-            className={`rounded-3xl border bg-white p-5 shadow-xs flex flex-col justify-between ${
-              s.is_active ? "border-slate-200" : "border-slate-200 opacity-75 bg-slate-50/50"
+            className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between ${
+              s.is_active ? "border-border-hairline" : "border-border-hairline opacity-75 bg-surface/50"
             }`}
           >
             <div>
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="text-base font-black text-slate-900">{s.name}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">{s.destination_name} Highway Corridor</p>
+                  <h3 className="text-base font-black text-text-primary">{s.name}</h3>
+                  <p className="text-xs text-text-secondary mt-0.5">{s.destination_name} Highway Corridor</p>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
-                    s.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
+                    s.is_active
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                      : "bg-surface text-text-secondary border-border-hairline"
                   }`}
                 >
                   {s.is_active ? "Active" : "Disabled"}
                 </span>
               </div>
 
-              <div className="mt-3 space-y-1 text-xs text-slate-600">
+              <div className="mt-3 space-y-1 text-xs text-text-secondary">
                 <p>{s.distance_text}</p>
-                <p className="text-[11px] text-slate-400 italic">{s.turnaround_text}</p>
+                <p className="text-[11px] text-text-secondary/70 italic">{s.turnaround_text}</p>
               </div>
 
               <div className="mt-3 flex flex-wrap gap-1">
                 {s.amenities.map((a, i) => (
                   <span
                     key={i}
-                    className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600"
+                    className="rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-medium text-text-secondary border border-border-hairline"
                   >
                     {a}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-slate-100">
-                <span className="text-slate-400 font-semibold uppercase text-[10px]">
+              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline">
+                <span className="text-text-secondary font-semibold uppercase text-[10px]">
                   {s.pricing_unit.replace("_", " ")}
                 </span>
-                <span className="text-sm font-black text-slate-900">
+                <span className="text-sm font-black text-text-primary font-mono">
                   ₹{s.price.toLocaleString("en-IN")}{" "}
-                  <span className="text-[10px] text-slate-400 font-normal">
+                  <span className="text-[10px] text-text-secondary font-normal font-sans">
                     {s.pricing_unit === "per_person" ? "/pax" : "flat"}
                   </span>
                 </span>
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="mt-5 pt-3 border-t border-border-hairline flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => {
@@ -227,7 +229,7 @@ export function StopsView() {
                   setIsEditing(true);
                 }}
                 disabled={!canWrite}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface disabled:opacity-50"
               >
                 <Edit2 className="h-3.5 w-3.5" />
                 <span>Edit</span>
@@ -238,10 +240,10 @@ export function StopsView() {
                   type="button"
                   onClick={() => handleToggleActive(s)}
                   disabled={!canWrite}
-                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
                     s.is_active
-                      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                      ? "bg-surface text-text-primary border-border-hairline hover:bg-surface-container-low"
+                      : "bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-800"
                   } disabled:opacity-50`}
                 >
                   {s.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -252,7 +254,7 @@ export function StopsView() {
                   type="button"
                   onClick={() => handleDeleteStop(s)}
                   disabled={!canWrite}
-                  className="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                  className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all disabled:opacity-50"
                   title="Delete Stop"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -264,16 +266,16 @@ export function StopsView() {
       </div>
 
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h2 className="text-lg font-black text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-lg rounded-2xl bg-card-surface p-6 shadow-xl border border-border-hairline">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+              <h2 className="text-lg font-black text-text-primary">
                 {formData.id ? `Edit Stop: ${formData.name}` : "Add Highway Stop"}
               </h2>
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
+                className="text-text-secondary hover:text-text-primary rounded-lg p-1"
               >
                 ✕
               </button>
@@ -281,23 +283,23 @@ export function StopsView() {
 
             <form onSubmit={handleSaveForm} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Stop Name</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Stop Name</label>
                 <input
                   type="text"
                   value={formData.name || ""}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary focus:bg-card-surface"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Destination</label>
+                  <label className="block text-xs font-bold text-text-secondary mb-1">Destination</label>
                   <select
                     value={formData.destination_id || ""}
                     onChange={(e) => setFormData({ ...formData, destination_id: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary focus:bg-card-surface"
                     required
                   >
                     {destinations.map((d) => (
@@ -308,7 +310,7 @@ export function StopsView() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Pricing Unit</label>
+                  <label className="block text-xs font-bold text-text-secondary mb-1">Pricing Unit</label>
                   <select
                     value={formData.pricing_unit || "per_person"}
                     onChange={(e) =>
@@ -317,7 +319,7 @@ export function StopsView() {
                         pricing_unit: e.target.value as "per_person" | "flat",
                       })
                     }
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold"
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs font-bold text-text-primary focus:bg-card-surface"
                   >
                     <option value="per_person">Per Person</option>
                     <option value="flat">Flat Vehicle Charge</option>
@@ -326,12 +328,12 @@ export function StopsView() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Price (₹)</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Price (₹)</label>
                 <input
                   type="number"
                   value={formData.price || 0}
                   onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary focus:bg-card-surface font-mono"
                   required
                 />
               </div>
@@ -343,13 +345,13 @@ export function StopsView() {
                 helperText="Uploaded to Supabase catalog-images bucket and displayed on highway rest stop cards."
               />
 
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-3 border-t border-border-hairline">
                 {formData.id ? (
                   <button
                     type="button"
                     onClick={() => handleDeleteStop(formData as StopAdmin)}
                     disabled={!canWrite}
-                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     <span>Delete Stop</span>
@@ -359,13 +361,13 @@ export function StopsView() {
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
+                    className="rounded-xl border border-border-hairline bg-surface px-4 py-2 text-xs font-bold text-text-primary hover:bg-card-surface"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                    className="rounded-xl bg-primary-container hover:bg-primary-container/90 px-5 py-2 text-xs font-bold text-white shadow-xs"
                   >
                     Save Stop
                   </button>

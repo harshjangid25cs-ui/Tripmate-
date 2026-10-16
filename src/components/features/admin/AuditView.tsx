@@ -25,38 +25,38 @@ export function AuditView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl font-black text-text-primary tracking-tight">
             Immutable Audit Trail & Ledger
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             Append-only security log recording every admin modification, before/after diffs, and mandatory reasons (§3.G, §11 A4)
           </p>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+          <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-text-secondary" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Filter by actor, action, entity..."
-            className="w-64 rounded-xl border border-slate-300 pl-8 pr-3 py-2 text-xs focus:ring-2 focus:ring-primary-500/20"
+            className="w-64 rounded-xl border border-border-hairline bg-surface pl-8 pr-3 py-2 text-xs text-text-primary focus:bg-card-surface focus:outline-hidden"
           />
         </div>
       </div>
 
-      <div className="rounded-2xl bg-amber-50 p-3.5 border border-amber-200 flex items-start gap-2.5 text-xs text-amber-900">
-        <ShieldAlert className="h-4 w-4 text-amber-700 flex-shrink-0 mt-0.5" />
+      <div className="rounded-xl bg-amber-50 p-3.5 border border-amber-300 flex items-start gap-2.5 text-xs text-amber-900">
+        <ShieldAlert className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
         <p className="leading-snug">
           <strong>Database Security Enforced:</strong> The audit log table operates with a strict BEFORE UPDATE OR DELETE Postgres trigger. No administrator or service account can modify or purge entries once committed.
         </p>
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
+      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
                 <th className="py-2.5">Timestamp (IST)</th>
                 <th className="py-2.5">Actor & Role</th>
                 <th className="py-2.5">Action</th>
@@ -65,10 +65,10 @@ export function AuditView() {
                 <th className="py-2.5 text-right">Inspection</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border-hairline">
               {filteredLogs.map((entry) => (
-                <tr key={entry.id} className="hover:bg-slate-50/50">
-                  <td className="py-3.5 font-mono text-slate-500 text-[11px]">
+                <tr key={entry.id} className="hover:bg-surface-container-low/40">
+                  <td className="py-3.5 font-mono text-text-secondary text-[11px]">
                     {new Date(entry.created_at).toLocaleDateString([], {
                       month: "short",
                       day: "numeric",
@@ -81,28 +81,28 @@ export function AuditView() {
                   </td>
 
                   <td className="py-3.5">
-                    <p className="font-bold text-slate-900">{entry.actor_name}</p>
-                    <span className="text-[10px] text-slate-400 font-mono">{entry.actor_role}</span>
+                    <p className="font-bold text-text-primary">{entry.actor_name}</p>
+                    <span className="text-[10px] text-text-secondary font-mono">{entry.actor_role}</span>
                   </td>
 
                   <td className="py-3.5">
-                    <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-mono font-extrabold uppercase text-slate-800">
+                    <span className="rounded bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-mono font-extrabold uppercase text-text-primary">
                       {entry.action}
                     </span>
                   </td>
 
-                  <td className="py-3.5 font-semibold text-slate-700">
+                  <td className="py-3.5 font-semibold text-text-primary">
                     {entry.entity_type}{" "}
                     {entry.entity_id && (
-                      <span className="font-mono text-slate-400 text-[10px]">({entry.entity_id})</span>
+                      <span className="font-mono text-text-secondary text-[10px]">({entry.entity_id})</span>
                     )}
                   </td>
 
-                  <td className="py-3.5 text-slate-600 max-w-sm">
+                  <td className="py-3.5 text-text-secondary max-w-sm">
                     {entry.reason ? (
                       <span className="italic text-[11px]">&quot;{entry.reason}&quot;</span>
                     ) : (
-                      <span className="text-slate-400">—</span>
+                      <span className="text-text-secondary/60">—</span>
                     )}
                   </td>
 
@@ -111,9 +111,9 @@ export function AuditView() {
                       <button
                         type="button"
                         onClick={() => setSelectedEntry(entry)}
-                        className="rounded-xl border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50 inline-flex items-center gap-1"
+                        className="rounded-xl border border-border-hairline bg-surface px-2.5 py-1 text-xs font-semibold text-text-primary hover:bg-card-surface inline-flex items-center gap-1"
                       >
-                        <Code className="h-3 w-3" />
+                        <Code className="h-3 w-3 text-text-secondary" />
                         <span>Diff</span>
                       </button>
                     )}
@@ -127,28 +127,28 @@ export function AuditView() {
 
       {/* Before / After Diff Inspector Modal */}
       {selectedEntry && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-2xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-2xl rounded-2xl bg-card-surface p-6 shadow-xl border border-border-hairline">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
               <div>
-                <h3 className="text-base font-black text-slate-900">
+                <h3 className="text-base font-black text-text-primary">
                   Audit Snapshot: {selectedEntry.action.toUpperCase()} {selectedEntry.entity_type}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
+                <p className="text-xs text-text-secondary mt-0.5">
                   Actor: {selectedEntry.actor_name} ({selectedEntry.actor_role}) · {selectedEntry.created_at}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedEntry(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-text-secondary hover:text-text-primary rounded-lg p-1"
               >
                 ✕
               </button>
             </div>
 
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="rounded-2xl bg-slate-950 p-4 text-white">
+              <div className="rounded-xl bg-surface-dark p-4 text-white border border-border-hairline">
                 <span className="text-[10px] font-mono uppercase text-slate-400 block mb-2 font-bold">
                   State Before
                 </span>
@@ -157,7 +157,7 @@ export function AuditView() {
                 </pre>
               </div>
 
-              <div className="rounded-2xl bg-slate-950 p-4 text-white">
+              <div className="rounded-xl bg-surface-dark p-4 text-white border border-border-hairline">
                 <span className="text-[10px] font-mono uppercase text-slate-400 block mb-2 font-bold">
                   State After
                 </span>
@@ -168,17 +168,17 @@ export function AuditView() {
             </div>
 
             {selectedEntry.reason && (
-              <div className="mt-4 rounded-xl bg-slate-50 p-3 border border-slate-200 text-xs">
-                <span className="font-bold text-slate-700 block mb-0.5">Recorded Reason:</span>
-                <p className="text-slate-600 italic">&quot;{selectedEntry.reason}&quot;</p>
+              <div className="mt-4 rounded-xl bg-surface p-3 border border-border-hairline text-xs">
+                <span className="font-bold text-text-primary block mb-0.5">Recorded Reason:</span>
+                <p className="text-text-secondary italic">&quot;{selectedEntry.reason}&quot;</p>
               </div>
             )}
 
-            <div className="mt-5 flex justify-end pt-3 border-t border-slate-100">
+            <div className="mt-5 flex justify-end pt-3 border-t border-border-hairline">
               <button
                 type="button"
                 onClick={() => setSelectedEntry(null)}
-                className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                className="rounded-xl border border-border-hairline bg-surface px-4 py-2 text-xs font-bold text-text-primary hover:bg-card-surface"
               >
                 Close Inspector
               </button>

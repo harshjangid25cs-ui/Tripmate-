@@ -60,15 +60,15 @@ export function CatalogImageUpload({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="block text-xs font-bold text-slate-700">{label}</label>
+        <label className="block text-xs font-bold text-text-secondary">{label}</label>
         <div className="flex items-center gap-1 text-[11px]">
           <button
             type="button"
             onClick={() => setMode("upload")}
             className={`px-2 py-0.5 rounded-md font-semibold transition-colors ${
               mode === "upload"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ? "bg-surface-dark text-white shadow-xs"
+                : "bg-surface text-text-secondary border border-border-hairline hover:bg-card-surface"
             }`}
           >
             File Upload
@@ -78,8 +78,8 @@ export function CatalogImageUpload({
             onClick={() => setMode("url")}
             className={`px-2 py-0.5 rounded-md font-semibold transition-colors ${
               mode === "url"
-                ? "bg-slate-900 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ? "bg-surface-dark text-white shadow-xs"
+                : "bg-surface text-text-secondary border border-border-hairline hover:bg-card-surface"
             }`}
           >
             URL Input
@@ -99,18 +99,18 @@ export function CatalogImageUpload({
           />
           <label
             htmlFor={`catalog-file-${label.toLowerCase().replace(/\s+/g, "-")}`}
-            className={`flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-slate-300 rounded-xl p-3 text-xs font-semibold text-slate-700 hover:border-slate-400 hover:bg-slate-50 cursor-pointer transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-border-hairline rounded-xl p-3 text-xs font-semibold text-text-primary hover:border-primary-container hover:bg-surface-container-low/40 cursor-pointer transition-all ${
               isUploading ? "opacity-50 pointer-events-none" : ""
             }`}
           >
             {isUploading ? (
               <>
-                <Loader2 className="h-4 w-4 animate-spin text-slate-600" />
+                <Loader2 className="h-4 w-4 animate-spin text-text-secondary" />
                 <span>Uploading to Supabase Storage...</span>
               </>
             ) : (
               <>
-                <Upload className="h-4 w-4 text-slate-500" />
+                <Upload className="h-4 w-4 text-text-secondary" />
                 <span>Choose Image file (PNG/JPG/WEBP &lt; 5MB)</span>
               </>
             )}
@@ -118,7 +118,7 @@ export function CatalogImageUpload({
         </div>
       ) : (
         <div className="relative">
-          <LinkIcon className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+          <LinkIcon className="absolute left-3 top-2.5 h-3.5 w-3.5 text-text-secondary" />
           <input
             type="url"
             value={value}
@@ -134,15 +134,15 @@ export function CatalogImageUpload({
               }
             }}
             placeholder="https://example.com/image.jpg"
-            className="w-full rounded-xl border border-slate-300 pl-8 pr-3 py-2 text-xs focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+            className="w-full rounded-xl border border-border-hairline bg-surface pl-8 pr-3 py-2 text-xs text-text-primary focus:bg-card-surface focus:outline-hidden"
           />
         </div>
       )}
 
       {/* Image Preview & Current Value */}
       {value ? (
-        <div className="flex items-center gap-3 p-2 bg-slate-50 rounded-xl border border-slate-200">
-          <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0 border border-slate-300 flex items-center justify-center relative">
+        <div className="flex items-center gap-3 p-2 bg-surface rounded-xl border border-border-hairline">
+          <div className="w-12 h-12 rounded-lg bg-surface-dark/10 overflow-hidden shrink-0 border border-border-hairline flex items-center justify-center relative">
             {!imageError ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
@@ -154,15 +154,15 @@ export function CatalogImageUpload({
                 onLoad={() => setImageError(false)}
               />
             ) : (
-              <ImageIcon className="h-5 w-5 text-slate-400" />
+              <ImageIcon className="h-5 w-5 text-text-secondary" />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-700">
+            <div className="flex items-center gap-1 text-[11px] font-bold text-emerald-800">
               <CheckCircle2 className="h-3.5 w-3.5" />
               <span>Image Attached</span>
             </div>
-            <p className="text-[10px] text-slate-500 truncate font-mono mt-0.5">{value}</p>
+            <p className="text-[10px] text-text-secondary truncate font-mono mt-0.5">{value}</p>
           </div>
           <button
             type="button"
@@ -170,18 +170,18 @@ export function CatalogImageUpload({
               setImageError(false);
               onChange("");
             }}
-            className="text-[11px] font-bold text-rose-600 hover:text-rose-700 px-2 py-1"
+            className="text-[11px] font-bold text-rose-700 hover:text-rose-800 px-2 py-1"
           >
             Remove
           </button>
         </div>
       ) : (
-        <p className="text-[11px] text-slate-500">{helperText}</p>
+        <p className="text-[11px] text-text-secondary">{helperText}</p>
       )}
 
       {uploadError && (
-        <div className="flex items-center gap-1.5 text-xs text-rose-600 bg-rose-50 p-2 rounded-lg border border-rose-200">
-          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+        <div className="flex items-center gap-1.5 text-xs text-rose-700 bg-rose-50 p-2 rounded-lg border border-rose-200">
+          <AlertCircle className="h-3.5 w-3.5 shrink-0" />
           <span>{uploadError}</span>
         </div>
       )}

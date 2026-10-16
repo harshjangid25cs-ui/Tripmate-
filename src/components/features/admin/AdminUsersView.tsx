@@ -65,10 +65,10 @@ export function AdminUsersView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl font-black text-text-primary tracking-tight">
             Administrative Accounts & Governance
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             Promote accounts, manage role permissions, and enforce mandatory MFA assurance (§3.G, §8.1)
           </p>
         </div>
@@ -77,7 +77,7 @@ export function AdminUsersView() {
           <button
             type="button"
             onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 px-4 py-2 text-xs font-bold text-white shadow-sm"
+            className="flex items-center gap-2 rounded-xl bg-primary-container hover:bg-primary-container/90 px-4 py-2 text-xs font-bold text-white shadow-xs"
           >
             <UserPlus className="h-4 w-4" />
             <span>Grant Admin Role</span>
@@ -85,11 +85,11 @@ export function AdminUsersView() {
         )}
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
+      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
                 <th className="py-2.5">Administrator</th>
                 <th className="py-2.5">Designated Role</th>
                 <th className="py-2.5">MFA Status</th>
@@ -98,28 +98,28 @@ export function AdminUsersView() {
                 <th className="py-2.5 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border-hairline">
               {admins.map((a) => {
                 const roleInfo = ADMIN_ROLES.find((r) => r.id === a.role);
                 const isCurrent = a.id === currentAdmin.id;
 
                 return (
-                  <tr key={a.id} className="hover:bg-slate-50/50">
+                  <tr key={a.id} className="hover:bg-surface-container-low/40">
                     <td className="py-3.5">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-white font-bold text-xs">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-dark text-white font-bold text-xs border border-border-hairline">
                           {a.full_name.charAt(0)}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900 flex items-center gap-1.5">
+                          <p className="font-bold text-text-primary flex items-center gap-1.5">
                             {a.full_name}
                             {isCurrent && (
-                              <span className="rounded bg-primary-50 text-primary-700 border border-primary-200 px-1.5 py-0.2 text-[9px] font-black">
+                              <span className="rounded bg-primary-container/10 text-primary-container border border-primary-container/20 px-1.5 py-0.2 text-[9px] font-black">
                                 YOU
                               </span>
                             )}
                           </p>
-                          <p className="text-[11px] text-slate-400">{a.email}</p>
+                          <p className="text-[11px] text-text-secondary">{a.email}</p>
                         </div>
                       </div>
                     </td>
@@ -127,7 +127,7 @@ export function AdminUsersView() {
                     <td className="py-3.5">
                       <span
                         className={`rounded-lg border px-2 py-0.5 text-[11px] font-bold ${
-                          roleInfo?.badgeColor || "bg-slate-100 text-slate-800"
+                          roleInfo?.badgeColor || "bg-surface text-text-primary border-border-hairline"
                         }`}
                       >
                         {roleInfo?.label || a.role}
@@ -135,12 +135,12 @@ export function AdminUsersView() {
                     </td>
 
                     <td className="py-3.5">
-                      <span className="inline-flex items-center gap-1 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-0.5 text-[10px]">
-                        <Key className="h-3 w-3 text-emerald-600" /> AAL2 Enforced
+                      <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-0.5 text-[10px]">
+                        <Key className="h-3 w-3 text-emerald-700" /> AAL2 Enforced
                       </span>
                     </td>
 
-                    <td className="py-3.5 text-slate-500 font-medium">
+                    <td className="py-3.5 text-text-secondary font-medium font-mono">
                       {new Date(a.created_at).toLocaleDateString([], {
                         month: "short",
                         day: "numeric",
@@ -150,8 +150,8 @@ export function AdminUsersView() {
 
                     <td className="py-3.5">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
-                          a.is_active ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+                        className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
+                          a.is_active ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-rose-50 text-rose-800 border-rose-200"
                         }`}
                       >
                         {a.is_active ? "Active" : "Deactivated"}
@@ -178,14 +178,14 @@ export function AdminUsersView() {
       </div>
 
       {isAdding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h2 className="text-lg font-black text-slate-900">Grant Administrative Role</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-card-surface p-6 shadow-xl border border-border-hairline">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+              <h2 className="text-lg font-black text-text-primary">Grant Administrative Role</h2>
               <button
                 type="button"
                 onClick={() => setIsAdding(false)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-text-secondary hover:text-text-primary rounded-lg p-1"
               >
                 ✕
               </button>
@@ -193,37 +193,37 @@ export function AdminUsersView() {
 
             <form onSubmit={handleGrantRole} className="mt-4 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Full Name</label>
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. Priya Sharma"
-                  className="w-full rounded-xl border border-slate-300 p-2 text-xs font-semibold"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-semibold text-text-primary focus:bg-card-surface"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Account Email</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Account Email</label>
                 <input
                   type="email"
                   value={newEmail}
                   onChange={(e) => setNewEmail(e.target.value)}
                   placeholder="priya@tripmate.in"
-                  className="w-full rounded-xl border border-slate-300 p-2 text-xs font-semibold"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-semibold text-text-primary focus:bg-card-surface"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-text-secondary mb-1">
                   Role Assignment (§2 Matrix)
                 </label>
                 <select
                   value={newRole}
                   onChange={(e) => setNewRole(e.target.value as AdminRole)}
-                  className="w-full rounded-xl border border-slate-300 p-2 text-xs font-bold text-slate-800"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-bold text-text-primary focus:bg-card-surface"
                 >
                   {ADMIN_ROLES.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -231,22 +231,22 @@ export function AdminUsersView() {
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-[11px] text-slate-500">
+                <p className="mt-1 text-[11px] text-text-secondary">
                   {ADMIN_ROLES.find((r) => r.id === newRole)?.description}
                 </p>
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-3 pt-3 border-t border-border-hairline">
                 <button
                   type="button"
                   onClick={() => setIsAdding(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
+                  className="rounded-xl border border-border-hairline bg-surface px-4 py-2 text-xs font-bold text-text-primary hover:bg-card-surface"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                  className="rounded-xl bg-primary-container hover:bg-primary-container/90 px-5 py-2 text-xs font-bold text-white shadow-xs"
                 >
                   Grant Role & Audit
                 </button>

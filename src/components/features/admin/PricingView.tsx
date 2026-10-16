@@ -91,34 +91,34 @@ export function PricingView() {
   return (
     <div className="space-y-8 animate-in fade-in">
       <div>
-        <h1 className="text-xl font-black text-slate-900 tracking-tight">
+        <h1 className="text-xl font-black text-text-primary tracking-tight">
           Pricing Pipeline & Refund Policies
         </h1>
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-text-secondary">
           Global fees, GST parameters, live preview calculator, and departure-tiered refund rules (§3.C, §7)
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Global Pricing Config Form */}
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
+          <div className="flex items-center justify-between pb-4 border-b border-border-hairline">
             <div className="flex items-center gap-2">
               <Coins className="h-5 w-5 text-amber-500" />
-              <h2 className="text-base font-bold text-slate-900">Global Pricing Constants</h2>
+              <h2 className="text-base font-bold text-text-primary">Global Pricing Constants</h2>
             </div>
-            <span className="rounded-md bg-amber-50 text-amber-900 px-2 py-0.5 text-[10px] font-bold">
+            <span className="rounded-md bg-amber-50 text-amber-900 border border-amber-300 px-2 py-0.5 text-[10px] font-bold">
               Database §1 & §11
             </span>
           </div>
 
           <form onSubmit={handleUpdateGlobalPricing} className="mt-4 space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-text-secondary mb-1">
                 TripMate Assistance & Fees (Service Fee)
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">₹</span>
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-text-secondary">₹</span>
                 <input
                   type="number"
                   value={pricing.service_fee}
@@ -126,17 +126,17 @@ export function PricingView() {
                     setPricing({ ...pricing, service_fee: Number(e.target.value) })
                   }
                   disabled={!canWrite}
-                  className="w-full rounded-xl border border-slate-300 pl-7 pr-3 py-2.5 text-xs font-bold text-slate-900 focus:ring-2 focus:ring-primary-500/20 disabled:bg-slate-50"
+                  className="w-full rounded-xl border border-border-hairline bg-surface pl-7 pr-3 py-2.5 text-xs font-mono font-bold text-text-primary focus:bg-card-surface disabled:opacity-60"
                   required
                 />
               </div>
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[11px] text-text-secondary">
                 Applied to normal passenger bookings. Waived (₹0) on commercial bookings per DATABASE §3.
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-text-secondary mb-1">
                 GST Tax Rate (Indian Goods & Services Tax)
               </label>
               <div className="flex items-center gap-3">
@@ -150,21 +150,21 @@ export function PricingView() {
                     setPricing({ ...pricing, gst_rate: Number(e.target.value) })
                   }
                   disabled={!canWrite}
-                  className="w-32 rounded-xl border border-slate-300 p-2.5 text-xs font-bold text-slate-900 disabled:bg-slate-50"
+                  className="w-32 rounded-xl border border-border-hairline bg-surface p-2.5 text-xs font-mono font-bold text-text-primary focus:bg-card-surface disabled:opacity-60"
                   required
                 />
-                <span className="text-xs font-bold text-slate-700">
+                <span className="text-xs font-bold text-text-primary font-mono">
                   = {(pricing.gst_rate * 100).toFixed(1)}% GST
                 </span>
               </div>
-              <p className="mt-1 text-[11px] text-slate-500">
+              <p className="mt-1 text-[11px] text-text-secondary">
                 Formula: round(gst_rate × (subtotal + service_fee), 0)
               </p>
             </div>
 
-            <div className="rounded-2xl bg-amber-50 p-3 border border-amber-200">
-              <p className="text-[11px] text-amber-800 leading-snug">
-                <strong>Immutable Price Guarantee:</strong> Confirmed reservations retain their exact historical price snapshots. Changes only apply to newly drafted bookings.
+            <div className="rounded-xl bg-surface p-3 border border-border-hairline">
+              <p className="text-[11px] text-text-secondary leading-snug">
+                <strong className="text-text-primary">Immutable Price Guarantee:</strong> Confirmed reservations retain their exact historical price snapshots. Changes only apply to newly drafted bookings.
               </p>
             </div>
 
@@ -172,7 +172,7 @@ export function PricingView() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2.5 text-xs font-bold text-white shadow-sm transition-all"
+                  className="rounded-xl bg-primary-container hover:bg-primary-container/90 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-all"
                 >
                   Save Global Parameters
                 </button>
@@ -182,42 +182,42 @@ export function PricingView() {
         </div>
 
         {/* Live Sample Booking Price Calculator Preview (§5, §7) */}
-        <div className="rounded-3xl border border-slate-200 bg-slate-900 p-6 text-white shadow-lg flex flex-col justify-between">
+        <div className="rounded-2xl border border-border-hairline bg-surface-dark p-6 text-white shadow-md flex flex-col justify-between">
           <div>
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+            <div className="flex items-center justify-between pb-4 border-b border-border-hairline/30">
               <div className="flex items-center gap-2">
                 <Calculator className="h-5 w-5 text-amber-400" />
                 <h2 className="text-base font-bold text-white">Live Booking Preview (§7)</h2>
               </div>
-              <span className="rounded-md bg-white/10 px-2 py-0.5 text-[10px] font-mono text-amber-300">
+              <span className="rounded-md bg-white/10 border border-white/10 px-2 py-0.5 text-[10px] font-mono text-amber-300">
                 Formula Simulator
               </span>
             </div>
 
             <div className="mt-4 space-y-3">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Sample Subtotal (Hotel + Fleet + Stops):</span>
+                <span className="text-slate-300">Sample Subtotal (Hotel + Fleet + Stops):</span>
                 <input
                   type="number"
                   value={sampleSubtotal}
                   onChange={(e) => setSampleSubtotal(Number(e.target.value))}
-                  className="w-28 rounded-lg bg-slate-800 border border-slate-700 px-2 py-1 text-right text-xs font-bold text-white"
+                  className="w-28 rounded-lg bg-white/10 border border-white/20 px-2 py-1 text-right text-xs font-mono font-bold text-white focus:bg-white/15"
                 />
               </div>
 
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">+ Tripmate Service Fee:</span>
+                <span className="text-slate-300">+ Tripmate Service Fee:</span>
                 <span className="font-mono font-bold text-white">₹{calcServiceFee.toLocaleString("en-IN")}</span>
               </div>
 
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">+ GST ({(pricing.gst_rate * 100).toFixed(0)}% on ₹{calcTaxableBase}):</span>
+                <span className="text-slate-300">+ GST ({(pricing.gst_rate * 100).toFixed(0)}% on ₹{calcTaxableBase}):</span>
                 <span className="font-mono font-bold text-white">₹{calcTaxAmount.toLocaleString("en-IN")}</span>
               </div>
 
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Gross Payable:</span>
-                <span className="font-mono font-bold text-slate-300">₹{calcBaseTotal.toLocaleString("en-IN")}</span>
+                <span className="text-slate-300">Gross Payable:</span>
+                <span className="font-mono font-bold text-slate-200">₹{calcBaseTotal.toLocaleString("en-IN")}</span>
               </div>
 
               <div className="flex items-center justify-between text-xs">
@@ -227,10 +227,10 @@ export function PricingView() {
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-slate-800 flex items-baseline justify-between">
+          <div className="mt-6 pt-4 border-t border-border-hairline/30 flex items-baseline justify-between">
             <div>
-              <span className="text-xs text-slate-400 font-semibold block">Total Customer Price</span>
-              <span className="text-[10px] text-slate-500">Matching canonical standard ₹27,376 test case</span>
+              <span className="text-xs text-slate-300 font-semibold block">Total Customer Price</span>
+              <span className="text-[10px] text-slate-400">Matching canonical standard ₹27,376 test case</span>
             </div>
             <span className="text-2xl font-black text-amber-400 font-mono">
               ₹{calcTotalAmount.toLocaleString("en-IN")}
@@ -240,13 +240,13 @@ export function PricingView() {
       </div>
 
       {/* Cancellation Refund Rules Table (§3.C, §7) */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border-hairline">
           <div>
-            <h2 className="text-base font-bold text-slate-900">
+            <h2 className="text-base font-bold text-text-primary">
               Cancellation Refund Rules & Tiers (§3.C)
             </h2>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-text-secondary">
               Replaces legacy hardcoded 48-hour logic. Looked up by hours remaining until 00:00 IST on departure day.
             </p>
           </div>
@@ -255,7 +255,7 @@ export function PricingView() {
             <button
               type="button"
               onClick={() => setIsAddingRule(!isAddingRule)}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+              className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface"
             >
               <Plus className="h-3.5 w-3.5" />
               <span>Add Refund Tier</span>
@@ -266,10 +266,10 @@ export function PricingView() {
         {isAddingRule && (
           <form
             onSubmit={handleAddRefundRule}
-            className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-wrap items-end gap-4"
+            className="mt-4 p-4 rounded-xl bg-surface border border-border-hairline flex flex-wrap items-end gap-4"
           >
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-text-secondary mb-1">
                 Min Hours Before Departure
               </label>
               <input
@@ -277,33 +277,33 @@ export function PricingView() {
                 min="0"
                 value={ruleHours}
                 onChange={(e) => setRuleHours(Number(e.target.value))}
-                className="w-32 rounded-xl border border-slate-300 p-2 text-xs"
+                className="w-32 rounded-xl border border-border-hairline bg-card-surface p-2 text-xs font-mono text-text-primary"
                 required
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Refund Percentage (%)</label>
+              <label className="block text-xs font-bold text-text-secondary mb-1">Refund Percentage (%)</label>
               <input
                 type="number"
                 min="0"
                 max="100"
                 value={rulePercent}
                 onChange={(e) => setRulePercent(Number(e.target.value))}
-                className="w-32 rounded-xl border border-slate-300 p-2 text-xs"
+                className="w-32 rounded-xl border border-border-hairline bg-card-surface p-2 text-xs font-mono text-text-primary"
                 required
               />
             </div>
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="rounded-xl bg-primary-600 hover:bg-primary-700 px-4 py-2 text-xs font-bold text-white"
+                className="rounded-xl bg-primary-container hover:bg-primary-container/90 px-4 py-2 text-xs font-bold text-white shadow-xs"
               >
                 Save Tier
               </button>
               <button
                 type="button"
                 onClick={() => setIsAddingRule(false)}
-                className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-white"
+                className="rounded-xl border border-border-hairline bg-surface px-3 py-2 text-xs font-bold text-text-primary hover:bg-card-surface"
               >
                 Cancel
               </button>
@@ -314,7 +314,7 @@ export function PricingView() {
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
                 <th className="py-2.5">Rule Tier</th>
                 <th className="py-2.5">Window Condition</th>
                 <th className="py-2.5">Customer Refund %</th>
@@ -322,19 +322,19 @@ export function PricingView() {
                 <th className="py-2.5 text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border-hairline">
               {refundRules
                 .sort((a, b) => b.hours_before_min - a.hours_before_min)
                 .map((r, i) => (
-                  <tr key={r.id} className="hover:bg-slate-50/50">
-                    <td className="py-3 font-mono font-bold text-slate-900">Tier #{i + 1}</td>
-                    <td className="py-3 font-semibold text-slate-700">
+                  <tr key={r.id} className="hover:bg-surface-container-low/40">
+                    <td className="py-3 font-mono font-bold text-text-primary">Tier #{i + 1}</td>
+                    <td className="py-3 font-semibold text-text-primary">
                       ≥ {r.hours_before_min} hours before departure
                     </td>
-                    <td className="py-3 font-black text-emerald-600">{r.refund_percent}% of Total Paid</td>
-                    <td className="py-3 text-slate-500 capitalize">{r.applies_to}</td>
+                    <td className="py-3 font-black text-emerald-700 font-mono">{r.refund_percent}% of Total Paid</td>
+                    <td className="py-3 text-text-secondary capitalize">{r.applies_to}</td>
                     <td className="py-3 text-right">
-                      <span className="rounded-full bg-emerald-100 text-emerald-800 px-2 py-0.5 text-[10px] font-extrabold uppercase">
+                      <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 text-[10px] font-extrabold uppercase">
                         Active
                       </span>
                     </td>

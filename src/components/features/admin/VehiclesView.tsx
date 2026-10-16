@@ -148,8 +148,8 @@ export function VehiclesView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">Fleet & Transport Catalog</h1>
-          <p className="text-xs text-slate-500">
+          <h1 className="text-xl font-black text-text-primary tracking-tight">Fleet & Transport Catalog</h1>
+          <p className="text-xs text-text-secondary">
             Configure cars, bikes, and commercial corporate luxury buses (§3.B)
           </p>
         </div>
@@ -171,7 +171,7 @@ export function VehiclesView() {
               });
               setIsEditing(true);
             }}
-            className="flex items-center gap-2 rounded-2xl bg-primary-600 hover:bg-primary-700 px-4 py-2 text-xs font-bold text-white shadow-sm"
+            className="flex items-center gap-2 rounded-xl bg-primary-container hover:bg-primary-container/90 px-4 py-2 text-xs font-bold text-white shadow-xs"
           >
             <Plus className="h-4 w-4" />
             <span>Add Vehicle</span>
@@ -183,44 +183,46 @@ export function VehiclesView() {
         {vehicles.map((v) => (
           <div
             key={v.id}
-            className={`rounded-3xl border bg-white p-5 shadow-xs flex flex-col justify-between ${
-              v.is_active ? "border-slate-200" : "border-slate-200 opacity-75 bg-slate-50/50"
+            className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between ${
+              v.is_active ? "border-border-hairline" : "border-border-hairline opacity-75 bg-surface/50"
             }`}
           >
             <div>
               <div className="flex items-start justify-between">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-base font-black text-slate-900">{v.name}</span>
+                    <span className="text-base font-black text-text-primary">{v.name}</span>
                   </div>
-                  <span className="inline-block mt-0.5 rounded-md bg-slate-100 text-slate-700 px-2 py-0.5 text-[10px] font-extrabold uppercase">
+                  <span className="inline-block mt-0.5 rounded-md bg-surface text-text-secondary border border-border-hairline px-2 py-0.5 text-[10px] font-extrabold uppercase">
                     {v.type}
                   </span>
                 </div>
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase ${
-                    v.is_active ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-700"
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
+                    v.is_active
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                      : "bg-surface text-text-secondary border-border-hairline"
                   }`}
                 >
                   {v.is_active ? "Active" : "Disabled"}
                 </span>
               </div>
 
-              <p className="mt-2 text-xs text-slate-600 line-clamp-2">{v.subtitle}</p>
+              <p className="mt-2 text-xs text-text-secondary line-clamp-2">{v.subtitle}</p>
 
-              <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-slate-600">
-                <div className="rounded-xl bg-slate-50 p-2 border border-slate-100 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-slate-400" />
+              <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-text-secondary">
+                <div className="rounded-xl bg-surface p-2.5 border border-border-hairline flex items-center gap-2">
+                  <Users className="h-4 w-4 text-text-secondary/70" />
                   <div>
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Capacity</span>
-                    <span className="font-bold text-slate-900">{v.capacity} Seats</span>
+                    <span className="text-[10px] text-text-secondary/70 block uppercase font-bold">Capacity</span>
+                    <span className="font-bold text-text-primary">{v.capacity} Seats</span>
                   </div>
                 </div>
-                <div className="rounded-xl bg-slate-50 p-2 border border-slate-100 flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-slate-400" />
+                <div className="rounded-xl bg-surface p-2.5 border border-border-hairline flex items-center gap-2">
+                  <Briefcase className="h-4 w-4 text-text-secondary/70" />
                   <div>
-                    <span className="text-[10px] text-slate-400 block uppercase font-bold">Luggage</span>
-                    <span className="font-bold text-slate-900">{v.luggage_capacity} Bags</span>
+                    <span className="text-[10px] text-text-secondary/70 block uppercase font-bold">Luggage</span>
+                    <span className="font-bold text-text-primary">{v.luggage_capacity} Bags</span>
                   </div>
                 </div>
               </div>
@@ -229,23 +231,23 @@ export function VehiclesView() {
                 {v.features.map((f, i) => (
                   <span
                     key={i}
-                    className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[9px] font-semibold text-slate-600"
+                    className="rounded-md bg-surface px-1.5 py-0.5 text-[9px] font-semibold text-text-secondary border border-border-hairline"
                   >
                     {f}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-slate-100">
-                <span className="text-slate-400 font-semibold">{v.driver_type}</span>
-                <span className="text-sm font-black text-slate-900">
+              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline">
+                <span className="text-text-secondary font-semibold">{v.driver_type}</span>
+                <span className="text-sm font-black text-text-primary font-mono">
                   ₹{v.price_per_day.toLocaleString("en-IN")}{" "}
-                  <span className="text-[10px] text-slate-400 font-normal">/day</span>
+                  <span className="text-[10px] text-text-secondary font-normal font-sans">/day</span>
                 </span>
               </div>
             </div>
 
-            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
+            <div className="mt-5 pt-3 border-t border-border-hairline flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => {
@@ -253,7 +255,7 @@ export function VehiclesView() {
                   setIsEditing(true);
                 }}
                 disabled={!canWrite}
-                className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface disabled:opacity-50"
               >
                 <Edit2 className="h-3.5 w-3.5" />
                 <span>Edit</span>
@@ -264,10 +266,10 @@ export function VehiclesView() {
                   type="button"
                   onClick={() => handleToggleActive(v)}
                   disabled={!canWrite}
-                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
                     v.is_active
-                      ? "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
+                      ? "bg-surface text-text-primary border-border-hairline hover:bg-surface-container-low"
+                      : "bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-800"
                   } disabled:opacity-50`}
                 >
                   {v.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
@@ -278,7 +280,7 @@ export function VehiclesView() {
                   type="button"
                   onClick={() => handleDeleteVehicle(v)}
                   disabled={!canWrite}
-                  className="flex items-center gap-1 rounded-xl border border-rose-200 px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition-all disabled:opacity-50"
+                  className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all disabled:opacity-50"
                   title="Delete Vehicle"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -290,16 +292,16 @@ export function VehiclesView() {
       </div>
 
       {isEditing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h2 className="text-lg font-black text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-xl rounded-2xl bg-card-surface p-6 shadow-xl border border-border-hairline">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+              <h2 className="text-lg font-black text-text-primary">
                 {formData.id ? `Edit Vehicle: ${formData.name}` : "Add Fleet Vehicle"}
               </h2>
               <button
                 type="button"
                 onClick={() => setIsEditing(false)}
-                className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
+                className="text-text-secondary hover:text-text-primary rounded-lg p-1"
               >
                 ✕
               </button>
@@ -308,17 +310,17 @@ export function VehiclesView() {
             <form onSubmit={handleSaveForm} className="mt-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Vehicle Name</label>
+                  <label className="block text-xs font-bold text-text-secondary mb-1">Vehicle Name</label>
                   <input
                     type="text"
                     value={formData.name || ""}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary focus:bg-card-surface"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Category Type</label>
+                  <label className="block text-xs font-bold text-text-secondary mb-1">Category Type</label>
                   <select
                     value={formData.type || "car"}
                     onChange={(e) =>
@@ -327,7 +329,7 @@ export function VehiclesView() {
                         type: e.target.value as "car" | "bike" | "bus",
                       })
                     }
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold"
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs font-bold text-text-primary focus:bg-card-surface"
                   >
                     <option value="car">Car (Sedan/SUV)</option>
                     <option value="bike">Bike / Cruiser</option>
@@ -337,19 +339,19 @@ export function VehiclesView() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Subtitle / Summary</label>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Subtitle / Summary</label>
                 <input
                   type="text"
                   value={formData.subtitle || ""}
                   onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                  className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary focus:bg-card-surface"
                   placeholder="e.g. Premium SUV · Captain Seats · AC"
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-text-secondary mb-1">
                     Seat Capacity {formData.type === "bus" ? "(Req)" : ""}
                   </label>
                   <input
@@ -358,30 +360,30 @@ export function VehiclesView() {
                     onChange={(e) =>
                       setFormData({ ...formData, capacity: Number(e.target.value) })
                     }
-                    className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary focus:bg-card-surface"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Luggage Capacity</label>
+                  <label className="block text-xs font-bold text-text-secondary mb-1">Luggage Capacity</label>
                   <input
                     type="number"
                     value={formData.luggage_capacity || 2}
                     onChange={(e) =>
                       setFormData({ ...formData, luggage_capacity: Number(e.target.value) })
                     }
-                    className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary focus:bg-card-surface"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Rate Per Day (₹)</label>
+                  <label className="block text-xs font-bold text-text-secondary mb-1">Rate Per Day (₹)</label>
                   <input
                     type="number"
                     value={formData.price_per_day || 0}
                     onChange={(e) =>
                       setFormData({ ...formData, price_per_day: Number(e.target.value) })
                     }
-                    className="w-full rounded-xl border border-slate-300 p-2 text-xs"
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary focus:bg-card-surface font-mono"
                     required
                   />
                 </div>
@@ -394,13 +396,13 @@ export function VehiclesView() {
                 helperText="Uploaded to Supabase catalog-images bucket and displayed on fleet cards."
               />
 
-              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-3 border-t border-border-hairline">
                 {formData.id ? (
                   <button
                     type="button"
                     onClick={() => handleDeleteVehicle(formData as VehicleAdmin)}
                     disabled={!canWrite}
-                    className="flex items-center gap-1 rounded-xl border border-rose-200 px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50"
+                    className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     <span>Delete Vehicle</span>
@@ -410,13 +412,13 @@ export function VehiclesView() {
                   <button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700"
+                    className="rounded-xl border border-border-hairline bg-surface px-4 py-2 text-xs font-bold text-text-primary hover:bg-card-surface"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="rounded-xl bg-primary-600 hover:bg-primary-700 px-5 py-2 text-xs font-bold text-white shadow-sm"
+                    className="rounded-xl bg-primary-container hover:bg-primary-container/90 px-5 py-2 text-xs font-bold text-white shadow-xs"
                   >
                     Save Vehicle
                   </button>

@@ -74,25 +74,25 @@ export function ApprovalsView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl font-bold text-text-primary tracking-tight">
             Commercial Fleet Approvals Queue
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             Corporate road trip packages exceeding company policy thresholds (§3.D, §4 W5)
           </p>
         </div>
 
-        <div className="rounded-2xl bg-purple-50 px-3.5 py-1.5 border border-purple-200 text-xs font-bold text-purple-900 flex items-center gap-2">
+        <div className="rounded-xl bg-purple-50 px-3.5 py-1.5 border border-purple-200 text-xs font-bold text-purple-900 flex items-center gap-2">
           <Building2 className="h-4 w-4 text-purple-700" />
           <span>Acme Tech & Corporate Fleet Roster</span>
         </div>
       </div>
 
       {approvals.length === 0 ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center">
-          <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto" />
-          <h3 className="mt-3 text-base font-bold text-slate-900">All Approvals Cleared</h3>
-          <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+        <div className="rounded-2xl border border-border-hairline bg-card-surface p-12 text-center shadow-xs">
+          <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto" />
+          <h3 className="mt-3 text-base font-bold text-text-primary">All Approvals Cleared</h3>
+          <p className="mt-1 text-xs text-text-secondary max-w-sm mx-auto">
             No commercial bookings are currently pending corporate budget authorization.
           </p>
         </div>
@@ -101,45 +101,45 @@ export function ApprovalsView() {
           {approvals.map((item) => (
             <div
               key={item.id}
-              className="rounded-3xl border border-purple-200 bg-white p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6"
+              className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6"
             >
               <div className="space-y-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="rounded-xl bg-purple-100 text-purple-800 px-2.5 py-1 text-xs font-extrabold uppercase">
+                  <span className="rounded-full bg-purple-50 text-purple-800 border border-purple-200 px-2.5 py-0.5 text-[11px] font-bold uppercase">
                     Commercial Policy Trigger
                   </span>
-                  <span className="text-xs font-mono text-slate-400">GST: {item.gst_number}</span>
+                  <span className="text-xs font-mono text-text-secondary">GST: {item.gst_number}</span>
                 </div>
 
-                <h3 className="text-lg font-black text-slate-900">
+                <h3 className="text-lg font-bold text-text-primary tracking-tight">
                   {item.company_name} — {item.destination_name}
                 </h3>
 
-                <p className="text-xs text-slate-600">
-                  Booked by <strong>{item.booker_name}</strong> ({item.booker_email}) · Travel Dates:{" "}
-                  <strong>{item.dates}</strong>
+                <p className="text-xs text-text-secondary">
+                  Booked by <strong className="text-text-primary">{item.booker_name}</strong> ({item.booker_email}) · Travel Dates:{" "}
+                  <strong className="text-text-primary">{item.dates}</strong>
                 </p>
 
-                <div className="flex flex-wrap gap-3 text-xs text-slate-600 pt-1">
-                  <span className="rounded-lg bg-slate-100 px-2 py-0.5 font-bold">
+                <div className="flex flex-wrap gap-2.5 text-xs text-text-secondary pt-1">
+                  <span className="rounded-lg bg-surface border border-border-hairline px-2.5 py-1 font-semibold text-text-primary">
                     Fleet: {item.vehicle_name}
                   </span>
-                  <span className="rounded-lg bg-slate-100 px-2 py-0.5 font-bold">
+                  <span className="rounded-lg bg-surface border border-border-hairline px-2.5 py-1 font-semibold text-text-primary">
                     Headcount: {item.passenger_count} Pax
                   </span>
-                  <span className="rounded-lg bg-rose-50 text-rose-800 px-2 py-0.5 font-bold border border-rose-200">
+                  <span className="rounded-lg bg-rose-50 text-rose-800 px-2.5 py-1 font-bold border border-rose-200">
                     Exceeds Limit: ₹{item.total_amount.toLocaleString("en-IN")} &gt; ₹
                     {item.approval_limit.toLocaleString("en-IN")}
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-end sm:items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
                 <div className="text-right sm:pr-4">
-                  <span className="text-[10px] text-slate-400 uppercase font-bold block">
+                  <span className="text-[10px] text-text-secondary uppercase font-bold block">
                     Total Amount
                   </span>
-                  <span className="text-xl font-black text-slate-900 font-mono">
+                  <span className="text-xl font-bold text-text-primary font-mono tabular-nums">
                     ₹{item.total_amount.toLocaleString("en-IN")}
                   </span>
                 </div>
@@ -150,7 +150,7 @@ export function ApprovalsView() {
                       type="button"
                       disabled={isMutating}
                       onClick={() => handleDecision(item, "rejected")}
-                      className="rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-4 py-2 text-xs font-bold transition-all disabled:opacity-50"
+                      className="rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-4 py-2 text-xs font-bold transition-colors disabled:opacity-50"
                     >
                       Reject
                     </button>
@@ -158,7 +158,7 @@ export function ApprovalsView() {
                       type="button"
                       disabled={isMutating}
                       onClick={() => handleDecision(item, "approved")}
-                      className="rounded-xl bg-primary-600 hover:bg-primary-700 text-white px-5 py-2 text-xs font-bold shadow-sm transition-all disabled:opacity-50 flex items-center gap-1.5"
+                      className="rounded-xl bg-primary-container hover:bg-primary-hover text-white px-5 py-2 text-xs font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
                     >
                       {isMutating && <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />}
                       <span>Authorize & Confirm</span>

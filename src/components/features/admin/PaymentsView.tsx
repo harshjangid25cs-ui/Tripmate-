@@ -70,10 +70,10 @@ export function PaymentsView() {
     <div className="space-y-6 animate-in fade-in">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-xl font-black text-text-primary tracking-tight">
             Payments, Invoices & Financial Reports
           </h1>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-text-secondary">
             GST-compliant invoices, gateway transactions, and role-audited CSV exports (§3.A, §3.C)
           </p>
         </div>
@@ -83,15 +83,15 @@ export function PaymentsView() {
             <button
               type="button"
               onClick={() => exportCsv("bookings")}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 shadow-xs"
+              className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-2 text-xs font-bold text-text-primary hover:bg-card-surface shadow-xs"
             >
-              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" />
+              <FileSpreadsheet className="h-3.5 w-3.5 text-emerald-700" />
               <span>Export Bookings</span>
             </button>
             <button
               type="button"
               onClick={() => exportCsv("payments")}
-              className="flex items-center gap-1.5 rounded-xl bg-primary-600 hover:bg-primary-700 px-3 py-2 text-xs font-bold text-white shadow-xs"
+              className="flex items-center gap-1.5 rounded-xl bg-primary-container hover:bg-primary-container/90 px-3 py-2 text-xs font-bold text-white shadow-xs"
             >
               <Download className="h-3.5 w-3.5" />
               <span>Export Invoices</span>
@@ -100,11 +100,11 @@ export function PaymentsView() {
         )}
       </div>
 
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs">
+      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
                 <th className="py-2.5">Invoice Number</th>
                 <th className="py-2.5">Booking Ref</th>
                 <th className="py-2.5">Customer / Company</th>
@@ -114,29 +114,29 @@ export function PaymentsView() {
                 <th className="py-2.5 text-right">Payment Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-border-hairline">
               {payments.map((p) => (
-                <tr key={p.id} className="hover:bg-slate-50/50">
-                  <td className="py-3.5 font-mono font-bold text-slate-900">{p.invoice_number}</td>
-                  <td className="py-3.5 font-mono font-bold text-primary-600">{p.booking_ref}</td>
-                  <td className="py-3.5 font-semibold text-slate-800">{p.customer_name}</td>
-                  <td className="py-3.5 font-black text-slate-900 font-mono">
+                <tr key={p.id} className="hover:bg-surface-container-low/40">
+                  <td className="py-3.5 font-mono font-bold text-text-primary">{p.invoice_number}</td>
+                  <td className="py-3.5 font-mono font-bold text-primary-container">{p.booking_ref}</td>
+                  <td className="py-3.5 font-semibold text-text-primary">{p.customer_name}</td>
+                  <td className="py-3.5 font-black text-text-primary font-mono">
                     ₹{p.amount.toLocaleString("en-IN")}
                   </td>
-                  <td className="py-3.5 text-slate-600">
+                  <td className="py-3.5 text-text-secondary font-mono">
                     ₹{p.gst_amount.toLocaleString("en-IN")} (18%)
                   </td>
-                  <td className="py-3.5 uppercase font-mono text-slate-500 text-[10px]">
+                  <td className="py-3.5 uppercase font-mono text-text-secondary text-[10px]">
                     {p.method}
                   </td>
                   <td className="py-3.5 text-right">
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase ${
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border ${
                         p.status === "completed"
-                          ? "bg-emerald-100 text-emerald-800"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                           : p.status === "refunded"
-                          ? "bg-rose-100 text-rose-800"
-                          : "bg-slate-100 text-slate-700"
+                          ? "bg-rose-50 text-rose-800 border-rose-200"
+                          : "bg-surface text-text-secondary border-border-hairline"
                       }`}
                     >
                       {p.status}
