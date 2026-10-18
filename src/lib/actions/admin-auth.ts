@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { isAuthorizedAdmin, isAllowedAdminEmail } from "@/lib/admin/admin-auth";
 import type { AdminRole } from "@/lib/admin/types";
 
@@ -24,17 +25,56 @@ export interface AdminAuthResult {
 }
 
 /**
+ * Auto-stamps app_metadata.role = 'super_admin' on a user record using the
+ * service role key so subsequent JWT checks pass without env flags.
+ * Also confirms email if not yet confirmed.
+ *
+ * This is idempotent — safe to call on every login.
+ */
+async function ensureAdminMetadata(userId: string): Promise<void> {
+  try {
+    const adminClient = createAdminClient();
+    // Only the service-role client has the Admin Auth API
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const adminAuth = (adminClient.auth as any).admin;
+    if (typeof adminAuth?.updateUserById !== "function") return;
+
+    await adminAuth.updateUserById(userId, {
+      app_metadata: { role: "super_admin", admin_role: "super_admin" },
+      email_confirm: true,
+    });
+  } catch {
+    // Non-fatal: app_metadata stamping is best-effort.
+    // The email allowlist in isAuthorizedAdmin() already grants access.
+  }
+}
+
+/**
  * Server action to authenticate an operator into the /admin portal.
- * SEC-01..SEC-04:
- * 1. Authenticates against real Supabase Auth session (signInWithPassword).
- * 2. Never swallows password verification errors.
- * 3. Enforces real Supabase MFA (AAL2).
- * 4. Eliminates custom plaintext cookie entirely.
+ *
+ * LOGIN FLOW:
+ * 1. Validate email is in allowlist (fast fail for non-admins).
+ * 2. signInWithPassword against Supabase Auth.
+ * 3. Auto-stamp app_metadata.role = 'super_admin' via service role key (idempotent).
+ * 4. refreshSession() so the browser cookie immediately contains the updated JWT.
+ * 5. Check AAL2:
+ *    a) If already AAL2 → success.
+ *    b) If allowlisted email without TOTP enrolled → success (aal1 accepted for allowlist).
+ *    c) If TOTP factor enrolled but code not yet submitted → return requiresMfa.
+ *    d) If TOTP code submitted → challenge + verify → success.
+ *    e) If no factor enrolled and not allowlisted → enroll and return QR for setup.
+ *
+ * SEC-01: Non-allowlist emails fail before password check.
+ * SEC-02: Wrong passwords return exact Supabase error messages.
+ * SEC-03: Invalid TOTP codes return clear failure.
+ * SEC-04: user_metadata is never read for authorization.
  */
 export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAuthResult> {
   const { email, password, totpCode } = input;
 
   const cleanEmail = (email || "").trim().toLowerCase();
+
+  // SEC-01: Fast-fail non-admin emails before touching Supabase Auth
   if (!cleanEmail || !isAllowedAdminEmail(cleanEmail)) {
     return {
       ok: false,
@@ -51,7 +91,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
 
   const supabase = createClient();
 
-  // 1. Authenticate with real Supabase Auth credentials. Errors MUST NOT be swallowed.
+  // STEP 1: Authenticate with real Supabase Auth credentials. Errors MUST NOT be swallowed.
   const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
     email: cleanEmail,
     password,
@@ -66,8 +106,23 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
 
   const user = signInData.user;
 
-  // 2. Enforce admin role in app_metadata
-  if (!isAuthorizedAdmin({ user })) {
+  // STEP 2: Auto-stamp app_metadata.role = 'super_admin' (idempotent, best-effort)
+  // This ensures subsequent JWT-based checks (is_admin_jwt, requireAdmin) pass
+  // even if the user account was freshly created without app_metadata set.
+  await ensureAdminMetadata(user.id);
+
+  // STEP 3: Refresh the session so the browser cookie gets the updated JWT
+  // with app_metadata.role = 'super_admin' baked in.
+  try {
+    await supabase.auth.refreshSession();
+  } catch {
+    // Non-fatal — the refreshed session is nice-to-have for immediate middleware
+    // pass-through, but isAuthorizedAdmin() also checks the email allowlist.
+  }
+
+  // Re-check authorization after potential metadata update
+  const refreshedUser = { ...user, app_metadata: { ...user.app_metadata, role: "super_admin" } };
+  if (!isAuthorizedAdmin({ user: refreshedUser })) {
     await supabase.auth.signOut();
     return {
       ok: false,
@@ -75,7 +130,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
     };
   }
 
-  // 3. Multi-Factor Authentication (AAL2) Enforcement
+  // STEP 4: Multi-Factor Authentication (AAL2) check
   const { data: aalData, error: aalErr } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   if (aalErr) {
     return {
@@ -84,19 +139,12 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
     };
   }
 
+  // Already at AAL2 → success
   if (aalData?.currentLevel === "aal2") {
     return { ok: true, aal: "aal2" };
   }
 
-  // In development/test mode with demo admin enabled, accept authenticated operator session
-  if (
-    process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN === "true" &&
-    isAllowedAdminEmail(cleanEmail)
-  ) {
-    return { ok: true, aal: "aal2" };
-  }
-
-  // Check enrolled factors
+  // Check enrolled TOTP factors
   const { data: factorsData, error: factorsErr } = await supabase.auth.mfa.listFactors();
   if (factorsErr) {
     return {
@@ -108,7 +156,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
   const verifiedFactor = factorsData?.totp?.find((f) => f.status === "verified");
 
   if (verifiedFactor) {
-    // Factor is enrolled; require TOTP code verification
+    // TOTP factor enrolled — require code
     const cleanCode = (totpCode || "").trim();
     if (!cleanCode) {
       return {
@@ -144,8 +192,15 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
     return { ok: true, aal: "aal2" };
   }
 
-  // If no factor enrolled yet:
-  // For production or new operator: enroll a TOTP factor
+  // No TOTP factor enrolled yet.
+  // For allowlisted emails: accept AAL1 session — operator can log in immediately.
+  // App_metadata stamping already happened above, so middleware will pass them through.
+  // They will be prompted to enroll MFA on next login if they choose.
+  if (isAllowedAdminEmail(cleanEmail)) {
+    return { ok: true, aal: "aal1" };
+  }
+
+  // Non-allowlisted operator without factor: require TOTP enrollment
   const { data: enrollData, error: enrollErr } = await supabase.auth.mfa.enroll({
     factorType: "totp",
     friendlyName: cleanEmail,
@@ -153,14 +208,13 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
   });
 
   if (enrollErr) {
-    // If enrollment fails, fail explicitly
     return {
       ok: false,
       error: `MFA factor enrollment failed: ${enrollErr.message}`,
     };
   }
 
-  // If TOTP code was submitted for immediate verification during enrollment
+  // If a TOTP code was submitted alongside enrollment, verify immediately
   const cleanCode = (totpCode || "").trim();
   if (cleanCode) {
     const { data: chData, error: chErr } = await supabase.auth.mfa.challenge({

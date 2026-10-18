@@ -82,6 +82,26 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
       expect(redirect).toBeNull();
     });
 
+    it("redirects authenticated admin from /admin/login to /admin (skip login page if session exists)", () => {
+      const redirect = getAuthRedirectPath({
+        pathname: "/admin/login",
+        hasUser: true,
+        hasCompletedOnboarding: true,
+        isAdminUser: true,
+      });
+      expect(redirect).toBe("/admin");
+    });
+
+    it("allows non-admin authenticated user to view /admin/login (customer might need to re-login)", () => {
+      const redirect = getAuthRedirectPath({
+        pathname: "/admin/login",
+        hasUser: true,
+        hasCompletedOnboarding: true,
+        isAdminUser: false,
+      });
+      expect(redirect).toBeNull();
+    });
+
     it("redirects unauthenticated user accessing /admin to /admin/login", () => {
       const redirect = getAuthRedirectPath({
         pathname: "/admin",
@@ -222,14 +242,23 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
       const { isAllowedAdminEmail } = await import("@/lib/admin/admin-auth");
       expect(isAllowedAdminEmail("superadmin@tripmate.in")).toBe(true);
       expect(isAllowedAdminEmail("ops@tripmate.in")).toBe(true);
+      expect(isAllowedAdminEmail("tripmateoffical007@gmail.com")).toBe(true);
+      expect(isAllowedAdminEmail("catalog@tripmate.in")).toBe(true);
+      expect(isAllowedAdminEmail("finance@tripmate.in")).toBe(true);
+      expect(isAllowedAdminEmail("support@tripmate.in")).toBe(true);
+      // @tripmate.in domain wildcard
+      expect(isAllowedAdminEmail("anyoperator@tripmate.in")).toBe(true);
+      // Non-admin emails
       expect(isAllowedAdminEmail("arjun.kapoor@tripmate.io")).toBe(false);
       expect(isAllowedAdminEmail("hacker@gmail.com")).toBe(false);
+      expect(isAllowedAdminEmail(null)).toBe(false);
+      expect(isAllowedAdminEmail("")).toBe(false);
     });
 
     it("evaluates isAuthorizedAdmin correctly across sessions and user metadata", async () => {
       const { isAuthorizedAdmin } = await import("@/lib/admin/admin-auth");
       
-      // Customer user without admin credentials
+      // Customer user without admin credentials — REJECTED
       expect(
         isAuthorizedAdmin({
           user: { email: "arjun.kapoor@tripmate.io", app_metadata: {}, user_metadata: {} },
@@ -270,12 +299,60 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
         })
       ).toBe(true);
 
-      // Legacy plaintext or forged cookie does NOT grant admin access (SEC-01)
+      // Null user — REJECTED
       expect(
         isAuthorizedAdmin({
           user: null,
         })
       ).toBe(false);
+    });
+
+    it("isAuthorizedAdmin allows DEFAULT_ADMIN_EMAILS without app_metadata role (production-safe, no env flag)", async () => {
+      // Simulate production: NEXT_PUBLIC_ENABLE_DEMO_ADMIN is NOT set
+      const origEnv = process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN;
+      delete process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN;
+
+      const { isAuthorizedAdmin } = await import("@/lib/admin/admin-auth");
+
+      // Primary admin account must pass even without app_metadata
+      expect(
+        isAuthorizedAdmin({
+          user: { email: "tripmateoffical007@gmail.com", app_metadata: {}, user_metadata: {} },
+        })
+      ).toBe(true);
+
+      // superadmin@tripmate.in must pass
+      expect(
+        isAuthorizedAdmin({
+          user: { email: "superadmin@tripmate.in", app_metadata: {}, user_metadata: {} },
+        })
+      ).toBe(true);
+
+      // ops@tripmate.in must pass
+      expect(
+        isAuthorizedAdmin({
+          user: { email: "ops@tripmate.in", app_metadata: {} },
+        })
+      ).toBe(true);
+
+      // @tripmate.in wildcard must pass
+      expect(
+        isAuthorizedAdmin({
+          user: { email: "newoperator@tripmate.in", app_metadata: {} },
+        })
+      ).toBe(true);
+
+      // Non-admin email without app_metadata must fail
+      expect(
+        isAuthorizedAdmin({
+          user: { email: "customer@gmail.com", app_metadata: {} },
+        })
+      ).toBe(false);
+
+      // Restore env
+      if (origEnv !== undefined) {
+        process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN = origEnv;
+      }
     });
 
     it("requireAdmin() rejects unauthenticated callers and non-admin users (SEC-05)", async () => {

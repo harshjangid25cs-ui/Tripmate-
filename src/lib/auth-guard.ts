@@ -26,6 +26,10 @@ export function getAuthRedirectPath({
   // Admin routes: /admin/login is public; all other /admin routes require verified admin privileges
   if (pathname.startsWith("/admin")) {
     if (pathname === "/admin/login") {
+      // Already-authenticated admins should skip the login page and go straight to /admin
+      if (isAdminUser) {
+        return "/admin";
+      }
       return null;
     }
     if (!isAdminUser) {
@@ -34,6 +38,7 @@ export function getAuthRedirectPath({
     }
     return null;
   }
+
 
   // Public bypass paths (never redirected)
   const isPublicRoute =

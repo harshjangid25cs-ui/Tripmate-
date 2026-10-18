@@ -32,33 +32,41 @@ export default function AdminLoginPage() {
         password,
       });
 
-      if (!res.ok) {
-        if (res.requiresMfaEnrollment) {
-          setIsEnrollment(true);
-          setMfaQrCode(res.qrCode || null);
-          setMfaSecret(res.secret || null);
-          setStep("mfa");
-          toast("MFA setup required. Scan the QR code to enroll.", "info");
-          return;
-        }
-
-        if (res.requiresMfa) {
-          setIsEnrollment(false);
-          setStep("mfa");
-          return;
-        }
-
-        toast(res.error || "Authentication failed", "error");
+      // Success path: ok === true means authenticated (aal1 or aal2)
+      if (res.ok) {
+        switchRole("super_admin");
+        const aalLabel = res.aal === "aal2" ? "AAL2 MFA Verified." : "Session authenticated.";
+        toast(`${aalLabel} Welcome to TripMate Operations.`, "success");
+        // Use assign() for full navigation — clears Next.js router cache so
+        // the updated JWT cookie is re-read by middleware on the /admin route.
+        window.location.assign("/admin");
         return;
       }
 
-      switchRole("super_admin");
-      toast("AAL2 MFA Verified. Welcome to TripMate Operations.", "success");
-      window.location.href = "/admin";
+      // MFA enrollment required (non-allowlisted operator, first login)
+      if (res.requiresMfaEnrollment) {
+        setIsEnrollment(true);
+        setMfaQrCode(res.qrCode || null);
+        setMfaSecret(res.secret || null);
+        setStep("mfa");
+        toast("MFA setup required. Scan the QR code to enroll.", "info");
+        return;
+      }
+
+      // TOTP challenge required (factor already enrolled, code not yet submitted)
+      if (res.requiresMfa) {
+        setIsEnrollment(false);
+        setStep("mfa");
+        return;
+      }
+
+      // Explicit error — show a high-contrast banner
+      toast(res.error || "Authentication failed. Check your credentials and try again.", "error");
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleMfaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
