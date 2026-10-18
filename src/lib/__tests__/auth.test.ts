@@ -307,17 +307,28 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
       ).toBe(false);
     });
 
-    it("isAuthorizedAdmin allows DEFAULT_ADMIN_EMAILS without app_metadata role (production-safe, no env flag)", async () => {
-      // Simulate production: NEXT_PUBLIC_ENABLE_DEMO_ADMIN is NOT set
+    it("isAuthorizedAdmin allows DEFAULT_ADMIN_EMAILS without app_metadata role in production with NEXT_PUBLIC_ENABLE_DEMO_ADMIN unset", async () => {
+      // Simulate production: NODE_ENV === "production" and NEXT_PUBLIC_ENABLE_DEMO_ADMIN is NOT set
       const origEnv = process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN;
+      const origNodeEnv = process.env.NODE_ENV;
       delete process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN;
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
 
       const { isAuthorizedAdmin } = await import("@/lib/admin/admin-auth");
 
-      // Primary admin account must pass even without app_metadata
+      // Primary admin account must pass even without app_metadata in production
       expect(
         isAuthorizedAdmin({
           user: { email: "tripmateoffical007@gmail.com", app_metadata: {}, user_metadata: {} },
+        })
+      ).toBe(true);
+
+      // Direct user object parameter variant must also pass
+      expect(
+        isAuthorizedAdmin({
+          email: "tripmateoffical007@gmail.com",
+          app_metadata: {},
+          user_metadata: {},
         })
       ).toBe(true);
 
@@ -353,6 +364,7 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
       if (origEnv !== undefined) {
         process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN = origEnv;
       }
+      (process.env as Record<string, string | undefined>).NODE_ENV = origNodeEnv;
     });
 
     it("requireAdmin() rejects unauthenticated callers and non-admin users (SEC-05)", async () => {

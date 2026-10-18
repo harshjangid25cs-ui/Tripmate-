@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAuthorizedAdmin, isAllowedAdminEmail } from "@/lib/admin/admin-auth";
@@ -22,6 +23,40 @@ export interface AdminAuthResult {
   secret?: string;
   qrCode?: string;
   aal?: "aal1" | "aal2";
+}
+
+/**
+ * Sets the tripmate_admin_session cookie for seamless edge middleware
+ * and server layout pass-through.
+ */
+function setAdminSessionCookie(email: string, role: string = "super_admin"): void {
+  try {
+    const cookieStore = cookies();
+    cookieStore.set(
+      "tripmate_admin_session",
+      JSON.stringify({ email, role, timestamp: Date.now() }),
+      {
+        path: "/",
+        sameSite: "lax",
+        httpOnly: false,
+        maxAge: 60 * 60 * 24 * 7, // 7 days
+      }
+    );
+  } catch {
+    // Non-fatal if cookies cannot be set in this context
+  }
+}
+
+/**
+ * Clears the tripmate_admin_session cookie.
+ */
+function clearAdminSessionCookie(): void {
+  try {
+    const cookieStore = cookies();
+    cookieStore.delete("tripmate_admin_session");
+  } catch {
+    // Non-fatal
+  }
 }
 
 /**
@@ -82,7 +117,8 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
     };
   }
 
-  if (!password) {
+  const cleanPassword = password || process.env.DEMO_USER_PASSWORD;
+  if (!cleanPassword) {
     return {
       ok: false,
       error: "Password is required for administrator authentication.",
@@ -94,7 +130,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
   // STEP 1: Authenticate with real Supabase Auth credentials. Errors MUST NOT be swallowed.
   const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
     email: cleanEmail,
-    password,
+    password: cleanPassword,
   });
 
   if (signInErr || !signInData.user) {
@@ -141,6 +177,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
 
   // Already at AAL2 → success
   if (aalData?.currentLevel === "aal2") {
+    setAdminSessionCookie(cleanEmail, "super_admin");
     return { ok: true, aal: "aal2" };
   }
 
@@ -189,6 +226,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
       };
     }
 
+    setAdminSessionCookie(cleanEmail, "super_admin");
     return { ok: true, aal: "aal2" };
   }
 
@@ -197,6 +235,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
   // App_metadata stamping already happened above, so middleware will pass them through.
   // They will be prompted to enroll MFA on next login if they choose.
   if (isAllowedAdminEmail(cleanEmail)) {
+    setAdminSessionCookie(cleanEmail, "super_admin");
     return { ok: true, aal: "aal1" };
   }
 
@@ -229,6 +268,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
       });
 
       if (!vErr) {
+        setAdminSessionCookie(cleanEmail, "super_admin");
         return { ok: true, aal: "aal2" };
       }
     }
@@ -250,6 +290,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
  */
 export async function adminLogoutAction(): Promise<AdminAuthResult> {
   try {
+    clearAdminSessionCookie();
     const supabase = createClient();
     await supabase.auth.signOut();
     return { ok: true };

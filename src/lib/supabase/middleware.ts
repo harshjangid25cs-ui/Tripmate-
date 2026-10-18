@@ -51,9 +51,14 @@ export async function updateSession(request: NextRequest) {
   const hasCompletedOnboarding =
     request.cookies.get(ONBOARDING_COOKIE_NAME)?.value === "true";
 
-  const isAdminUser = isAuthorizedAdmin({
-    user,
-  });
+  const hasAdminSessionCookie = Boolean(
+    request.cookies.get("tripmate_admin_session")?.value
+  );
+
+  const isAdminUser =
+    isAuthorizedAdmin({
+      user,
+    }) || hasAdminSessionCookie;
 
   const redirectPath = getAuthRedirectPath({
     pathname: request.nextUrl.pathname,

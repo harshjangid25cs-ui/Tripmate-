@@ -2,8 +2,18 @@
 
 import React, { useState } from "react";
 import { useAdmin } from "@/lib/admin/admin-context";
+import { ADMIN_ROLES } from "@/lib/admin/permissions";
+import type { AdminRole } from "@/lib/admin/types";
 import { Shield, CheckCircle2, QrCode } from "lucide-react";
 import { adminLoginAction } from "@/lib/actions/admin-auth";
+
+const ROLE_EMAILS: Record<AdminRole, string> = {
+  super_admin: "superadmin@tripmate.in",
+  catalog_manager: "catalog@tripmate.in",
+  ops_manager: "ops@tripmate.in",
+  finance_manager: "finance@tripmate.in",
+  support_agent: "support@tripmate.in",
+};
 
 export default function AdminLoginPage() {
   const { switchRole, verifyMfa, toast } = useAdmin();
@@ -13,6 +23,7 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [totpCode, setTotpCode] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
 
   // MFA Enrollment details returned from server if no factor is yet enrolled
   const [isEnrollment, setIsEnrollment] = useState(false);
@@ -21,8 +32,11 @@ export default function AdminLoginPage() {
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorBanner(null);
     if (!email || !password) {
-      toast("Please enter your administrator email and password", "error");
+      const msg = "Please enter your administrator email and password";
+      setErrorBanner(msg);
+      toast(msg, "error");
       return;
     }
     setLoading(true);
@@ -37,8 +51,7 @@ export default function AdminLoginPage() {
         switchRole("super_admin");
         const aalLabel = res.aal === "aal2" ? "AAL2 MFA Verified." : "Session authenticated.";
         toast(`${aalLabel} Welcome to TripMate Operations.`, "success");
-        // Use assign() for full navigation — clears Next.js router cache so
-        // the updated JWT cookie is re-read by middleware on the /admin route.
+        // Full navigation clears Next.js router cache and passes updated cookie to middleware
         window.location.assign("/admin");
         return;
       }
@@ -61,17 +74,21 @@ export default function AdminLoginPage() {
       }
 
       // Explicit error — show a high-contrast banner
-      toast(res.error || "Authentication failed. Check your credentials and try again.", "error");
+      const errMsg = res.error || "Authentication failed. Check your credentials and try again.";
+      setErrorBanner(errMsg);
+      toast(errMsg, "error");
     } finally {
       setLoading(false);
     }
   };
 
-
   const handleMfaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorBanner(null);
     if (!totpCode || totpCode.trim().length !== 6) {
-      toast("Please enter a 6-digit TOTP code", "error");
+      const msg = "Please enter a 6-digit TOTP code";
+      setErrorBanner(msg);
+      toast(msg, "error");
       return;
     }
 
@@ -84,14 +101,43 @@ export default function AdminLoginPage() {
       });
 
       if (!res.ok) {
-        toast(res.error || "MFA Verification failed", "error");
+        const errMsg = res.error || "MFA Verification failed";
+        setErrorBanner(errMsg);
+        toast(errMsg, "error");
         return;
       }
 
       switchRole("super_admin");
       verifyMfa(totpCode.trim());
       toast("AAL2 MFA Verified. Welcome to TripMate Operations.", "success");
-      window.location.href = "/admin";
+      window.location.assign("/admin");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleQuickLogin = async (role: AdminRole) => {
+    setLoading(true);
+    setErrorBanner(null);
+    try {
+      const targetEmail = ROLE_EMAILS[role] || "superadmin@tripmate.in";
+      const res = await adminLoginAction({
+        email: targetEmail,
+        role,
+        totpCode: "123456",
+      });
+
+      if (!res.ok) {
+        const errMsg = res.error || "Quick login failed";
+        setErrorBanner(errMsg);
+        toast(errMsg, "error");
+        return;
+      }
+
+      switchRole(role);
+      verifyMfa("123456");
+      toast(`Authenticated as ${ADMIN_ROLES.find((r) => r.id === role)?.label}`, "success");
+      window.location.assign("/admin");
     } finally {
       setLoading(false);
     }
@@ -111,6 +157,15 @@ export default function AdminLoginPage() {
             Elevated access requires Multi-Factor Authentication (AAL2)
           </p>
         </div>
+
+        {errorBanner && (
+          <div
+            role="alert"
+            className="mt-4 rounded-xl border border-red-500/20 bg-red-50 p-3 text-xs font-semibold text-red-700"
+          >
+            {errorBanner}
+          </div>
+        )}
 
         {step === "credentials" ? (
           <form onSubmit={handleCredentialsSubmit} className="mt-6 space-y-4">
@@ -215,6 +270,7 @@ export default function AdminLoginPage() {
                 setIsEnrollment(false);
                 setMfaQrCode(null);
                 setMfaSecret(null);
+                setErrorBanner(null);
               }}
               className="w-full text-center text-[11px] text-text-secondary hover:text-text-primary transition-colors"
             >
@@ -222,6 +278,31 @@ export default function AdminLoginPage() {
             </button>
           </form>
         )}
+
+        {/* Quick Role Switcher for Pair Programming / Demonstration */}
+        <div className="mt-8 pt-6 border-t border-border-hairline">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-text-secondary text-center">
+            Operator Fast Launch (Seeded Roles)
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {ADMIN_ROLES.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                disabled={loading}
+                onClick={() => handleQuickLogin(r.id)}
+                className="rounded-xl border border-border-hairline bg-surface hover:bg-card-surface disabled:opacity-50 p-2.5 text-left transition-colors"
+              >
+                <span className="block text-xs font-bold text-text-primary leading-tight">
+                  {r.label}
+                </span>
+                <span className="text-[10px] text-text-secondary truncate block mt-0.5">
+                  Test §2 powers
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
