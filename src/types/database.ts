@@ -137,6 +137,10 @@ export interface Database {
           gst_rate: number;
           demo_coupon_code: string | null;
           demo_coupon_discount: number;
+          merchant_upi_vpa?: string | null;
+          merchant_payee_name?: string | null;
+          active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo" | null;
+          upi_auto_confirm?: boolean | null;
           created_at: string;
           updated_at?: string;
         };
@@ -146,6 +150,10 @@ export interface Database {
           gst_rate?: number;
           demo_coupon_code?: string | null;
           demo_coupon_discount?: number;
+          merchant_upi_vpa?: string | null;
+          merchant_payee_name?: string | null;
+          active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo" | null;
+          upi_auto_confirm?: boolean | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -154,6 +162,10 @@ export interface Database {
           gst_rate?: number;
           demo_coupon_code?: string | null;
           demo_coupon_discount?: number;
+          merchant_upi_vpa?: string | null;
+          merchant_payee_name?: string | null;
+          active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo" | null;
+          upi_auto_confirm?: boolean | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -863,27 +875,36 @@ export interface Database {
           id: string;
           trip_id: string;
           user_id: string;
-          provider: "demo" | "razorpay";
+          provider: "demo" | "razorpay" | "direct_upi";
           method: "upi" | "card" | "netbanking" | "emi" | null;
           amount: number;
           currency: string;
           status: "succeeded" | "failed" | "refunded";
           provider_reference: string | null;
+          utr_number: string | null;
+          payer_vpa: string | null;
+          verification_status: "pending_verification" | "verified" | "rejected";
           created_at: string;
         };
         Insert: {
           id?: string;
           trip_id: string;
           user_id: string;
-          provider?: "demo" | "razorpay";
+          provider?: "demo" | "razorpay" | "direct_upi";
           method?: "upi" | "card" | "netbanking" | "emi" | null;
           amount: number;
           currency?: string;
           status: "succeeded" | "failed" | "refunded";
           provider_reference?: string | null;
+          utr_number?: string | null;
+          payer_vpa?: string | null;
+          verification_status?: "pending_verification" | "verified" | "rejected";
           created_at?: string;
         };
-        Update: Record<string, never>;
+        Update: {
+          status?: "succeeded" | "failed" | "refunded";
+          verification_status?: "pending_verification" | "verified" | "rejected";
+        };
         Relationships: [];
       };
 
@@ -1404,6 +1425,27 @@ export interface Database {
           p_gst_rate: number;
           p_demo_coupon_code?: string;
           p_demo_coupon_discount?: number;
+          p_reason?: string | null;
+          p_merchant_upi_vpa?: string;
+          p_merchant_payee_name?: string;
+          p_active_payment_gateway?: string;
+          p_upi_auto_confirm?: boolean;
+        };
+        Returns: Json;
+      };
+      submit_direct_upi_payment: {
+        Args: {
+          p_trip_id: string;
+          p_utr_number: string;
+          p_payer_vpa?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_verify_upi_payment: {
+        Args: {
+          p_payment_id: string;
+          p_status: string;
+          p_notes?: string | null;
         };
         Returns: Json;
       };

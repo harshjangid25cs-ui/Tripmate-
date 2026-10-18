@@ -53,6 +53,8 @@ import {
   adminToggleCouponSchema,
   adminDeleteCouponSchema,
   adminUpdatePricingConfigSchema,
+  submitDirectUpiPaymentSchema,
+  adminVerifyUpiPaymentSchema,
   adminUpsertHighlightSchema,
   adminDeleteHighlightSchema,
   adminOverrideBookingSchema,
@@ -200,6 +202,16 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         d.highlights = highlights.filter((h) => h.destination_id === d.id);
       });
 
+      // Enrich bookings with UTR info if available from payments
+      const paymentByTrip = new Map(payments.filter((p) => p.trip_id && p.utr_number).map((p) => [p.trip_id, p]));
+      bookings.forEach((b) => {
+        const pm = paymentByTrip.get(b.id);
+        if (pm) {
+          b.utr_number = pm.utr_number;
+          b.verification_status = pm.verification_status;
+        }
+      });
+
       return {
         ok: true,
         data: {
@@ -318,7 +330,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
     const hotels = (hotelsData || []).map(mapDatabaseHotelToAdminHotel);
     const stops = (stopsData || []).map(mapDatabaseStopToAdminStop);
 
-    const [coupRes, priceRes, emailRes, auditRes, highRes, polRes, histRes] = await Promise.all([
+    const [coupRes, priceRes, emailRes, auditRes, highRes, polRes, histRes, payRes] = await Promise.all([
       supabase.from("coupons").select("*").order("created_at", { ascending: false }),
       supabase.from("pricing_config").select("*").eq("id", 1).maybeSingle(),
       supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
@@ -326,9 +338,11 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       supabase.from("destination_highlights").select("*").order("sort_order", { ascending: true }),
       supabase.from("policies").select("*").order("created_at", { ascending: false }),
       supabase.from("trip_status_history").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
     ]);
 
     const coupons = (coupRes.data || []).map((c) => mapDatabaseCouponToAdminCoupon(c as unknown as DbRecord));
+    const payments = (payRes.data || []).map((p) => mapDatabasePaymentToAdminPayment(p as unknown as DbRecord));
     const pricing = priceRes.data ? mapDatabasePricingToAdminPricing(priceRes.data as unknown as DbRecord) : undefined;
     const emailLogs = (emailRes.data || []).map((e) => mapDatabaseEmailToAdminEmail(e as unknown as DbRecord));
     const auditLogs = (auditRes.data || []).map((a) => mapDatabaseAuditToAdminAudit(a as unknown as DbRecord));
@@ -365,6 +379,15 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       d.highlights = highlights.filter((h) => h.destination_id === d.id);
     });
 
+    const paymentByTrip = new Map(payments.filter((p) => p.trip_id && p.utr_number).map((p) => [p.trip_id, p]));
+    bookings.forEach((b) => {
+      const pm = paymentByTrip.get(b.id);
+      if (pm) {
+        b.utr_number = pm.utr_number;
+        b.verification_status = pm.verification_status;
+      }
+    });
+
     const totalRevenue = bookings
       .filter((b) => b.status === "confirmed" || b.status === "completed")
       .reduce((acc, b) => acc + b.total_amount, 0);
@@ -388,7 +411,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         stops,
         users: [],
         companies: [],
-        payments: [],
+        payments,
         coupons,
         pricing,
         emailLogs,
@@ -2489,6 +2512,10 @@ export async function adminUpdatePricingConfigAction(rawInput: AdminUpdatePricin
       p_demo_coupon_code: input.demoCouponCode,
       p_demo_coupon_discount: input.demoCouponDiscount,
       p_reason: input.reason ?? null,
+      p_merchant_upi_vpa: input.merchantUpiVpa,
+      p_merchant_payee_name: input.merchantPayeeName,
+      p_active_payment_gateway: input.activePaymentGateway,
+      p_upi_auto_confirm: input.upiAutoConfirm,
     });
 
     if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
@@ -2503,6 +2530,10 @@ export async function adminUpdatePricingConfigAction(rawInput: AdminUpdatePricin
       gst_rate: input.gstRate,
       demo_coupon_code: input.demoCouponCode,
       demo_coupon_discount: input.demoCouponDiscount,
+      merchant_upi_vpa: input.merchantUpiVpa,
+      merchant_payee_name: input.merchantPayeeName,
+      active_payment_gateway: input.activePaymentGateway,
+      upi_auto_confirm: input.upiAutoConfirm,
       updated_at: new Date().toISOString(),
     };
 
@@ -3010,6 +3041,127 @@ export async function adminGetDocumentSignedUrlAction(payload: unknown): Promise
     return { ok: true, signedUrl: data.signedUrl };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to generate signed URL.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// QUERY/ACTION 23: submitDirectUpiPaymentAction
+// ============================================================================
+
+export async function submitDirectUpiPaymentAction(rawInput: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: unknown;
+}> {
+  const parse = submitDirectUpiPaymentSchema.safeParse(rawInput);
+  if (!parse.success) {
+    return { ok: false, error: parse.error.issues[0]?.message ?? "Invalid UPI payment details." };
+  }
+
+  const { tripId, utrNumber, payerVpa } = parse.data;
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("submit_direct_upi_payment", {
+      p_trip_id: tripId,
+      p_utr_number: utrNumber,
+      p_payer_vpa: payerVpa || null,
+    });
+
+    if (rpcErr) {
+      return { ok: false, error: rpcErr.message || "Failed to submit direct UPI payment." };
+    }
+
+    // Trigger transactional booking confirmation email
+    try {
+      const { data: tripData } = await supabase
+        .from("trips")
+        .select("booking_ref, total_amount, profiles(full_name, email)")
+        .eq("id", tripId)
+        .maybeSingle();
+
+      const profile = tripData?.profiles as { full_name?: string; email?: string } | null;
+      if (profile?.email && tripData) {
+        await sendTransactionalEmail({
+          to: profile.email,
+          template: "booking_confirmed",
+          subject: `TripMate Reservation Confirmed #${tripData.booking_ref}`,
+          content: `Your booking #${tripData.booking_ref} has been confirmed via Direct UPI Payment (UTR: ${utrNumber}). Amount paid: ₹${Number(tripData.total_amount || 0).toLocaleString("en-IN")}.`,
+          relatedTripId: tripId,
+          relatedBookingRef: tripData.booking_ref,
+          sentBy: "system",
+        });
+      }
+    } catch {
+      // Non-blocking notification
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/trips");
+    revalidatePath(`/book/${tripId}/confirmed`);
+    revalidatePath("/book", "layout");
+
+    return { ok: true, data: rpcRes };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to record UPI UTR payment.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// QUERY/ACTION 24: adminVerifyUpiPaymentAction
+// ============================================================================
+
+export async function adminVerifyUpiPaymentAction(rawInput: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: unknown;
+}> {
+  const parse = adminVerifyUpiPaymentSchema.safeParse(rawInput);
+  if (!parse.success) {
+    return { ok: false, error: parse.error.issues[0]?.message ?? "Invalid verification input." };
+  }
+
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const { paymentId, status, notes, reason } = parse.data;
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_verify_upi_payment", {
+      p_payment_id: paymentId,
+      p_status: status,
+      p_notes: notes || null,
+    });
+
+    if (rpcErr) {
+      return { ok: false, error: rpcErr.message || "Failed to update UPI payment verification status." };
+    }
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: status === "verified" ? "VERIFY_UPI_UTR" : "REJECT_UPI_UTR",
+        entity_type: "payments",
+        entity_id: paymentId,
+        after: { verification_status: status, notes },
+        reason: reason || notes || null,
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/trips");
+    return { ok: true, data: rpcRes };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to verify UPI payment.";
     return { ok: false, error: message };
   }
 }

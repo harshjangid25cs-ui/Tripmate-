@@ -128,6 +128,10 @@ export interface PricingConfig {
   gst_rate: number;
   demo_coupon_code: string;
   demo_coupon_discount: number;
+  merchant_upi_vpa?: string;
+  merchant_payee_name?: string;
+  active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo";
+  upi_auto_confirm?: boolean;
 }
 
 export interface DestinationHighlight {
@@ -344,6 +348,10 @@ export interface BookingAdmin {
   calculated_distance_km?: number;
   transit_mode?: "local_only" | "live_origin_to_destination";
   status_history?: TripStatusHistoryItem[];
+  utr_number?: string | null;
+  payer_vpa?: string | null;
+  verification_status?: "pending_verification" | "verified" | "rejected";
+  payment_id?: string;
   travellers: TravellerAdmin[];
   notes: BookingNote[];
   created_at: string;
@@ -471,6 +479,11 @@ export interface PaymentInvoiceRecord {
   itc_qualified: boolean;
   company_name?: string;
   gst_number?: string;
+  utr_number?: string | null;
+  payer_vpa?: string | null;
+  verification_status?: "pending_verification" | "verified" | "rejected";
+  provider?: string | null;
+  provider_payment_id?: string | null;
   created_at: string;
 }
 

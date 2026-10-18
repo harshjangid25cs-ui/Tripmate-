@@ -9,6 +9,7 @@ import {
   adminAssignDriverOrVehicleAction,
   adminOverrideBookingItemsAction,
   adminSendCustomerNotificationAction,
+  adminVerifyUpiPaymentAction,
 } from "@/lib/actions/admin-ops";
 import {
   Search,
@@ -240,6 +241,42 @@ export function BookingsView() {
     setOverrideReason("");
     setIsOverridingItems(false);
     setIsAssigningDriver(false);
+  };
+
+  const handleVerifyUpiInModal = async (status: "verified" | "rejected") => {
+    if (!selectedBooking) return;
+    const payment = AdminService.getPayments().find(
+      (p) => p.trip_id === selectedBooking.id || (p.utr_number && p.utr_number === selectedBooking.utr_number)
+    );
+    const paymentId = payment?.id || selectedBooking.payment_id || selectedBooking.id;
+
+    setIsMutating(true);
+    try {
+      AdminService.verifyUpiPayment(currentAdmin, paymentId, status);
+      const res = await adminVerifyUpiPaymentAction({
+        paymentId,
+        status,
+        notes: status === "verified" ? "UTR verified by admin from booking drawer" : "Fake UTR rejected by admin from booking drawer",
+      });
+
+      if (res.ok) {
+        toast(
+          status === "verified" ? "12-Digit UTR verified successfully" : "Fake UTR rejected and booking cancelled",
+          status === "verified" ? "success" : "info"
+        );
+        setSelectedBooking((prev) =>
+          prev ? { ...prev, verification_status: status, ...(status === "rejected" ? { status: "cancelled" } : {}) } : null
+        );
+      } else {
+        toast(res.error || "Failed to update verification status on server", "error");
+      }
+      refresh();
+      await refreshOperationalData();
+    } catch {
+      toast("Error verifying UTR", "error");
+    } finally {
+      setIsMutating(false);
+    }
   };
 
   const handleOverrideItems = async (e: React.FormEvent) => {
@@ -482,6 +519,11 @@ export function BookingsView() {
                     <span className="font-bold text-text-primary tabular-nums">
                       ₹{b.total_amount.toLocaleString("en-IN")}
                     </span>
+                    {b.utr_number && (
+                      <span className="mt-1 flex items-center gap-1 font-mono text-[10px] tabular-nums font-bold text-text-primary bg-surface px-1.5 py-0.5 rounded border border-border-hairline w-fit">
+                        UTR: {b.utr_number}
+                      </span>
+                    )}
                     {b.coupon_code && (
                       <span className="block text-[10px] text-emerald-700 font-bold">
                         Coupon: {b.coupon_code} (−₹{b.discount_amount})
@@ -634,6 +676,69 @@ export function BookingsView() {
             <div className="mt-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left 2 Cols: Items snapshot & Travellers */}
               <div className="lg:col-span-2 space-y-6">
+                {/* Direct UPI UTR Verification Card (if booking paid via direct UPI) */}
+                {selectedBooking.utr_number && (
+                  <div className="rounded-2xl bg-surface p-4 border border-border-hairline flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-text-secondary">
+                          Direct UPI Payment (12-Digit UTR)
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase border ${
+                            selectedBooking.verification_status === "verified"
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                              : selectedBooking.verification_status === "rejected"
+                              ? "bg-rose-50 text-rose-800 border-rose-300"
+                              : "bg-amber-50 text-amber-800 border-amber-300"
+                          }`}
+                        >
+                          {selectedBooking.verification_status === "pending_verification"
+                            ? "Pending Review"
+                            : selectedBooking.verification_status === "rejected"
+                            ? "Rejected (Fake UTR)"
+                            : "Verified"}
+                        </span>
+                      </div>
+                      <div className="flex items-baseline gap-3 mt-1.5">
+                        <span className="font-mono font-black text-sm tracking-wider text-text-primary tabular-nums">
+                          UTR: {selectedBooking.utr_number}
+                        </span>
+                        {selectedBooking.payer_vpa && (
+                          <span className="text-xs font-mono text-text-secondary">
+                            Payer: {selectedBooking.payer_vpa}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {selectedBooking.verification_status !== "verified" && (
+                        <button
+                          type="button"
+                          onClick={() => handleVerifyUpiInModal("verified")}
+                          disabled={isMutating}
+                          className="flex items-center gap-1 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300 px-3 py-1.5 text-xs font-bold transition-all disabled:opacity-50"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>Verify UTR</span>
+                        </button>
+                      )}
+                      {selectedBooking.verification_status !== "rejected" && selectedBooking.status !== "cancelled" && (
+                        <button
+                          type="button"
+                          onClick={() => handleVerifyUpiInModal("rejected")}
+                          disabled={isMutating}
+                          className="flex items-center gap-1 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 px-3 py-1.5 text-xs font-bold transition-all disabled:opacity-50"
+                        >
+                          <Ban className="h-3.5 w-3.5" />
+                          <span>Reject Fake UTR</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Price Breakdown Snapshot (§7) */}
                 <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200">
                   <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">

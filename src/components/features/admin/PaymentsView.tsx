@@ -4,13 +4,45 @@ import React, { useState } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { PaymentInvoiceRecord } from "@/lib/admin/types";
-import { Download, FileSpreadsheet } from "lucide-react";
+import { Download, FileSpreadsheet, CheckCircle2, XCircle } from "lucide-react";
+import { adminVerifyUpiPaymentAction } from "@/lib/actions/admin-ops";
 
 export function PaymentsView() {
-  const { currentAdmin, hasPermission, toast } = useAdmin();
-  const [payments] = useState<PaymentInvoiceRecord[]>(() => AdminService.getPayments());
+  const { currentAdmin, hasPermission, toast, refreshOperationalData } = useAdmin();
+  const [payments, setPayments] = useState<PaymentInvoiceRecord[]>(() => AdminService.getPayments());
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const canExport = hasPermission("payments_export");
+  const refresh = () => setPayments(AdminService.getPayments());
+
+  const handleVerifyUpi = async (paymentId: string, status: "verified" | "rejected") => {
+    setProcessingId(paymentId);
+    try {
+      AdminService.verifyUpiPayment(currentAdmin, paymentId, status);
+      const res = await adminVerifyUpiPaymentAction({
+        paymentId,
+        status,
+        notes: status === "verified" ? "UTR verified by admin" : "Fake UTR rejected by admin",
+      });
+
+      if (res.ok) {
+        toast(
+          status === "verified"
+            ? "12-Digit UTR verified successfully"
+            : "Fake UTR rejected and booking cancelled",
+          status === "verified" ? "success" : "info"
+        );
+      } else {
+        toast(res.error || "Failed to update verification status on server", "error");
+      }
+      refresh();
+      await refreshOperationalData();
+    } catch {
+      toast("Error verifying UTR", "error");
+    } finally {
+      setProcessingId(null);
+    }
+  };
 
   const exportCsv = (type: "payments" | "bookings" | "coupons") => {
     if (!canExport) {
@@ -22,9 +54,9 @@ export function PaymentsView() {
     let filename = "";
 
     if (type === "payments") {
-      csvContent = "InvoiceNumber,BookingRef,Customer,Amount,GSTAmount,Method,Status,Timestamp\n";
+      csvContent = "InvoiceNumber,BookingRef,Customer,Amount,GSTAmount,Method,UTRNumber,VerificationStatus,Status,Timestamp\n";
       for (const p of payments) {
-        csvContent += `"${p.invoice_number}","${p.booking_ref}","${p.customer_name}",${p.amount},${p.gst_amount},"${p.method}","${p.status}","${p.created_at}"\n`;
+        csvContent += `"${p.invoice_number}","${p.booking_ref}","${p.customer_name}",${p.amount},${p.gst_amount},"${p.method}","${p.utr_number || ""}","${p.verification_status || ""}","${p.status}","${p.created_at}"\n`;
       }
       filename = `tripmate-payments-${new Date().toISOString().slice(0, 10)}.csv`;
     } else if (type === "bookings") {
@@ -111,6 +143,8 @@ export function PaymentsView() {
                 <th className="py-2.5">Total Amount</th>
                 <th className="py-2.5">GST Breakdown</th>
                 <th className="py-2.5">Method</th>
+                <th className="py-2.5">12-Digit UTR</th>
+                <th className="py-2.5">UTR Verification</th>
                 <th className="py-2.5 text-right">Payment Status</th>
               </tr>
             </thead>
@@ -128,6 +162,70 @@ export function PaymentsView() {
                   </td>
                   <td className="py-3.5 uppercase font-mono text-text-secondary text-[10px]">
                     {p.method}
+                  </td>
+                  <td className="py-3.5 font-mono text-xs">
+                    {p.utr_number ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-bold text-text-primary tracking-wider tabular-nums bg-surface px-2 py-0.5 rounded border border-border-hairline inline-block w-fit">
+                          {p.utr_number}
+                        </span>
+                        {p.payer_vpa && (
+                          <span className="text-[10px] text-text-secondary truncate max-w-[140px]">
+                            {p.payer_vpa}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-text-secondary text-[11px]">—</span>
+                    )}
+                  </td>
+                  <td className="py-3.5">
+                    {p.utr_number ? (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase border ${
+                            p.verification_status === "verified"
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                              : p.verification_status === "rejected"
+                              ? "bg-rose-50 text-rose-800 border-rose-300"
+                              : "bg-amber-50 text-amber-800 border-amber-300"
+                          }`}
+                        >
+                          {p.verification_status === "pending_verification"
+                            ? "Pending Review"
+                            : p.verification_status === "rejected"
+                            ? "Rejected"
+                            : "Verified"}
+                        </span>
+
+                        {p.verification_status === "pending_verification" && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              disabled={processingId === p.id}
+                              onClick={() => handleVerifyUpi(p.id, "verified")}
+                              className="p-1 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-300 text-[10px] font-bold flex items-center gap-0.5 disabled:opacity-50"
+                              title="Verify 12-Digit UTR"
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                              <span>Verify</span>
+                            </button>
+                            <button
+                              type="button"
+                              disabled={processingId === p.id}
+                              onClick={() => handleVerifyUpi(p.id, "rejected")}
+                              className="p-1 rounded bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-300 text-[10px] font-bold flex items-center gap-0.5 disabled:opacity-50"
+                              title="Reject Fake UTR (Cancel Booking)"
+                            >
+                              <XCircle className="h-3 w-3" />
+                              <span>Reject</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-text-secondary text-[11px]">—</span>
+                    )}
                   </td>
                   <td className="py-3.5 text-right">
                     <span

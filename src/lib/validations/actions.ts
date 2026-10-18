@@ -387,6 +387,10 @@ export const adminUpdatePricingConfigSchema = z.object({
   gstRate: z.number().min(0).max(1, "GST rate must be between 0 and 1 (e.g. 0.18)."),
   demoCouponCode: z.string().trim().min(2).optional().default("EXPLOREINDIA"),
   demoCouponDiscount: z.number().min(0).optional().default(2000),
+  merchantUpiVpa: z.string().trim().min(3).optional().default("tripmate@upi"),
+  merchantPayeeName: z.string().trim().min(1).optional().default("TripMate Travels"),
+  activePaymentGateway: z.enum(["auto", "direct_upi_utr", "razorpay", "demo"]).optional().default("auto"),
+  upiAutoConfirm: z.boolean().optional().default(true),
   reason: z.string().trim().optional(),
 });
 
@@ -405,6 +409,21 @@ export const verifyRazorpayPaymentSchema = z.object({
   razorpay_payment_id: z.string().min(1, "Payment ID is required."),
   razorpay_signature: z.string().min(1, "Signature is required."),
   paymentMethod: z.enum(["upi", "card", "netbanking", "emi"]).optional().default("upi"),
+});
+
+export const submitDirectUpiPaymentSchema = z.object({
+  tripId: z.string().min(1, "Trip ID is required."),
+  utrNumber: z.string().trim().regex(/^\d{12}$/, "UTR must be exactly 12 numeric digits."),
+  payerVpa: z.string().trim().optional().nullable(),
+});
+
+export const adminVerifyUpiPaymentSchema = z.object({
+  paymentId: z.string().min(1, "Payment ID is required."),
+  status: z.enum(["verified", "rejected"], {
+    errorMap: () => ({ message: "Status must be either 'verified' or 'rejected'." }),
+  }),
+  notes: z.string().trim().optional().nullable(),
+  reason: z.string().trim().optional(),
 });
 
 export type AdminUpdateBookingStatusInput = z.infer<typeof adminUpdateBookingStatusSchema>;
@@ -436,6 +455,8 @@ export type AdminUpdatePricingConfigInput = z.infer<typeof adminUpdatePricingCon
 export type ApplyCustomerCouponInput = z.infer<typeof applyCustomerCouponSchema>;
 export type CreateRazorpayOrderInput = z.infer<typeof createRazorpayOrderSchema>;
 export type VerifyRazorpayPaymentInput = z.infer<typeof verifyRazorpayPaymentSchema>;
+export type SubmitDirectUpiPaymentInput = z.infer<typeof submitDirectUpiPaymentSchema>;
+export type AdminVerifyUpiPaymentInput = z.infer<typeof adminVerifyUpiPaymentSchema>;
 
 export const adminUpsertHighlightSchema = z.object({
   id: z.string().min(1).optional(),

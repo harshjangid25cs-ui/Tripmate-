@@ -49,6 +49,10 @@ const INITIAL_PRICING_CONFIG: PricingConfig = {
   gst_rate: 0.18,
   demo_coupon_code: "EXPLOREINDIA",
   demo_coupon_discount: 2000,
+  merchant_upi_vpa: "tripmate@upi",
+  merchant_payee_name: "TripMate Travels",
+  active_payment_gateway: "auto",
+  upi_auto_confirm: true,
 };
 
 const INITIAL_REFUND_RULES: RefundRule[] = [
@@ -369,6 +373,10 @@ export class AdminService {
         gstRate: Number(currentState.pricing.gst_rate),
         demoCouponCode: currentState.pricing.demo_coupon_code,
         demoCouponDiscount: Number(currentState.pricing.demo_coupon_discount),
+        merchantUpiVpa: currentState.pricing.merchant_upi_vpa || "tripmate@upi",
+        merchantPayeeName: currentState.pricing.merchant_payee_name || "TripMate Travels",
+        activePaymentGateway: currentState.pricing.active_payment_gateway || "auto",
+        upiAutoConfirm: currentState.pricing.upi_auto_confirm ?? true,
         reason,
       });
     } catch {
@@ -376,6 +384,43 @@ export class AdminService {
     }
 
     return currentState.pricing;
+  }
+
+  static verifyUpiPayment(
+    actor: AdminActor,
+    paymentId: string,
+    status: "verified" | "rejected",
+    notes?: string,
+    reason?: string
+  ) {
+    const payment = currentState.payments.find((p) => p.id === paymentId);
+    if (payment) {
+      const before = { ...payment };
+      payment.verification_status = status;
+      // If rejected, mark booking cancelled; if verified, mark booking verified
+      const tripId = payment.trip_id;
+      if (tripId) {
+        const booking = currentState.bookings.find((b) => b.id === tripId);
+        if (booking) {
+          if (status === "rejected") {
+            booking.status = "cancelled";
+            booking.verification_status = "rejected";
+          } else {
+            booking.verification_status = "verified";
+          }
+        }
+      }
+      this.writeAudit(
+        actor,
+        status === "verified" ? "verify_upi_utr" : "reject_upi_utr",
+        "payments",
+        paymentId,
+        before as unknown as Record<string, unknown>,
+        payment as unknown as Record<string, unknown>,
+        reason || notes || `UTR marked ${status}`
+      );
+      this.notify();
+    }
   }
 
   static getRefundRules(): RefundRule[] {

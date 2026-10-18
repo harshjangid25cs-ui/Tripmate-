@@ -1,14 +1,42 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
-import { Coins, Plus, Calculator } from "lucide-react";
+import { Coins, Plus, Calculator, QrCode } from "lucide-react";
+import { buildUpiPaymentUri, generateUpiQrDataUrl } from "@/lib/payments/upi-qr";
 
 export function PricingView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
   const [pricing, setPricing] = useState(() => AdminService.getPricing());
   const [refundRules, setRefundRules] = useState(() => AdminService.getRefundRules());
+
+  // Merchant UPI Gateway state
+  const [merchantVpa, setMerchantVpa] = useState(pricing.merchant_upi_vpa || "tripmate@upi");
+  const [merchantPayeeName, setMerchantPayeeName] = useState(pricing.merchant_payee_name || "TripMate Travels");
+  const [activeGateway, setActiveGateway] = useState<"auto" | "direct_upi_utr" | "razorpay" | "demo">(
+    pricing.active_payment_gateway || "auto"
+  );
+  const [upiAutoConfirm, setUpiAutoConfirm] = useState(pricing.upi_auto_confirm ?? true);
+  const [previewQrUrl, setPreviewQrUrl] = useState<string | null>(null);
+
+  // Generate live test-scan QR code for Superadmin
+  useEffect(() => {
+    const testUri = buildUpiPaymentUri({
+      vpa: merchantVpa,
+      payeeName: merchantPayeeName,
+      amount: 1000,
+      transactionNote: "TripMate Admin QR Test",
+      transactionRef: "TM-ADMIN-TEST",
+    });
+    let active = true;
+    generateUpiQrDataUrl(testUri, { size: 180 }).then((url) => {
+      if (active) setPreviewQrUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [merchantVpa, merchantPayeeName]);
 
   // Interactive Live Sample Booking Preview (§5, §7)
   const [sampleSubtotal, setSampleSubtotal] = useState(24200);
@@ -23,7 +51,12 @@ export function PricingView() {
   const canWrite = hasPermission("pricing_write");
 
   const refresh = () => {
-    setPricing(AdminService.getPricing());
+    const freshPricing = AdminService.getPricing();
+    setPricing(freshPricing);
+    setMerchantVpa(freshPricing.merchant_upi_vpa || "tripmate@upi");
+    setMerchantPayeeName(freshPricing.merchant_payee_name || "TripMate Travels");
+    setActiveGateway(freshPricing.active_payment_gateway || "auto");
+    setUpiAutoConfirm(freshPricing.upi_auto_confirm ?? true);
     setRefundRules(AdminService.getRefundRules());
   };
 
@@ -51,10 +84,43 @@ export function PricingView() {
           {
             service_fee: Number(pricing.service_fee),
             gst_rate: Number(pricing.gst_rate),
+            merchant_upi_vpa: merchantVpa,
+            merchant_payee_name: merchantPayeeName,
+            active_payment_gateway: activeGateway,
+            upi_auto_confirm: upiAutoConfirm,
           },
           reason
         );
         toast("Global pricing configuration updated & audited", "success");
+        refresh();
+      }
+    );
+  };
+
+  const handleUpdateUpiGateway = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canWrite) {
+      toast("Finance Manager or Super Admin role required", "error");
+      return;
+    }
+
+    requestReasonModal(
+      "Update Merchant UPI Gateway Settings",
+      `Set merchant UPI VPA to ${merchantVpa}, payee name to "${merchantPayeeName}", gateway mode to "${activeGateway}".`,
+      (reason) => {
+        AdminService.updatePricing(
+          currentAdmin,
+          {
+            service_fee: Number(pricing.service_fee),
+            gst_rate: Number(pricing.gst_rate),
+            merchant_upi_vpa: merchantVpa,
+            merchant_payee_name: merchantPayeeName,
+            active_payment_gateway: activeGateway,
+            upi_auto_confirm: upiAutoConfirm,
+          },
+          reason
+        );
+        toast("Direct UPI Gateway configuration saved & audited", "success");
         refresh();
       }
     );
@@ -234,6 +300,151 @@ export function PricingView() {
             </div>
             <span className="text-2xl font-black text-amber-400 font-mono">
               ₹{calcTotalAmount.toLocaleString("en-IN")}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Direct UPI Gateway (YouPI-PG Mode) Configuration Card */}
+      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
+        <div className="flex items-center justify-between pb-4 border-b border-border-hairline">
+          <div className="flex items-center gap-2">
+            <QrCode className="h-5 w-5 text-primary-container" />
+            <div>
+              <h2 className="text-base font-bold text-text-primary">
+                Direct UPI Gateway (YouPI-PG Mode)
+              </h2>
+              <p className="text-xs text-text-secondary">
+                Accept 0% fee UPI payments directly into your bank VPA with automated or manual 12-digit UTR verification
+              </p>
+            </div>
+          </div>
+          <span className="rounded-md bg-emerald-50 text-emerald-800 border border-emerald-300 px-2 py-0.5 text-[10px] font-bold">
+            0% Gateway Fee
+          </span>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <form onSubmit={handleUpdateUpiGateway} className="lg:col-span-2 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-text-secondary mb-1">
+                Merchant UPI ID (VPA)
+              </label>
+              <input
+                type="text"
+                value={merchantVpa}
+                onChange={(e) => setMerchantVpa(e.target.value)}
+                disabled={!canWrite}
+                placeholder="e.g. tripmate@upi or yourname@okaxis"
+                className="w-full rounded-xl border border-border-hairline bg-surface px-3 py-2.5 text-xs font-mono font-bold text-text-primary focus:bg-card-surface disabled:opacity-60"
+                required
+              />
+              <p className="mt-1 text-[11px] text-text-secondary">
+                Your bank or business UPI ID where customer funds will be credited immediately.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-text-secondary mb-1">
+                Merchant Payee Name
+              </label>
+              <input
+                type="text"
+                value={merchantPayeeName}
+                onChange={(e) => setMerchantPayeeName(e.target.value)}
+                disabled={!canWrite}
+                placeholder="e.g. TripMate Travels"
+                className="w-full rounded-xl border border-border-hairline bg-surface px-3 py-2.5 text-xs font-bold text-text-primary focus:bg-card-surface disabled:opacity-60"
+                required
+              />
+              <p className="mt-1 text-[11px] text-text-secondary">
+                The business or entity name displayed to customers in their UPI app on payment.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1">
+                  Active Payment Mode
+                </label>
+                <select
+                  value={activeGateway}
+                  onChange={(e) => setActiveGateway(e.target.value as typeof activeGateway)}
+                  disabled={!canWrite}
+                  className="w-full rounded-xl border border-border-hairline bg-surface px-3 py-2.5 text-xs font-bold text-text-primary focus:bg-card-surface disabled:opacity-60"
+                >
+                  <option value="auto">Auto (Smart Route / Hybrid)</option>
+                  <option value="direct_upi_utr">Direct UPI QR + UTR (0% Fee)</option>
+                  <option value="razorpay">Razorpay PG</option>
+                  <option value="demo">Demo Mode</option>
+                </select>
+                <p className="mt-1 text-[11px] text-text-secondary">
+                  Controls payment options surfaced to customers at checkout.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1">
+                  12-Digit UTR Auto-Confirmation
+                </label>
+                <div className="flex items-center gap-2 mt-2">
+                  <input
+                    type="checkbox"
+                    id="upiAutoConfirm"
+                    checked={upiAutoConfirm}
+                    onChange={(e) => setUpiAutoConfirm(e.target.checked)}
+                    disabled={!canWrite}
+                    className="w-4 h-4 text-primary-container accent-primary-container rounded"
+                  />
+                  <label htmlFor="upiAutoConfirm" className="text-xs font-bold text-text-primary cursor-pointer">
+                    Auto-confirm on valid 12-digit UTR
+                  </label>
+                </div>
+                <p className="mt-1 text-[11px] text-text-secondary">
+                  If enabled, submitting a unique 12-digit UTR immediately confirms the booking and flags it for audit.
+                </p>
+              </div>
+            </div>
+
+            {canWrite && (
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="rounded-xl bg-primary-container hover:bg-primary-container/90 px-5 py-2.5 text-xs font-bold text-white shadow-xs transition-all"
+                >
+                  Save UPI Gateway Settings
+                </button>
+              </div>
+            )}
+          </form>
+
+          {/* Live QR Preview inside Admin */}
+          <div className="rounded-2xl border border-border-hairline bg-surface p-4 flex flex-col items-center justify-center text-center">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider text-text-secondary mb-2">
+              Live Gateway QR Preview
+            </span>
+            <div className="bg-white p-3 rounded-xl border border-border-hairline shadow-xs">
+              {previewQrUrl ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={previewQrUrl}
+                  alt="Live Merchant UPI QR Preview"
+                  className="w-36 h-36"
+                />
+              ) : (
+                <div className="w-36 h-36 flex items-center justify-center bg-surface">
+                  <QrCode className="h-8 w-8 text-text-secondary animate-pulse" />
+                </div>
+              )}
+            </div>
+            <span className="font-mono font-bold text-xs text-text-primary mt-2">
+              {merchantVpa}
+            </span>
+            <span className="text-[10px] text-text-secondary">
+              Test scan with GPay / PhonePe / Paytm
+            </span>
+            <span className="mt-2 text-[9px] font-mono text-text-secondary/80 break-all px-2">
+              upi://pay?pa={merchantVpa}&amp;pn={encodeURIComponent(merchantPayeeName)}
             </span>
           </div>
         </div>

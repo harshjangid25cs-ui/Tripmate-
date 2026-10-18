@@ -7,6 +7,8 @@ import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
 import { processTripPayment, applyCustomerCouponAction } from "@/lib/actions/trips";
 import { createRazorpayOrderAction, verifyRazorpayPaymentAction } from "@/lib/actions/razorpay";
 import { formatCurrency } from "@/lib/format";
+import { buildUpiPaymentUri, generateUpiQrDataUrl, isValidUtr } from "@/lib/payments/upi-qr";
+import { submitDirectUpiPaymentAction } from "@/lib/actions/admin-ops";
 
 declare global {
   interface Window {
@@ -35,12 +37,88 @@ function loadRazorpayScript(): Promise<boolean> {
 
 interface TripCheckoutViewProps {
   tripData: ValidatedDraftTrip;
+  pricingConfig?: {
+    merchant_upi_vpa?: string;
+    merchant_payee_name?: string;
+    active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo";
+    upi_auto_confirm?: boolean;
+  };
 }
 
-export function TripCheckoutView({ tripData }: TripCheckoutViewProps) {
+export function TripCheckoutView({ tripData, pricingConfig }: TripCheckoutViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { trip, hotel, vehicle, stops, destination } = tripData;
+
+  const merchantVpa = pricingConfig?.merchant_upi_vpa || "tripmate@upi";
+  const merchantPayeeName = pricingConfig?.merchant_payee_name || "TripMate Travels";
+
+  // UPI sub-mode: Direct UPI QR (default) vs Instant UPI VPA
+  const [upiSubMode, setUpiSubMode] = React.useState<"direct_qr" | "instant">("direct_qr");
+  const [utrNumber, setUtrNumber] = React.useState("");
+  const [payerVpa, setPayerVpa] = React.useState("");
+  const [copiedVpa, setCopiedVpa] = React.useState(false);
+  const [qrDataUrl, setQrDataUrl] = React.useState<string | null>(null);
+
+  const upiUri = React.useMemo(() => {
+    return buildUpiPaymentUri({
+      vpa: merchantVpa,
+      payeeName: merchantPayeeName,
+      amount: trip.total_amount,
+      transactionNote: `TripMate #${trip.booking_ref}`,
+      transactionRef: trip.booking_ref,
+    });
+  }, [merchantVpa, merchantPayeeName, trip.total_amount, trip.booking_ref]);
+
+  React.useEffect(() => {
+    let active = true;
+    generateUpiQrDataUrl(upiUri, { size: 220 }).then((url) => {
+      if (active) setQrDataUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, [upiUri]);
+
+  const handleCopyVpa = async () => {
+    try {
+      await navigator.clipboard.writeText(merchantVpa);
+      setCopiedVpa(true);
+      setTimeout(() => setCopiedVpa(false), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
+  const handleDirectUpiSubmit = async () => {
+    const cleanUtr = utrNumber.trim();
+    if (!isValidUtr(cleanUtr)) {
+      setErrorMsg("Please enter a valid strictly 12-digit UPI UTR number.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg(null);
+
+    try {
+      const res = await submitDirectUpiPaymentAction({
+        tripId: trip.id,
+        utrNumber: cleanUtr,
+        payerVpa: payerVpa.trim() || undefined,
+      });
+
+      if (!res.ok) {
+        setErrorMsg(res.error || "Failed to submit direct UPI payment.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      router.push(`/book/${trip.id}/confirmed`);
+    } catch {
+      setErrorMsg("Network error submitting UTR payment. Please retry.");
+      setIsSubmitting(false);
+    }
+  };
 
   // Payment method selection
   const [paymentMethod, setPaymentMethod] = React.useState<"upi" | "card" | "netbanking" | "emi">("upi");
@@ -154,6 +232,36 @@ export function TripCheckoutView({ tripData }: TripCheckoutViewProps) {
   const handlePayment = async () => {
     setIsSubmitting(true);
     setErrorMsg(null);
+
+    // 0. Direct UPI Submission if user entered a custom 12-digit UTR
+    if (paymentMethod === "upi" && utrNumber.trim()) {
+      const cleanUtr = utrNumber.trim();
+      if (!isValidUtr(cleanUtr)) {
+        setErrorMsg("Please enter a valid strictly 12-digit UPI UTR number.");
+        setIsSubmitting(false);
+        return;
+      }
+      try {
+        const res = await submitDirectUpiPaymentAction({
+          tripId: trip.id,
+          utrNumber: cleanUtr,
+          payerVpa: payerVpa.trim() || undefined,
+        });
+
+        if (!res.ok) {
+          setErrorMsg(res.error || "Failed to submit direct UPI payment.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        router.push(`/book/${trip.id}/confirmed`);
+        return;
+      } catch {
+        setErrorMsg("Network error submitting UTR payment. Please retry.");
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     const razorpayKeyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
 
@@ -550,33 +658,187 @@ export function TripCheckoutView({ tripData }: TripCheckoutViewProps) {
                 </div>
 
                 {paymentMethod === "upi" && (
-                  <div className="mt-3 pt-3 border-t border-border-hairline/60 flex flex-col gap-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={upiId}
-                        aria-label="Enter Virtual Payment Address (UPI ID)"
-                        onChange={(e) => {
-                          setUpiId(e.target.value);
-                          setUpiVerified(false);
-                        }}
-                        placeholder="yourname@bank"
-                        className="flex-1 bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono text-text-primary focus:outline-none focus:border-primary-container"
-                      />
+                  <div className="mt-3 pt-3 border-t border-border-hairline/60 flex flex-col gap-3">
+                    {/* Sub-mode selector tabs */}
+                    <div className="flex rounded-xl bg-surface p-1 border border-border-hairline gap-1">
                       <button
                         type="button"
-                        onClick={handleVerifyUpi}
-                        disabled={isVerifyingUpi}
-                        className="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-semibold text-text-primary active:scale-95 transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setUpiSubMode("direct_qr");
+                        }}
+                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
+                          upiSubMode === "direct_qr"
+                            ? "bg-primary-container text-white shadow-xs"
+                            : "text-text-secondary hover:text-text-primary"
+                        }`}
                       >
-                        {isVerifyingUpi ? "Checking..." : upiVerified ? "Verified ✓" : "Verify"}
+                        Direct UPI QR &amp; UTR (0% Fee)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setUpiSubMode("instant");
+                        }}
+                        className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-bold transition-all ${
+                          upiSubMode === "instant"
+                            ? "bg-primary-container text-white shadow-xs"
+                            : "text-text-secondary hover:text-text-primary"
+                        }`}
+                      >
+                        Instant UPI VPA
                       </button>
                     </div>
-                    {upiVerified && (
-                      <p className="text-[11px] text-success-green flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">check_circle</span>
-                        Verified: Harsh Kumar (Demo VPA)
-                      </p>
+
+                    {upiSubMode === "direct_qr" ? (
+                      <div className="flex flex-col gap-3 pt-1">
+                        {/* Live Merchant VPA Banner */}
+                        <div className="p-3 bg-surface rounded-xl border border-border-hairline flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <span className="text-[10px] uppercase font-bold text-text-secondary block">
+                              Pay To Merchant UPI ID
+                            </span>
+                            <span className="font-mono font-bold text-xs text-text-primary block truncate">
+                              {merchantVpa}
+                            </span>
+                            <span className="text-[10px] text-text-secondary block">
+                              Payee: {merchantPayeeName}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopyVpa();
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-semibold text-text-primary shrink-0 border border-border-hairline active:scale-95 transition-all"
+                          >
+                            {copiedVpa ? "Copied ✓" : "Copy UPI ID"}
+                          </button>
+                        </div>
+
+                        {/* Flat Crisp Dynamic UPI QR Code */}
+                        <div className="bg-white p-4 rounded-2xl border border-border-hairline flex flex-col items-center justify-center text-center shadow-xs">
+                          {qrDataUrl ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={qrDataUrl}
+                              alt="Direct UPI QR Code"
+                              className="w-44 h-44 border border-border-hairline/40 rounded-xl p-1 bg-white"
+                            />
+                          ) : (
+                            <div className="w-44 h-44 flex items-center justify-center bg-surface rounded-xl border border-border-hairline">
+                              <span className="material-symbols-outlined text-text-secondary text-[28px] animate-spin">
+                                progress_activity
+                              </span>
+                            </div>
+                          )}
+                          <div className="mt-2 text-center">
+                            <span className="font-mono font-extrabold text-sm text-text-primary block">
+                              {formatCurrency(trip.total_amount)}
+                            </span>
+                            <span className="text-[11px] text-text-secondary">
+                              Scan with GPay, PhonePe, Paytm, or BHIM
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Mobile Intent Deep Link CTA */}
+                        <a
+                          href={upiUri}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-full py-2.5 px-3 rounded-xl bg-surface hover:bg-surface-container text-xs font-bold text-text-primary flex items-center justify-center gap-2 border border-border-hairline active:scale-95 transition-all"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                          <span>Open UPI App (GPay / PhonePe / Paytm)</span>
+                        </a>
+
+                        {/* 12-Digit UTR Input */}
+                        <div className="space-y-1">
+                          <label className="font-label-sm text-[10px] font-bold text-text-secondary block">
+                            Enter 12-Digit UPI Ref / UTR No. *
+                          </label>
+                          <input
+                            type="text"
+                            maxLength={12}
+                            id="upi-utr-input"
+                            aria-label="12-digit UPI UTR Number"
+                            value={utrNumber}
+                            onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, ""))}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="Enter 12-digit UPI Ref / UTR No. (e.g. 429183746512)"
+                            className="w-full bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono font-bold text-text-primary tracking-wider focus:outline-none focus:border-primary-container"
+                          />
+                          <p className="text-[10px] text-text-secondary">
+                            Find the 12-digit UTR in your UPI app transaction history.
+                          </p>
+                        </div>
+
+                        {/* Optional Payer VPA Input */}
+                        <div className="space-y-1">
+                          <label className="font-label-sm text-[10px] text-text-secondary block">
+                            Your UPI ID / Payer VPA (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={payerVpa}
+                            onChange={(e) => setPayerVpa(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="yourname@bank (optional)"
+                            className="w-full bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono text-text-primary focus:outline-none focus:border-primary-container"
+                          />
+                        </div>
+
+                        {/* Direct Submit Button inside card */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDirectUpiSubmit();
+                          }}
+                          disabled={isSubmitting || utrNumber.length !== 12}
+                          className="w-full py-2.5 rounded-xl bg-primary-container text-white text-xs font-bold hover:bg-primary-container/90 disabled:opacity-50 transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">verified</span>
+                          <span>Submit 12-Digit UTR to Confirm</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-2 pt-1">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            id="upi-id"
+                            value={upiId}
+                            aria-label="Enter Virtual Payment Address (UPI ID)"
+                            onChange={(e) => {
+                              setUpiId(e.target.value);
+                              setUpiVerified(false);
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            placeholder="yourname@bank"
+                            className="flex-1 bg-surface border border-border-hairline rounded-lg px-3 py-2 text-xs font-mono text-text-primary focus:outline-none focus:border-primary-container"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleVerifyUpi();
+                            }}
+                            disabled={isVerifyingUpi}
+                            className="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-xs font-semibold text-text-primary active:scale-95 transition-all"
+                          >
+                            {isVerifyingUpi ? "Checking..." : upiVerified ? "Verified ✓" : "Verify"}
+                          </button>
+                        </div>
+                        {upiVerified && (
+                          <p className="text-[11px] text-success-green flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                            Verified: Harsh Kumar (Demo VPA)
+                          </p>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

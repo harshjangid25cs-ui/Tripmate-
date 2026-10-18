@@ -439,6 +439,11 @@ export function mapDatabasePaymentToAdminPayment(p: DbRecord): PaymentInvoiceRec
     itc_qualified: Boolean(p.itc_qualified ?? true),
     company_name: p.company_name ? String(p.company_name) : undefined,
     gst_number: p.gst_number ? String(p.gst_number) : undefined,
+    utr_number: p.utr_number ? String(p.utr_number) : null,
+    payer_vpa: p.payer_vpa ? String(p.payer_vpa) : null,
+    verification_status: (p.verification_status as "pending_verification" | "verified" | "rejected") || (p.provider === "direct_upi" ? "pending_verification" : "verified"),
+    provider: p.provider ? String(p.provider) : null,
+    provider_payment_id: p.provider_payment_id ? String(p.provider_payment_id) : null,
     created_at: String(p.created_at || new Date().toISOString()),
   };
 }
@@ -479,6 +484,10 @@ export function mapDatabasePricingToAdminPricing(p: DbRecord): PricingConfig {
     gst_rate: Number(p.gst_rate) || 0.18,
     demo_coupon_code: String(p.demo_coupon_code || "EXPLOREINDIA"),
     demo_coupon_discount: Number(p.demo_coupon_discount) || 2000,
+    merchant_upi_vpa: p.merchant_upi_vpa ? String(p.merchant_upi_vpa) : "tripmate@upi",
+    merchant_payee_name: p.merchant_payee_name ? String(p.merchant_payee_name) : "TripMate Travels",
+    active_payment_gateway: (p.active_payment_gateway as PricingConfig["active_payment_gateway"]) || "auto",
+    upi_auto_confirm: p.upi_auto_confirm !== undefined && p.upi_auto_confirm !== null ? Boolean(p.upi_auto_confirm) : true,
   };
 }
 
