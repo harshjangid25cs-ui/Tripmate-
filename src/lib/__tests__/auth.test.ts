@@ -53,19 +53,13 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
       expect(redirect).toBeNull();
     });
 
-    it("redirects /dev/ui to /home in production environment", () => {
-      const prevEnv = process.env.NODE_ENV;
-      try {
-        (process.env as Record<string, string | undefined>).NODE_ENV = "production";
-        const redirect = getAuthRedirectPath({
-          pathname: "/dev/ui",
-          hasUser: false,
-          hasCompletedOnboarding: false,
-        });
-        expect(redirect).toBe("/home");
-      } finally {
-        (process.env as Record<string, string | undefined>).NODE_ENV = prevEnv;
-      }
+    it("allows /dev routes to proceed to page handler where notFound() is invoked in production", () => {
+      const redirect = getAuthRedirectPath({
+        pathname: "/dev/ui",
+        hasUser: false,
+        hasCompletedOnboarding: false,
+      });
+      expect(redirect).toBeNull();
     });
 
     it("allows access to /auth/callback without authentication", () => {
@@ -233,7 +227,7 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
     });
 
     it("evaluates isAuthorizedAdmin correctly across sessions and user metadata", async () => {
-      const { isAuthorizedAdmin, createAdminSessionPayload } = await import("@/lib/admin/admin-auth");
+      const { isAuthorizedAdmin } = await import("@/lib/admin/admin-auth");
       
       // Customer user without admin credentials
       expect(
@@ -276,13 +270,68 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
         })
       ).toBe(true);
 
-      // Valid admin session cookie
-      const validCookie = createAdminSessionPayload("superadmin@tripmate.in", "super_admin");
+      // Legacy plaintext or forged cookie does NOT grant admin access (SEC-01)
       expect(
         isAuthorizedAdmin({
-          adminSessionCookie: validCookie,
+          user: null,
         })
-      ).toBe(true);
+      ).toBe(false);
+    });
+
+    it("requireAdmin() rejects unauthenticated callers and non-admin users (SEC-05)", async () => {
+      const { requireAdmin } = await import("@/lib/admin/admin-auth");
+
+      // Without active session, requireAdmin must throw unauthorized error
+      await expect(requireAdmin()).rejects.toThrow("Unauthorized");
+    });
+
+    it("adminLoginAction rejects wrong password and never swallows errors (SEC-02)", async () => {
+      const { adminLoginAction } = await import("@/lib/actions/admin-auth");
+
+      const result = await adminLoginAction({
+        email: "superadmin@tripmate.in",
+        password: "definitely-wrong-password-12345",
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+
+    it("adminLoginAction rejects unauthorized emails (SEC-01)", async () => {
+      const { adminLoginAction } = await import("@/lib/actions/admin-auth");
+
+      const result = await adminLoginAction({
+        email: "attacker@external.com",
+        password: "any-password",
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.error).toContain("Access denied");
+    });
+
+    it("adminLoginAction rejects fake or invalid TOTP codes (SEC-03)", async () => {
+      const { adminLoginAction } = await import("@/lib/actions/admin-auth");
+
+      const result = await adminLoginAction({
+        email: "superadmin@tripmate.in",
+        password: "wrong-password",
+        totpCode: "000000",
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+
+    it("a non-admin user cannot execute admin actions (SEC-04 / SEC-05)", async () => {
+      const { adminUpdateBookingStatusAction } = await import("@/lib/actions/admin-ops");
+
+      const result = await adminUpdateBookingStatusAction({
+        tripId: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        newStatus: "confirmed",
+      });
+
+      expect(result.ok).toBe(false);
+      expect(result.error).toBe("Unauthorized admin access.");
     });
   });
 });

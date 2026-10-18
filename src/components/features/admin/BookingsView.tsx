@@ -7,6 +7,8 @@ import type { BookingAdmin } from "@/lib/admin/types";
 import {
   adminUpdateBookingStatusAction,
   adminAssignDriverOrVehicleAction,
+  adminOverrideBookingItemsAction,
+  adminSendCustomerNotificationAction,
 } from "@/lib/actions/admin-ops";
 import {
   Search,
@@ -14,6 +16,11 @@ import {
   Ban,
   MessageSquare,
   CheckCircle2,
+  Hotel,
+  Compass,
+  Clock,
+  Bell,
+  Sliders,
 } from "lucide-react";
 
 export function BookingsView() {
@@ -29,6 +36,19 @@ export function BookingsView() {
   const [selectedDriverId, setSelectedDriverId] = useState("");
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
 
+  // Override Items (Hotel, Stops, Adjustments) state
+  const [isOverridingItems, setIsOverridingItems] = useState(false);
+  const [overrideHotelId, setOverrideHotelId] = useState("");
+  const [overrideStopIds, setOverrideStopIds] = useState<string[]>([]);
+  const [overrideAdjustment, setOverrideAdjustment] = useState<number>(0);
+  const [overrideReason, setOverrideReason] = useState("");
+
+  // Live Notification state
+  const [isSendingNotif, setIsSendingNotif] = useState(false);
+  const [notifTitle, setNotifTitle] = useState("");
+  const [notifMessage, setNotifMessage] = useState("");
+  const [notifType, setNotifType] = useState<"booking" | "system" | "offer">("booking");
+
   // Cancel Booking dialog state
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [cancelRefundMode, setCancelRefundMode] = useState<"policy" | "full" | "none" | "custom">("policy");
@@ -40,6 +60,8 @@ export function BookingsView() {
 
   const drivers = AdminService.getDrivers().filter((d) => d.is_active);
   const vehicles = AdminService.getVehicles().filter((v) => v.is_active);
+  const allHotels = AdminService.getHotels();
+  const allStops = AdminService.getStops();
 
   const canCancelPolicy = hasPermission("cancel_by_policy");
   const canCancelDiscretionary = hasPermission("cancel_full_custom_none");
@@ -202,6 +224,117 @@ export function BookingsView() {
           }
         } catch (err: unknown) {
           toast(err instanceof Error ? err.message : "Assignment failed", "error");
+        } finally {
+          setIsMutating(false);
+        }
+      }
+    );
+  };
+
+  const handleOpenDetails = (b: BookingAdmin) => {
+    setSelectedBooking(b);
+    const initialHotelId = b.hotel_id || (b.hotel && "id" in b.hotel ? (b.hotel as { id: string }).id : "") || "";
+    setOverrideHotelId(initialHotelId);
+    setOverrideStopIds(b.stops?.map((s) => s.id) || []);
+    setOverrideAdjustment(0);
+    setOverrideReason("");
+    setIsOverridingItems(false);
+    setIsAssigningDriver(false);
+  };
+
+  const handleOverrideItems = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+    if (!overrideReason.trim()) {
+      toast("Mandatory: Reason required for booking item override", "error");
+      return;
+    }
+
+    setIsMutating(true);
+    try {
+      const res = await adminOverrideBookingItemsAction({
+        tripId: selectedBooking.id,
+        hotelId: overrideHotelId || undefined,
+        stopIds: overrideStopIds,
+        customAdjustment: overrideAdjustment || 0,
+        reason: overrideReason.trim(),
+      });
+
+      if (!res.ok) {
+        toast(res.error || "Failed to override booking items", "error");
+      } else {
+        toast("Booking items updated & total recalculated via trigger", "success");
+        setIsOverridingItems(false);
+        refresh();
+        await refreshOperationalData();
+      }
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Error overriding booking items", "error");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const handleSendNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedBooking) return;
+    if (!notifTitle.trim() || !notifMessage.trim()) {
+      toast("Notification title and message are required", "error");
+      return;
+    }
+
+    setIsMutating(true);
+    try {
+      const validNotifTypes = ["booking_confirmed", "booking_cancelled", "approval_required", "approval_decision", "payment_succeeded", "reminder"] as const;
+      const typeVal = validNotifTypes.includes(notifType as (typeof validNotifTypes)[number])
+        ? (notifType as (typeof validNotifTypes)[number])
+        : "reminder";
+
+      const res = await adminSendCustomerNotificationAction({
+        profileId: selectedBooking.user_id || selectedBooking.customer_id || "",
+        message: `${notifTitle.trim()}: ${notifMessage.trim()}`,
+        type: typeVal,
+        tripId: selectedBooking.id,
+      });
+
+      if (res.ok) {
+        toast(`Live notification broadcasted to ${selectedBooking.customer_name}`, "success");
+        setIsSendingNotif(false);
+        setNotifTitle("");
+        setNotifMessage("");
+      } else {
+        toast(res.error || "Failed to send notification", "error");
+      }
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Notification error", "error");
+    } finally {
+      setIsMutating(false);
+    }
+  };
+
+  const handleQuickUnassign = () => {
+    if (!selectedBooking) return;
+    requestReasonModal(
+      "Unassign Driver & Vehicle",
+      `Set chauffeur and vehicle to Unassigned for booking ${selectedBooking.booking_ref}.`,
+      async (reason) => {
+        setIsMutating(true);
+        try {
+          AdminService.assignDriver(currentAdmin, selectedBooking.id, "", reason);
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(selectedBooking.id);
+          if (isUuid) {
+            await adminAssignDriverOrVehicleAction({
+              tripId: selectedBooking.id,
+              driverId: null,
+              vehicleId: null,
+              reason,
+            });
+          }
+          toast("Driver & vehicle set to Unassigned", "success");
+          refresh();
+          await refreshOperationalData();
+        } catch (err: unknown) {
+          toast(err instanceof Error ? err.message : "Unassign failed", "error");
         } finally {
           setIsMutating(false);
         }
@@ -395,7 +528,7 @@ export function BookingsView() {
                   <td className="py-3.5 text-right">
                     <button
                       type="button"
-                      onClick={() => setSelectedBooking(b)}
+                      onClick={() => handleOpenDetails(b)}
                       className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface hover:border-text-primary px-3 py-1.5 text-xs font-bold text-text-primary ml-auto transition-colors"
                     >
                       <Eye className="h-3.5 w-3.5" />
@@ -439,6 +572,19 @@ export function BookingsView() {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNotifTitle(`Update regarding booking ${selectedBooking.booking_ref}`);
+                    setNotifMessage("");
+                    setIsSendingNotif(true);
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-surface-container px-3 py-1.5 text-xs font-bold text-text-primary transition-all"
+                >
+                  <Bell className="h-3.5 w-3.5 text-primary-container" />
+                  <span>Notify Customer</span>
+                </button>
+
                 {selectedBooking.status !== "confirmed" && (
                   <button
                     type="button"
@@ -604,25 +750,189 @@ export function BookingsView() {
                   </div>
                 </div>
 
+                {/* Booking Inventory Items & Dynamic Override */}
+                <div className="rounded-2xl border border-border-hairline p-4 bg-surface-container-low space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xs font-extrabold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                        <Sliders className="h-3.5 w-3.5 text-primary-container" />
+                        Booking Items & Scoped Inventory
+                      </h3>
+                      <p className="text-[11px] text-text-secondary">
+                        Swap assigned hotel, highway stops, or apply manual price adjustments.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsOverridingItems(!isOverridingItems)}
+                      className="flex items-center gap-1 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-surface-container transition-colors"
+                    >
+                      <Sliders className="h-3.5 w-3.5" />
+                      <span>{isOverridingItems ? "Close" : "Override Items"}</span>
+                    </button>
+                  </div>
+
+                  {/* Current assigned summary */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="rounded-xl border border-border-hairline bg-surface p-3">
+                      <div className="flex items-center gap-2 font-bold text-text-primary mb-1">
+                        <Hotel className="h-3.5 w-3.5 text-primary-container" />
+                        <span>Assigned Hotel</span>
+                      </div>
+                      <p className="text-text-secondary font-medium truncate">
+                        {selectedBooking.hotel?.name || selectedBooking.hotel_name || "No hotel selected"}
+                      </p>
+                      {Boolean(selectedBooking.hotel && selectedBooking.hotel.price_per_night) && (
+                        <p className="text-[11px] text-text-muted tabular-nums">
+                          ₹{selectedBooking.hotel?.price_per_night}/night
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="rounded-xl border border-border-hairline bg-surface p-3">
+                      <div className="flex items-center gap-2 font-bold text-text-primary mb-1">
+                        <Compass className="h-3.5 w-3.5 text-primary-container" />
+                        <span>Assigned Highway Stops</span>
+                      </div>
+                      <p className="text-text-secondary font-medium">
+                        {selectedBooking.stops && selectedBooking.stops.length > 0
+                          ? selectedBooking.stops.map((s) => s.name).join(", ")
+                          : "Direct route (No stops)"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isOverridingItems && (
+                    <form onSubmit={handleOverrideItems} className="rounded-xl border border-border-hairline bg-surface p-4 space-y-3 animate-in fade-in">
+                      <h4 className="text-xs font-bold text-text-primary">Operational Item Override</h4>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-text-secondary mb-1">
+                          Swap Assigned Hotel
+                        </label>
+                        <select
+                          value={overrideHotelId}
+                          onChange={(e) => setOverrideHotelId(e.target.value)}
+                          className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                        >
+                          <option value="">No Hotel / Remove Hotel</option>
+                          {allHotels
+                            .filter((h) => !selectedBooking.destination_id || h.destination_id === selectedBooking.destination_id)
+                            .map((h) => (
+                              <option key={h.id} value={h.id}>
+                                {h.name} (₹{h.price_per_night}/n, {h.rating}★)
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-text-secondary mb-1">
+                          Select Highway Stops
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 bg-surface-container-low rounded-xl border border-border-hairline">
+                          {allStops
+                            .filter((s) => !selectedBooking.destination_id || s.destination_id === selectedBooking.destination_id)
+                            .map((s) => {
+                              const isChecked = overrideStopIds.includes(s.id);
+                              return (
+                                <label key={s.id} className="flex items-center gap-2 text-xs text-text-primary cursor-pointer hover:bg-surface p-1 rounded-lg">
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={(e) => {
+                                      const next = e.target.checked
+                                        ? [...overrideStopIds, s.id]
+                                        : overrideStopIds.filter((id) => id !== s.id);
+                                      setOverrideStopIds(next);
+                                    }}
+                                    className="rounded text-primary-600"
+                                  />
+                                  <span className="truncate">{s.name} ({s.turnaround_text || s.distance_text || "Stop"})</span>
+                                </label>
+                              );
+                            })}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-text-secondary mb-1">
+                          Custom Price Adjustment (₹ positive or negative)
+                        </label>
+                        <input
+                          type="number"
+                          value={overrideAdjustment}
+                          onChange={(e) => setOverrideAdjustment(Number(e.target.value))}
+                          className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-mono tabular-nums text-text-primary"
+                          placeholder="0"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-text-secondary mb-1">
+                          Mandatory Audit Reason <span className="text-rose-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={overrideReason}
+                          onChange={(e) => setOverrideReason(e.target.value)}
+                          placeholder="e.g. Swapped hotel upon customer request"
+                          className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2 border-t border-border-hairline">
+                        <button
+                          type="button"
+                          onClick={() => setIsOverridingItems(false)}
+                          className="rounded-xl border border-border-hairline px-3 py-1.5 text-xs font-bold text-text-secondary hover:bg-surface-container"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={isMutating}
+                          className="rounded-xl bg-primary-container text-white px-4 py-1.5 text-xs font-bold hover:bg-primary-hover disabled:opacity-50"
+                        >
+                          Save & Recalculate Total
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+
                 {/* Driver Assignment Block */}
                 <div className="rounded-2xl border border-slate-200 p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
                       Assigned Driver (§3.D)
                     </h3>
-                    {canAssignDriver && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedDriverId(selectedBooking.driver_id || "none");
-                          setSelectedVehicleId(selectedBooking.vehicle_id || "none");
-                          setIsAssigningDriver(!isAssigningDriver);
-                        }}
-                        className="text-xs font-bold text-primary-600 hover:underline"
-                      >
-                        {selectedBooking.driver ? "Reassign" : "Assign Driver"}
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {canAssignDriver && (
+                        <button
+                          type="button"
+                          onClick={handleQuickUnassign}
+                          disabled={isMutating}
+                          className="text-[11px] font-bold text-text-muted hover:text-rose-600 transition-colors"
+                        >
+                          Unassign All
+                        </button>
+                      )}
+                      {canAssignDriver && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDriverId(selectedBooking.driver_id || "none");
+                            setSelectedVehicleId(selectedBooking.vehicle_id || "none");
+                            setIsAssigningDriver(!isAssigningDriver);
+                          }}
+                          className="text-xs font-bold text-primary-600 hover:underline"
+                        >
+                          {selectedBooking.driver ? "Reassign" : "Assign Driver"}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {selectedBooking.driver ? (
@@ -686,9 +996,42 @@ export function BookingsView() {
                 </div>
               </div>
 
-              {/* Right Col: Internal Notes (Never shown to customer §3.D) */}
+              {/* Right Col: Timeline & Notes */}
               <div className="space-y-4">
-                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 h-full flex flex-col justify-between">
+                {/* Live Status Timeline */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 space-y-3">
+                  <div className="flex items-center gap-1.5 pb-2 border-b border-slate-200">
+                    <Clock className="h-4 w-4 text-slate-500" />
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-600">
+                      Status History & Audit Timeline
+                    </h3>
+                  </div>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                    {AdminService.getStatusHistory(selectedBooking.id).length === 0 ? (
+                      <div className="text-xs text-slate-400 italic p-1">
+                        <span>Current status: </span>
+                        <span className="font-bold text-slate-700 capitalize">{selectedBooking.status}</span>
+                        <p className="text-[10px] text-slate-400 mt-0.5">No prior transitions logged.</p>
+                      </div>
+                    ) : (
+                      AdminService.getStatusHistory(selectedBooking.id).map((item) => (
+                        <div key={item.id} className="rounded-xl border border-slate-200 bg-white p-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-900 capitalize">{item.new_status || item.to_status}</span>
+                            <span className="text-[10px] text-slate-400 tabular-nums">
+                              {new Date(item.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </span>
+                          </div>
+                          {(item.reason || item.note) && (
+                            <p className="text-[11px] text-slate-600 mt-1">{item.reason || item.note}</p>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/50 p-4 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-1.5 pb-2 border-b border-slate-200">
                       <MessageSquare className="h-4 w-4 text-slate-500" />
@@ -868,6 +1211,98 @@ export function BookingsView() {
                   className="rounded-xl bg-rose-600 hover:bg-rose-700 px-5 py-2 text-xs font-bold text-white shadow-sm disabled:opacity-50"
                 >
                   Execute Cancellation & Audit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Send Customer Notification Dialog */}
+      {isSendingNotif && selectedBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl border border-slate-200">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary-600" />
+                <span>Send Live Customer Notification</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsSendingNotif(false)}
+                className="text-slate-400 hover:text-slate-600 rounded-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSendNotification} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">
+                  Recipient
+                </label>
+                <p className="text-xs font-bold text-slate-900">
+                  {selectedBooking.customer_name} ({selectedBooking.customer_email})
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">
+                  Notification Type
+                </label>
+                <select
+                  value={notifType}
+                  onChange={(e) => setNotifType(e.target.value as "booking" | "system" | "offer")}
+                  className="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-900 font-medium"
+                >
+                  <option value="booking">Booking Update</option>
+                  <option value="system">System Notice</option>
+                  <option value="offer">Special Offer / Voucher</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={notifTitle}
+                  onChange={(e) => setNotifTitle(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-900 font-medium"
+                  placeholder="e.g. Chauffeur Assigned to your Jaipur Trip"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">
+                  Message
+                </label>
+                <textarea
+                  rows={3}
+                  value={notifMessage}
+                  onChange={(e) => setNotifMessage(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 p-2 text-xs text-slate-900 font-medium"
+                  placeholder="Write your live message to the customer..."
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsSendingNotif(false)}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isMutating}
+                  className="rounded-xl bg-primary-600 text-white px-5 py-2 text-xs font-bold hover:bg-primary-700 disabled:opacity-50"
+                >
+                  Broadcast Notification
                 </button>
               </div>
             </form>

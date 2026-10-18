@@ -5,6 +5,10 @@ import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { IdReviewItem } from "@/lib/admin/types";
 import {
+  adminGetDocumentSignedUrlAction,
+  adminSendCustomerNotificationAction,
+} from "@/lib/actions/admin-ops";
+import {
   XCircle,
   Eye,
   Clock,
@@ -47,7 +51,7 @@ export function DocumentsView() {
     return () => clearInterval(timer);
   }, [activePreview, previewSecondsLeft, toast]);
 
-  const handleOpenPreview = (item: IdReviewItem) => {
+  const handleOpenPreview = async (item: IdReviewItem) => {
     if (!canView) {
       toast("Restricted: Role does not have permission to view ID documents", "error");
       return;
@@ -64,7 +68,17 @@ export function DocumentsView() {
       "Operator viewed customer ID verification document (60s signed link)"
     );
 
-    setActivePreview(item);
+    let liveUrl = item.doc_url;
+    try {
+      const res = await adminGetDocumentSignedUrlAction(item.doc_url);
+      if (res.ok && res.signedUrl) {
+        liveUrl = res.signedUrl;
+      }
+    } catch {
+      // Use fallback URL if signed URL action fails
+    }
+
+    setActivePreview({ ...item, doc_url: liveUrl });
     setPreviewSecondsLeft(60);
     toast("60-second secure temporary preview link generated", "info");
   };
@@ -78,9 +92,15 @@ export function DocumentsView() {
     requestReasonModal(
       "Approve Government ID",
       `Confirm identity verification for ${item.passenger_name} (${item.booking_ref}). Passenger status will become 'approved'.`,
-      () => {
+      async () => {
         const res = AdminService.reviewIdDocument(currentAdmin, item.id, "approved");
         if (res.ok) {
+          await adminSendCustomerNotificationAction({
+            title: "Identity Document Approved",
+            message: `Verification for passenger ${item.passenger_name} (Booking ${item.booking_ref}) has been approved.`,
+            type: "booking",
+            tripId: item.trip_id,
+          });
           toast(`ID for ${item.passenger_name} approved!`, "success");
           setActivePreview(null);
           refresh();
@@ -91,7 +111,7 @@ export function DocumentsView() {
     );
   };
 
-  const handleConfirmReject = (e: React.FormEvent) => {
+  const handleConfirmReject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rejectingItem) return;
     if (!rejectNote.trim()) {
@@ -108,8 +128,15 @@ export function DocumentsView() {
     );
 
     if (res.ok) {
+      await adminSendCustomerNotificationAction({
+        title: "ID Document Action Required",
+        message: `Your ID verification for passenger ${rejectingItem.passenger_name} (Booking ${rejectingItem.booking_ref}) requires correction: ${rejectNote.trim()}`,
+        type: "booking",
+        tripId: rejectingItem.trip_id,
+      });
+
       toast(
-        `ID rejected. Customer emailed correction request with link to /trips/${rejectingItem.trip_id}/documents`,
+        `ID rejected. Customer notified with re-upload link to /trips/${rejectingItem.trip_id}/documents`,
         "success"
       );
       setRejectingItem(null);

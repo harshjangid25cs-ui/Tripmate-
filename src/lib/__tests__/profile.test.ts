@@ -152,15 +152,14 @@ describe("Milestone M8 — Profile & Notifications (BUILD_PLAN.md & FEATURES §1
       });
     });
 
-    it("verifies fallback profile matches Screen 16 values faithfully", () => {
-      expect(FALLBACK_PROFILE.fullName).toBe("Arjun Kapoor");
-      expect(FALLBACK_PROFILE.email).toBe("arjun.kapoor@tripmate.io");
-      expect(FALLBACK_PROFILE.phone).toBe("+91 98101 23456");
-      expect(FALLBACK_PROFILE.tripsTaken).toBe(14);
-      expect(FALLBACK_PROFILE.savedSpots).toBe(8);
-      expect(FALLBACK_PROFILE.kmLogged).toBe(4850);
-      expect(FALLBACK_PROFILE.lastCompletedJourney?.title).toBe("Jaipur Royal Heritage Circuit");
-      expect(FALLBACK_PROFILE.companyMembership?.companyName).toBe("Acme Tech Pvt Ltd");
+    it("verifies empty initial profile displays zeros and empty states per DAT-03", () => {
+      expect(FALLBACK_PROFILE.fullName).toBe("Traveler");
+      expect(FALLBACK_PROFILE.tripsTaken).toBe(0);
+      expect(FALLBACK_PROFILE.savedSpots).toBe(0);
+      expect(FALLBACK_PROFILE.kmLogged).toBe(0);
+      expect(FALLBACK_PROFILE.lastCompletedJourney).toBeNull();
+      expect(FALLBACK_PROFILE.companyMembership).toBeNull();
+      expect(FALLBACK_PROFILE.savedDestinations).toEqual([]);
     });
   });
 

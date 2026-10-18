@@ -618,13 +618,12 @@ export async function saveTripPassengers({
 export async function uploadIdDocument({
   tripId,
   passengerIndex,
-  fileName,
   fileBytesBase64,
   mimeType,
 }: {
   tripId: string;
   passengerIndex: number;
-  fileName: string;
+  fileName?: string;
   fileBytesBase64: string;
   mimeType: string;
 }): Promise<{ ok: boolean; path?: string; error?: string }> {
@@ -638,18 +637,24 @@ export async function uploadIdDocument({
       return { ok: false, error: "Authentication required." };
     }
 
-    const allowedMime = ["image/jpeg", "image/png", "application/pdf"];
-    if (!allowedMime.includes(mimeType)) {
-      return { ok: false, error: "Only JPG, PNG or PDF files are allowed." };
-    }
+    const MIME_TO_EXT: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "application/pdf": "pdf",
+    };
 
-    const ext = fileName.split(".").pop()?.toLowerCase() ?? "pdf";
-    const filePath = `${user.id}/${tripId}/passenger_${passengerIndex}_${Date.now()}.${ext}`;
+    const ext = MIME_TO_EXT[mimeType];
+    if (!ext) {
+      return { ok: false, error: "Only JPG, PNG, WebP, and PDF files are allowed." };
+    }
 
     const buffer = Buffer.from(fileBytesBase64, "base64");
-    if (buffer.length > 6 * 1024 * 1024) {
-      return { ok: false, error: "Document must be under 6 MB." };
+    if (buffer.length > 5 * 1024 * 1024) {
+      return { ok: false, error: "Document must be under 5 MB." };
     }
+
+    const filePath = `${user.id}/${tripId}/passenger_${passengerIndex}_${Date.now()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("id-documents")
@@ -936,3 +941,59 @@ export async function applyCustomerCouponAction(rawInput: {
     return { ok: false, error: message };
   }
 }
+
+export async function updateTripTransitAction({
+  tripId,
+  originName,
+  originLat,
+  originLng,
+  calculatedDistanceKm,
+  transitMode,
+}: {
+  tripId: string;
+  originName?: string;
+  originLat?: number;
+  originLng?: number;
+  calculatedDistanceKm?: number;
+  transitMode: "local_only" | "live_origin_to_destination";
+}): Promise<ActionResult> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { ok: false, error: "Authentication required." };
+    }
+
+    const { error: updateError } = await supabase
+      .from("trips")
+      .update({
+        origin_name: originName ?? null,
+        origin_lat: originLat ?? null,
+        origin_lng: originLng ?? null,
+        calculated_distance_km: calculatedDistanceKm ?? 0,
+        transit_mode: transitMode,
+      })
+      .eq("id", tripId)
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      return { ok: false, error: updateError.message };
+    }
+
+    // Touch trip_vehicles if present to trigger price recomputation
+    await supabase
+      .from("trip_vehicles")
+      .update({ quantity: 1 })
+      .eq("trip_id", tripId);
+
+    revalidatePath(`/book/${tripId}`, "layout");
+    return { ok: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Unexpected error updating transit mode.";
+    return { ok: false, error: message };
+  }
+}
+

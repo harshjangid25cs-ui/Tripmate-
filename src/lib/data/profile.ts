@@ -2,8 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   type UserProfileData,
   type NotificationItem,
-  FALLBACK_PROFILE,
-  FALLBACK_NOTIFICATIONS,
+  EMPTY_PROFILE,
   computeTripsTaken,
   computeSavedSpotsCount,
   computeKmLogged,
@@ -42,7 +41,7 @@ export async function getUserProfileData(): Promise<UserProfileData> {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return FALLBACK_PROFILE;
+      return EMPTY_PROFILE;
     }
 
     // 1. Fetch user profile row
@@ -56,9 +55,9 @@ export async function getUserProfileData(): Promise<UserProfileData> {
       (profileRow?.full_name as string) ||
       (user.user_metadata?.["full_name"] as string) ||
       user.email?.split("@")[0] ||
-      FALLBACK_PROFILE.fullName;
+      "Traveler";
 
-    const email = (profileRow?.email as string) || user.email || FALLBACK_PROFILE.email;
+    const email = (profileRow?.email as string) || user.email || "";
     const phone = (profileRow?.phone as string) || user.user_metadata?.["phone"] || null;
     const avatarUrl = (profileRow?.avatar_url as string) || null;
 
@@ -83,19 +82,19 @@ export async function getUserProfileData(): Promise<UserProfileData> {
             trips.map((t) => ({ status: t.status, end_date: t.end_date || "" })),
             today
           )
-        : FALLBACK_PROFILE.tripsTaken;
+        : 0;
 
     const kmLogged =
       completedTrips.length > 0
         ? computeKmLogged(
             completedTrips.map((t) => ({ driveKm: t.destinations?.drive_km }))
           )
-        : FALLBACK_PROFILE.kmLogged;
+        : 0;
 
     const loyalty = computeLoyaltyTier(tripsTaken);
 
     // 3. Compute last completed journey
-    let lastCompletedJourney = FALLBACK_PROFILE.lastCompletedJourney;
+    let lastCompletedJourney: UserProfileData["lastCompletedJourney"] = null;
     if (completedTrips.length > 0) {
       // Sort newest completed first
       const sorted = [...completedTrips].sort((a, b) => {
@@ -114,7 +113,6 @@ export async function getUserProfileData(): Promise<UserProfileData> {
           : "Finished recently";
 
         const defaultCover =
-          FALLBACK_PROFILE.lastCompletedJourney?.coverImage ||
           "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80";
 
         lastCompletedJourney = {
@@ -139,10 +137,10 @@ export async function getUserProfileData(): Promise<UserProfileData> {
     const savedSpots =
       savedItems.length > 0
         ? computeSavedSpotsCount(savedItems)
-        : FALLBACK_PROFILE.savedSpots;
+        : 0;
 
     // Fetch saved destinations
-    let savedDestinations = FALLBACK_PROFILE.savedDestinations;
+    let savedDestinations: UserProfileData["savedDestinations"] = [];
     const destItemIds = savedItems
       .filter((i) => i.item_type === "destination")
       .map((i) => i.item_id);
@@ -155,7 +153,6 @@ export async function getUserProfileData(): Promise<UserProfileData> {
 
       if (destList && destList.length > 0) {
         const fallbackCover =
-          FALLBACK_PROFILE.savedDestinations[0]?.coverImage ||
           "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80";
 
         savedDestinations = (destList as Array<{
@@ -185,7 +182,7 @@ export async function getUserProfileData(): Promise<UserProfileData> {
       .eq("profile_id", user.id)
       .maybeSingle();
 
-    let companyMembership = FALLBACK_PROFILE.companyMembership;
+    let companyMembership: UserProfileData["companyMembership"] = null;
     if (memberData) {
       const comp = memberData.companies as unknown as { name: string; gst_number: string | null } | null;
       if (comp) {
@@ -221,7 +218,7 @@ export async function getUserProfileData(): Promise<UserProfileData> {
     };
   } catch (error) {
     console.error("Error fetching user profile data:", error);
-    return FALLBACK_PROFILE;
+    return EMPTY_PROFILE;
   }
 }
 
@@ -233,7 +230,7 @@ export async function getUserNotifications(): Promise<NotificationItem[]> {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return FALLBACK_NOTIFICATIONS;
+      return [];
     }
 
     const { data: rows, error } = await supabase
@@ -243,7 +240,7 @@ export async function getUserNotifications(): Promise<NotificationItem[]> {
       .order("created_at", { ascending: false });
 
     if (error || !rows || rows.length === 0) {
-      return FALLBACK_NOTIFICATIONS;
+      return [];
     }
 
     return (rows as Array<{
@@ -263,6 +260,6 @@ export async function getUserNotifications(): Promise<NotificationItem[]> {
     }));
   } catch (err) {
     console.error("Error loading notifications:", err);
-    return FALLBACK_NOTIFICATIONS;
+    return [];
   }
 }

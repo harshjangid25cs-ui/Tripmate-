@@ -1,4 +1,5 @@
 import * as React from "react";
+import { notFound } from "next/navigation";
 import { getPublicTicketDetails } from "@/lib/data/commercial";
 import { PublicTicketView } from "@/components/features/tickets/public-ticket-view";
 
@@ -11,6 +12,10 @@ interface TicketPageProps {
 export default async function TicketPage({ params }: TicketPageProps) {
   const { ticketCode } = params;
   const ticket = await getPublicTicketDetails(ticketCode);
+
+  if (!ticket) {
+    notFound();
+  }
 
   return <PublicTicketView ticket={ticket} ticketCode={ticketCode} />;
 }

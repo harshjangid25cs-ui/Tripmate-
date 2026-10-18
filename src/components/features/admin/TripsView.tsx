@@ -43,6 +43,7 @@ export function TripsView() {
   const destinations = AdminService.getDestinations();
   const allHotels = AdminService.getHotels();
   const allVehicles = AdminService.getVehicles();
+  const allStops = AdminService.getStops();
 
   const canWrite = hasPermission("catalog_write");
 
@@ -70,9 +71,15 @@ export function TripsView() {
       description: "",
       image_url: "",
       is_active: true,
+      pricing_scope: "local_city_only",
+      local_sightseeing_km_per_day: 50,
+      vehicle_required: true,
       hotel_ids: [],
       vehicle_ids: [],
       stop_ids: [],
+      included_hotel_ids: [],
+      included_vehicle_ids: [],
+      included_stop_ids: [],
     });
     setIsEditing(true);
   };
@@ -145,6 +152,11 @@ export function TripsView() {
       async (reason) => {
         const days = Number(formData.days) || 3;
         const nights = Math.max(0, days - 1);
+        const pricingScope = formData.pricing_scope || "local_city_only";
+        const localSightseeingKmPerDay = Number(formData.local_sightseeing_km_per_day) || 50;
+        const hotelIds = formData.included_hotel_ids ?? formData.hotel_ids ?? [];
+        const vehicleIds = formData.included_vehicle_ids ?? formData.vehicle_ids ?? [];
+        const stopIds = formData.included_stop_ids ?? formData.stop_ids ?? [];
 
         await adminUpsertCircuitAction({
           id: formData.id,
@@ -161,14 +173,33 @@ export function TripsView() {
           imageUrl: formData.image_url || "/images/placeholder.jpg",
           isFeatured: Boolean(formData.is_featured),
           isActive: formData.is_active ?? true,
+          pricingScope,
+          includedHotelIds: hotelIds,
+          includedVehicleIds: vehicleIds,
+          includedStopIds: stopIds,
+          localSightseeingKmPerDay,
           reason,
         });
+
+        const circuitData = {
+          ...formData,
+          days,
+          nights,
+          pricing_scope: pricingScope,
+          local_sightseeing_km_per_day: localSightseeingKmPerDay,
+          included_hotel_ids: hotelIds,
+          included_vehicle_ids: vehicleIds,
+          included_stop_ids: stopIds,
+          hotel_ids: hotelIds,
+          vehicle_ids: vehicleIds,
+          stop_ids: stopIds,
+        };
 
         if (formData.id) {
           AdminService.updateCircuit(
             currentAdmin,
             formData.id,
-            formData,
+            circuitData,
             reason
           );
           toast(`Updated circuit ${formData.title}`, "success");
@@ -190,12 +221,17 @@ export function TripsView() {
               image_url: formData.image_url || "/images/placeholder.jpg",
               is_featured: Boolean(formData.is_featured),
               is_active: formData.is_active ?? true,
+              pricing_scope: pricingScope,
+              local_sightseeing_km_per_day: localSightseeingKmPerDay,
+              included_hotel_ids: hotelIds,
+              included_vehicle_ids: vehicleIds,
+              included_stop_ids: stopIds,
               allow_car: formData.allow_car ?? null,
               allow_bike: formData.allow_bike ?? null,
               vehicle_required: formData.vehicle_required ?? null,
-              hotel_ids: formData.hotel_ids || [],
-              vehicle_ids: formData.vehicle_ids || [],
-              stop_ids: formData.stop_ids || [],
+              hotel_ids: hotelIds,
+              vehicle_ids: vehicleIds,
+              stop_ids: stopIds,
             },
             reason
           );
@@ -504,70 +540,179 @@ export function TripsView() {
                 helperText="Uploaded to Supabase catalog-images bucket and displayed on the trip card."
               />
 
-              {/* Per-trip availability selectors (§3.B) */}
-              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-200 space-y-3">
-                <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-                  Per-Trip Availability Matrix (§3.B)
+              {/* Pricing & KM Scope Configuration */}
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-border-hairline space-y-3">
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-text-muted">
+                  Pricing Scope & Transit Distance Engine
                 </h4>
-                <p className="text-[11px] text-slate-500">
-                  Select specific items offered for this circuit. If empty, it falls back to all active items for the destination.
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-secondary mb-1">
+                      Coverage & KM Scope
+                    </label>
+                    <select
+                      value={formData.pricing_scope || "local_city_only"}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          pricing_scope: e.target.value as "local_city_only" | "origin_transit_included",
+                        })
+                      }
+                      className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                    >
+                      <option value="local_city_only">
+                        Destination Local Only (No highway KM)
+                      </option>
+                      <option value="origin_transit_included">
+                        Outstation Transit (Origin to destination)
+                      </option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-secondary mb-1">
+                      Local Sightseeing Allowance (km/day)
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.local_sightseeing_km_per_day ?? 50}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          local_sightseeing_km_per_day: Number(e.target.value),
+                        })
+                      }
+                      className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-mono tabular-nums text-text-primary"
+                      placeholder="50"
+                    />
+                  </div>
+                </div>
+                <p className="text-[11px] text-text-secondary">
+                  When set to &quot;Destination Local Only&quot;, the base price covers local destination sightseeing and hotel stay without charging arbitrary outstation transit kilometers.
                 </p>
+              </div>
+
+              {/* Per-trip availability selectors (§3.B) */}
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-border-hairline space-y-4">
+                <div>
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-text-muted">
+                    Trip-Scoped Inventory Matrix (§3.B)
+                  </h4>
+                  <p className="text-[11px] text-text-secondary">
+                    Select specific items offered for this circuit. If empty, all active destination items are bookable.
+                  </p>
+                </div>
 
                 {/* Hotels checkbox list */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    Hotels Offered:
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 bg-white rounded-xl border border-slate-200">
-                    {allHotels.map((h) => {
-                      const isChecked = (formData.hotel_ids || []).includes(h.id);
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-bold text-text-secondary flex items-center gap-1.5">
+                      <Hotel className="h-3 w-3 text-primary-container" />
+                      Hotels Allowed ({formData.included_hotel_ids?.length || formData.hotel_ids?.length || 0} selected)
+                    </label>
+                    <span className="text-[10px] text-text-muted">Filtered for destination</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2.5 bg-surface rounded-xl border border-border-hairline">
+                    {allHotels
+                      .filter((h) => !formData.destination_id || h.destination_id === formData.destination_id)
+                      .map((h) => {
+                        const current = formData.included_hotel_ids || formData.hotel_ids || [];
+                        const isChecked = current.includes(h.id);
+                        return (
+                          <label key={h.id} className="flex items-center gap-2 text-xs text-text-primary cursor-pointer hover:bg-surface-container-low p-1 rounded-lg">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                const next = e.target.checked
+                                  ? [...current, h.id]
+                                  : current.filter((id) => id !== h.id);
+                                setFormData({ ...formData, included_hotel_ids: next, hotel_ids: next });
+                              }}
+                              className="rounded text-primary-600"
+                            />
+                            <span className="truncate">{h.name}</span>
+                            <span className="text-[10px] text-text-muted tabular-nums ml-auto">₹{h.price_per_night}/n</span>
+                          </label>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Vehicles checkbox list */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-bold text-text-secondary flex items-center gap-1.5">
+                      <Car className="h-3 w-3 text-primary-container" />
+                      Fleet Vehicles Allowed ({formData.included_vehicle_ids?.length || formData.vehicle_ids?.length || 0} selected)
+                    </label>
+                    <label className="flex items-center gap-1.5 text-[11px] font-bold text-text-primary cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={!(formData.vehicle_required ?? true)}
+                        onChange={(e) => setFormData({ ...formData, vehicle_required: !e.target.checked })}
+                        className="rounded text-primary-600"
+                      />
+                      <span>Allow Own Transport / No Vehicle</span>
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2.5 bg-surface rounded-xl border border-border-hairline">
+                    {allVehicles.map((v) => {
+                      const current = formData.included_vehicle_ids || formData.vehicle_ids || [];
+                      const isChecked = current.includes(v.id);
                       return (
-                        <label key={h.id} className="flex items-center gap-2 text-xs text-slate-700">
+                        <label key={v.id} className="flex items-center gap-2 text-xs text-text-primary cursor-pointer hover:bg-surface-container-low p-1 rounded-lg">
                           <input
                             type="checkbox"
                             checked={isChecked}
                             onChange={(e) => {
-                              const current = formData.hotel_ids || [];
                               const next = e.target.checked
-                                ? [...current, h.id]
-                                : current.filter((id) => id !== h.id);
-                              setFormData({ ...formData, hotel_ids: next });
+                                ? [...current, v.id]
+                                : current.filter((id) => id !== v.id);
+                              setFormData({ ...formData, included_vehicle_ids: next, vehicle_ids: next });
                             }}
                             className="rounded text-primary-600"
                           />
-                          <span className="truncate">{h.name}</span>
+                          <span className="truncate">{v.name} ({v.type})</span>
+                          <span className="text-[10px] text-text-muted tabular-nums ml-auto">₹{v.price_per_day}/d</span>
                         </label>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* Vehicles checkbox list */}
+                {/* Highway Stops checkbox list */}
                 <div>
-                  <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                    Fleet Vehicles Offered:
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-32 overflow-y-auto p-2 bg-white rounded-xl border border-slate-200">
-                    {allVehicles.map((v) => {
-                      const isChecked = (formData.vehicle_ids || []).includes(v.id);
-                      return (
-                        <label key={v.id} className="flex items-center gap-2 text-xs text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              const current = formData.vehicle_ids || [];
-                              const next = e.target.checked
-                                ? [...current, v.id]
-                                : current.filter((id) => id !== v.id);
-                              setFormData({ ...formData, vehicle_ids: next });
-                            }}
-                            className="rounded text-primary-600"
-                          />
-                          <span className="truncate">{v.name} ({v.type})</span>
-                        </label>
-                      );
-                    })}
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-bold text-text-secondary flex items-center gap-1.5">
+                      <Compass className="h-3 w-3 text-primary-container" />
+                      Highway Stops Offered ({formData.included_stop_ids?.length || formData.stop_ids?.length || 0} selected)
+                    </label>
+                    <span className="text-[10px] text-text-muted">Selectable in Step 4</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2.5 bg-surface rounded-xl border border-border-hairline">
+                    {allStops
+                      .filter((s) => !formData.destination_id || s.destination_id === formData.destination_id)
+                      .map((s) => {
+                        const current = formData.included_stop_ids || formData.stop_ids || [];
+                        const isChecked = current.includes(s.id);
+                        return (
+                          <label key={s.id} className="flex items-center gap-2 text-xs text-text-primary cursor-pointer hover:bg-surface-container-low p-1 rounded-lg">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={(e) => {
+                                const next = e.target.checked
+                                  ? [...current, s.id]
+                                  : current.filter((id) => id !== s.id);
+                                setFormData({ ...formData, included_stop_ids: next, stop_ids: next });
+                              }}
+                              className="rounded text-primary-600"
+                            />
+                            <span className="truncate">{s.name}</span>
+                            <span className="text-[10px] text-text-muted tabular-nums ml-auto">{s.turnaround_text || s.distance_text || "Stop"}</span>
+                          </label>
+                        );
+                      })}
                   </div>
                 </div>
               </div>

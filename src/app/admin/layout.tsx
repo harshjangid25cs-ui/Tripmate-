@@ -3,12 +3,10 @@ export const revalidate = 0;
 
 import type { Metadata } from "next";
 import React from "react";
-import { cookies, headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { AdminProvider } from "@/lib/admin/admin-context";
 import { AdminHeader } from "@/components/features/admin/AdminHeader";
-import { ADMIN_SESSION_COOKIE, isAuthorizedAdmin } from "@/lib/admin/admin-auth";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/admin/admin-auth";
 
 import { fetchAdminOperationalSnapshot } from "@/lib/actions/admin-ops";
 
@@ -42,26 +40,8 @@ export default async function AdminLayout({
     );
   }
 
-  // Enforce server-side role-based authorization check
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const adminCookie = cookies().get(ADMIN_SESSION_COOKIE)?.value;
-  const isAuthorized = isAuthorizedAdmin({
-    user,
-    adminSessionCookie: adminCookie,
-  });
-
-  if (!isAuthorized) {
-    if (!user) {
-      redirect("/admin/login");
-    } else {
-      // Authenticated regular travelers are redirected to /home to prevent privilege escalation
-      redirect("/home");
-    }
-  }
+  // Enforce server-side role-based authorization check + AAL2 MFA via requireAdmin
+  await requireAdmin({ redirectOnFail: true });
 
   // Load live Supabase operational snapshot for authorized operator
   let initialSnapshot = null;

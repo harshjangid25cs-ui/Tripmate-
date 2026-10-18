@@ -3,13 +3,12 @@
 import crypto from "crypto";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import {
   createRazorpayOrderSchema,
   verifyRazorpayPaymentSchema,
   type VerifyRazorpayPaymentInput,
 } from "@/lib/validations/actions";
-import { sendTransactionalEmail } from "@/lib/notifications/email";
+import { executePaymentConfirmation } from "@/lib/payments/completion";
 
 /**
  * Creates an authorized Razorpay Order via Razorpay REST API
@@ -128,64 +127,19 @@ export async function verifyRazorpayPaymentAction(
     return { ok: false, error: "Razorpay signature verification failed. Payment cannot be confirmed." };
   }
 
-  // 2. Signature is authentic: execute trip confirmation in database
-  const supabase = createAdminClient();
-
+  // 2. Signature is authentic: execute trip confirmation, payment upsert, and invoice generation
   try {
-    const { data: trip, error: tripErr } = await supabase
-      .from("trips")
-      .select("id, booking_ref, total_amount, currency, user_id")
-      .eq("id", tripId)
-      .single();
-
-    if (tripErr || !trip) {
-      return { ok: false, error: "Trip record not found." };
-    }
-
-    const { data: profile } = trip.user_id
-      ? await supabase
-          .from("profiles")
-          .select("full_name, email")
-          .eq("id", trip.user_id)
-          .single()
-      : { data: null };
-
-    // Mark trip confirmed
-    await supabase
-      .from("trips")
-      .update({
-        status: "confirmed",
-        confirmed_at: new Date().toISOString(),
-      })
-      .eq("id", tripId);
-
-    // Record verified payment row
-    const validMethod = (["upi", "card", "netbanking", "emi"].includes(paymentMethod)
-      ? paymentMethod
-      : "upi") as "upi" | "card" | "netbanking" | "emi";
-
-    await supabase.from("payments").insert({
-      trip_id: tripId,
-      user_id: trip.user_id,
-      amount: Number(trip.total_amount),
-      currency: trip.currency || "INR",
-      method: validMethod,
+    const confirmation = await executePaymentConfirmation({
+      tripId,
       provider: "razorpay",
-      status: "succeeded",
-      provider_reference: razorpay_payment_id,
+      providerReference: razorpay_payment_id,
+      method: (["upi", "card", "netbanking", "emi"].includes(paymentMethod)
+        ? paymentMethod
+        : "upi") as "upi" | "card" | "netbanking" | "emi",
     });
 
-    // 3. Dispatch automated confirmation email & audit trail
-    if (profile?.email) {
-      await sendTransactionalEmail({
-        to: profile.email,
-        template: "booking_confirmed",
-        subject: `Booking Confirmed #${trip.booking_ref} - TripMate`,
-        content: `Namaste ${profile.full_name || "Traveler"},\n\nYour TripMate journey (Ref #${trip.booking_ref}) has been successfully confirmed. Payment ID: ${razorpay_payment_id}.\n\nAccess your live itinerary and driver assignment details in your profile.`,
-        relatedTripId: tripId,
-        relatedBookingRef: trip.booking_ref,
-        sentBy: "Razorpay Payment Gateway",
-      });
+    if (!confirmation.ok) {
+      return { ok: false, error: confirmation.error || "Payment confirmation failed." };
     }
 
     revalidatePath(`/book/${tripId}`, "layout");
@@ -193,7 +147,7 @@ export async function verifyRazorpayPaymentAction(
 
     return {
       ok: true,
-      bookingRef: trip.booking_ref,
+      bookingRef: confirmation.bookingRef,
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Error recording verified payment.";

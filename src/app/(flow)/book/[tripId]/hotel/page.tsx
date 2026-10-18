@@ -13,7 +13,7 @@ interface PageProps {
 
 export default async function HotelSelectionPage({ params }: PageProps) {
   const tripData = await getValidatedDraftTrip(params.tripId, "hotel");
-  const hotels = await getHotelsForDestination(tripData.trip.destination_id);
+  const hotels = await getHotelsForDestination(tripData.trip.destination_id, tripData.trip.id);
 
   return <HotelSelectionView tripData={tripData} hotels={hotels} />;
 }

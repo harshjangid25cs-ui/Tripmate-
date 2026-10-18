@@ -134,6 +134,11 @@ export interface DestinationHighlight {
   id: string;
   destination_id: string;
   title: string;
+  category?: string | null;
+  duration_text?: string | null;
+  badge?: string | null;
+  description?: string | null;
+  image_path?: string | null;
   sort_order: number;
 }
 
@@ -155,6 +160,9 @@ export interface DestinationAdmin {
   origin_label: string;
   drive_hours: number | null;
   drive_km: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  local_radius_km?: number;
   is_featured: boolean;
   is_bookable: boolean;
   is_active: boolean;
@@ -189,6 +197,11 @@ export interface CircuitAdmin {
   hotel_ids: string[];
   vehicle_ids: string[];
   stop_ids: string[];
+  pricing_scope?: "local_city_only" | "origin_transit_included";
+  included_hotel_ids?: string[];
+  included_vehicle_ids?: string[];
+  included_stop_ids?: string[];
+  local_sightseeing_km_per_day?: number;
 }
 
 export interface HotelAdmin {
@@ -269,6 +282,27 @@ export interface BookingNote {
   created_at: string;
 }
 
+export interface TripStatusHistoryItem {
+  id: string;
+  trip_id: string;
+  from_status?: string | null;
+  to_status: string;
+  new_status?: string;
+  note?: string | null;
+  reason?: string | null;
+  changed_by?: string | null;
+  created_at: string;
+}
+
+export interface CompanyPolicyAdmin {
+  id: string;
+  company_id: string;
+  type: "hotel" | "vehicle" | "approval";
+  rule_text: string;
+  limit_value: number | null;
+  created_at?: string;
+}
+
 export interface BookingAdmin {
   id: string;
   booking_ref: string;
@@ -276,9 +310,12 @@ export interface BookingAdmin {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  customer_id?: string;
   kind: "normal" | "commercial";
   destination_name: string;
+  destination_id?: string;
   circuit_name?: string;
+  circuit_id?: string;
   start_date: string;
   end_date: string;
   days: number;
@@ -296,6 +333,17 @@ export interface BookingAdmin {
   driver_id?: string | null;
   vehicle?: VehicleAdmin | null;
   vehicle_id?: string | null;
+  hotel?: (HotelAdmin | { name: string; price_per_night?: number }) | null;
+  hotel_id?: string | null;
+  hotel_name?: string | null;
+  stop_ids?: string[];
+  stops?: StopAdmin[];
+  origin_name?: string | null;
+  origin_lat?: number | null;
+  origin_lng?: number | null;
+  calculated_distance_km?: number;
+  transit_mode?: "local_only" | "live_origin_to_destination";
+  status_history?: TripStatusHistoryItem[];
   travellers: TravellerAdmin[];
   notes: BookingNote[];
   created_at: string;
@@ -452,6 +500,9 @@ export interface AdminOperationalSnapshot {
   pricing?: PricingConfig;
   emailLogs?: EmailLogEntry[];
   auditLogs?: AuditLogEntry[];
+  highlights?: DestinationHighlight[];
+  policies?: CompanyPolicyAdmin[];
+  tripStatusHistory?: TripStatusHistoryItem[];
   metrics: {
     totalRevenue: number;
     pendingApprovalsCount: number;

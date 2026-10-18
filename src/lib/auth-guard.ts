@@ -18,11 +18,8 @@ export function getAuthRedirectPath({
   hasCompletedOnboarding,
   isAdminUser = false,
 }: AuthGuardOptions): string | null {
-  // Protect /dev routes so they are only accessible when process.env.NODE_ENV !== "production"
+  // Protect /dev routes: allow reaching the page handler where notFound() renders 404 in production
   if (pathname.startsWith("/dev")) {
-    if (process.env.NODE_ENV === "production") {
-      return "/home";
-    }
     return null;
   }
 

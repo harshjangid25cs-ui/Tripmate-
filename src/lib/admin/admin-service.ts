@@ -22,6 +22,9 @@ import type {
   CompanyAdmin,
   EmailLogEntry,
   PaymentInvoiceRecord,
+  DestinationHighlight,
+  CompanyPolicyAdmin,
+  TripStatusHistoryItem,
 } from "./types";
 import {
   adminUpsertCouponAction,
@@ -149,6 +152,9 @@ interface AdminState {
   emails: EmailLogEntry[];
   payments: PaymentInvoiceRecord[];
   auditLogs: AuditLogEntry[];
+  highlights: DestinationHighlight[];
+  policies: CompanyPolicyAdmin[];
+  tripStatusHistory: TripStatusHistoryItem[];
   admins: AdminUser[];
 }
 
@@ -173,6 +179,9 @@ function createDefaultState(): AdminState {
     emails: [],
     payments: [],
     auditLogs: [],
+    highlights: [],
+    policies: [],
+    tripStatusHistory: [],
     admins: INITIAL_ADMINS,
   };
 }
@@ -216,6 +225,9 @@ export class AdminService {
     pricing?: PricingConfig;
     emailLogs?: EmailLogEntry[];
     auditLogs?: AuditLogEntry[];
+    highlights?: DestinationHighlight[];
+    policies?: CompanyPolicyAdmin[];
+    tripStatusHistory?: TripStatusHistoryItem[];
   }) {
     if (snapshot.bookings !== undefined) {
       currentState.bookings = [...snapshot.bookings];
@@ -258,6 +270,15 @@ export class AdminService {
     }
     if (snapshot.auditLogs !== undefined && snapshot.auditLogs.length > 0) {
       currentState.auditLogs = [...snapshot.auditLogs];
+    }
+    if (snapshot.highlights !== undefined) {
+      currentState.highlights = [...snapshot.highlights];
+    }
+    if (snapshot.policies !== undefined) {
+      currentState.policies = [...snapshot.policies];
+    }
+    if (snapshot.tripStatusHistory !== undefined) {
+      currentState.tripStatusHistory = [...snapshot.tripStatusHistory];
     }
 
     this.notify();
@@ -705,6 +726,164 @@ export class AdminService {
     );
     this.notify();
     return true;
+  }
+
+  // --- Destination Highlights ---
+  static getHighlights(): DestinationHighlight[] {
+    return [...currentState.highlights];
+  }
+
+  static getHighlightsForDestination(destinationId: string): DestinationHighlight[] {
+    return currentState.highlights.filter((h) => h.destination_id === destinationId);
+  }
+
+  static upsertHighlight(actor: AdminActor, highlight: DestinationHighlight, reason?: string) {
+    const idx = currentState.highlights.findIndex((h) => h.id === highlight.id);
+    if (idx >= 0) {
+      const before = { ...currentState.highlights[idx] };
+      currentState.highlights[idx] = { ...currentState.highlights[idx], ...highlight };
+      this.writeAudit(
+        actor,
+        "update",
+        "destination_highlight",
+        highlight.id,
+        before as unknown as Record<string, unknown>,
+        highlight as unknown as Record<string, unknown>,
+        reason || "Updated destination highlight"
+      );
+    } else {
+      currentState.highlights.push(highlight);
+      this.writeAudit(
+        actor,
+        "create",
+        "destination_highlight",
+        highlight.id,
+        null,
+        highlight as unknown as Record<string, unknown>,
+        reason || "Created destination highlight"
+      );
+    }
+    const dest = currentState.destinations.find((d) => d.id === highlight.destination_id);
+    if (dest) {
+      dest.highlights = currentState.highlights.filter((h) => h.destination_id === dest.id);
+    }
+    this.notify();
+    return highlight;
+  }
+
+  static deleteHighlight(actor: AdminActor, highlightId: string, reason?: string) {
+    const idx = currentState.highlights.findIndex((h) => h.id === highlightId);
+    const [removed] = currentState.highlights.splice(idx, 1);
+    if (!removed) return false;
+    const dest = currentState.destinations.find((d) => d.id === removed.destination_id);
+    if (dest) {
+      dest.highlights = currentState.highlights.filter((h) => h.destination_id === dest.id);
+    }
+    this.writeAudit(
+      actor,
+      "delete",
+      "destination_highlight",
+      highlightId,
+      removed as unknown as Record<string, unknown>,
+      null,
+      reason || "Deleted destination highlight"
+    );
+    this.notify();
+    return true;
+  }
+
+  // --- Corporate Policies ---
+  static getPolicies(): CompanyPolicyAdmin[] {
+    return [...currentState.policies];
+  }
+
+  static getPoliciesForCompany(companyId: string): CompanyPolicyAdmin[] {
+    return currentState.policies.filter((p) => p.company_id === companyId);
+  }
+
+  static upsertPolicy(actor: AdminActor, policy: CompanyPolicyAdmin, reason?: string) {
+    const idx = currentState.policies.findIndex((p) => p.id === policy.id);
+    if (idx >= 0) {
+      const before = { ...currentState.policies[idx] };
+      currentState.policies[idx] = { ...currentState.policies[idx], ...policy };
+      this.writeAudit(
+        actor,
+        "update",
+        "company_policy",
+        policy.id,
+        before as unknown as Record<string, unknown>,
+        policy as unknown as Record<string, unknown>,
+        reason || "Updated company policy"
+      );
+    } else {
+      currentState.policies.push(policy);
+      this.writeAudit(
+        actor,
+        "create",
+        "company_policy",
+        policy.id,
+        null,
+        policy as unknown as Record<string, unknown>,
+        reason || "Created company policy"
+      );
+    }
+    this.notify();
+    return policy;
+  }
+
+  // --- Trip Status History ---
+  static getStatusHistory(tripId?: string): TripStatusHistoryItem[] {
+    if (tripId) {
+      return currentState.tripStatusHistory.filter((h) => h.trip_id === tripId);
+    }
+    return [...currentState.tripStatusHistory];
+  }
+
+  // --- Booking Overrides ---
+  static overrideBookingItems(
+    actor: AdminActor,
+    tripId: string,
+    updates: {
+      hotel_id?: string | null;
+      vehicle_id?: string | null;
+      driver_id?: string | null;
+      stop_ids?: string[] | null;
+    },
+    reason?: string
+  ) {
+    const booking = currentState.bookings.find((b) => b.id === tripId);
+    if (!booking) return null;
+    const before = { ...booking };
+    if (updates.hotel_id !== undefined) {
+      booking.hotel_id = updates.hotel_id;
+      const hotel = currentState.hotels.find((h) => h.id === updates.hotel_id);
+      booking.hotel_name = hotel ? hotel.name : undefined;
+    }
+    if (updates.vehicle_id !== undefined) {
+      booking.vehicle_id = updates.vehicle_id;
+      const v = currentState.vehicles.find((veh) => veh.id === updates.vehicle_id);
+      booking.vehicle = v || null;
+    }
+    if (updates.driver_id !== undefined) {
+      booking.driver_id = updates.driver_id;
+      const d = currentState.drivers.find((drv) => drv.id === updates.driver_id);
+      booking.driver = d || null;
+    }
+    if (updates.stop_ids !== undefined && updates.stop_ids !== null) {
+      booking.stop_ids = updates.stop_ids;
+      booking.stops = currentState.stops.filter((s) => updates.stop_ids!.includes(s.id));
+    }
+    this.writeAudit(
+      actor,
+      "override_booking",
+      "trip",
+      tripId,
+      before as unknown as Record<string, unknown>,
+      booking as unknown as Record<string, unknown>,
+      reason || "Operational booking items override"
+    );
+    this.notify();
+    return booking;
   }
 
   // --- Trips / Circuits ---
@@ -1604,6 +1783,34 @@ export class AdminService {
       null,
       { member: newMem },
       `Added ${email} as company ${role}`
+    );
+
+    this.notify();
+    return { ok: true };
+  }
+
+  static removeCompanyMember(
+    actor: AdminActor,
+    companyId: string,
+    memberId: string
+  ): { ok: boolean; error?: string } {
+    const comp = currentState.companies.find((c) => c.id === companyId);
+    if (!comp || !comp.members) return { ok: false, error: "Company or members not found" };
+
+    const member = comp.members.find((m) => m.id === memberId);
+    if (!member) return { ok: false, error: "Member not found" };
+
+    comp.members = comp.members.filter((m) => m.id !== memberId);
+    comp.member_count = comp.members.length;
+
+    this.writeAudit(
+      actor,
+      "remove_member",
+      "company",
+      companyId,
+      { member },
+      null,
+      `Removed member ${member.email}`
     );
 
     this.notify();

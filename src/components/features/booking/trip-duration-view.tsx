@@ -8,6 +8,7 @@ import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
 import { getDurationHeroImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { updateTripDuration } from "@/lib/actions/trips";
+import { LocationCoverageScopeBar } from "./LocationCoverageScopeBar";
 
 interface TripDurationViewProps {
   tripData: ValidatedDraftTrip;
@@ -362,6 +363,19 @@ export function TripDurationView({ tripData }: TripDurationViewProps) {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Location & Coverage Scope Bar */}
+          <div className="px-margin-mobile mb-2">
+            <LocationCoverageScopeBar
+              tripId={trip.id}
+              destinationName={destination?.name ?? "Jaipur"}
+              destinationLat={Number(destination?.latitude) || 26.9124}
+              destinationLng={Number(destination?.longitude) || 75.7873}
+              initialTransitMode={trip.transit_mode as "local_only" | "live_origin_to_destination" | null}
+              initialOriginName={trip.origin_name}
+              initialCalculatedKm={trip.calculated_distance_km}
+            />
           </div>
 
           {/* Quick Day Selector Horizontal Chips */}

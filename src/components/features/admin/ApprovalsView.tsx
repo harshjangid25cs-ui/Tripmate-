@@ -5,7 +5,8 @@ import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { CommercialApprovalItem } from "@/lib/admin/types";
 import { adminResolveApprovalAction } from "@/lib/actions/admin-ops";
-import { Building2, CheckCircle2 } from "lucide-react";
+import { Building2, CheckCircle2, Bus, Users } from "lucide-react";
+import { generateBusSeatGrid } from "@/lib/data/commercial-types";
 
 export function ApprovalsView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast, refreshOperationalData } = useAdmin();
@@ -13,6 +14,7 @@ export function ApprovalsView() {
     AdminService.getCommercialApprovals()
   );
   const [isMutating, setIsMutating] = useState(false);
+  const [inspectingItem, setInspectingItem] = useState<CommercialApprovalItem | null>(null);
 
   const canApprove = hasPermission("commercial_approval");
   const refresh = () => setApprovals(AdminService.getCommercialApprovals());
@@ -144,6 +146,15 @@ export function ApprovalsView() {
                   </span>
                 </div>
 
+                <button
+                  type="button"
+                  onClick={() => setInspectingItem(item)}
+                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface px-3 py-2 text-xs font-bold text-text-primary transition-colors"
+                >
+                  <Bus className="h-3.5 w-3.5 text-primary-container" />
+                  <span>Inspect Manifest</span>
+                </button>
+
                 {canApprove && (
                   <div className="flex items-center gap-2">
                     <button
@@ -168,6 +179,144 @@ export function ApprovalsView() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 2x2 Bus Seat Manifest Inspector Modal */}
+      {inspectingItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-card-surface p-6 shadow-xl border border-border-hairline">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+              <div>
+                <h2 className="text-lg font-black text-text-primary flex items-center gap-2">
+                  <Bus className="h-5 w-5 text-primary-container" />
+                  <span>2x2 Bus Seating Manifest: {inspectingItem.company_name}</span>
+                </h2>
+                <p className="text-xs text-text-secondary mt-0.5">
+                  Fleet: {inspectingItem.vehicle_name} · {inspectingItem.passenger_count} Passenger Seats Assigned
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInspectingItem(null)}
+                className="text-text-secondary hover:text-text-primary rounded-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Content: Bus Layout & Roster */}
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column: 2x2 Bus Layout Visual */}
+              <div className="rounded-xl border border-border-hairline bg-surface p-4">
+                <div className="flex items-center justify-between pb-2 mb-3 border-b border-border-hairline text-xs font-bold text-text-secondary">
+                  <span>Front of Bus / Driver</span>
+                  <span className="text-[10px] uppercase text-text-muted">2x2 Luxury Configuration</span>
+                </div>
+
+                {/* 2x2 rows */}
+                <div className="space-y-2">
+                  {(() => {
+                    const booking = AdminService.getBookings().find((b) => b.id === inspectingItem.trip_id);
+                    const paxList = booking?.travellers || [];
+                    const assignedSeatLabels = paxList.map((p) => p.seat_label).filter(Boolean) as string[];
+                    const grid = generateBusSeatGrid(32, assignedSeatLabels, []);
+
+                    return grid.map((row) => (
+                      <div key={row.rowNumber} className="flex items-center justify-between gap-3 text-xs font-mono">
+                        {/* Left seats A, B */}
+                        <div className="flex gap-1.5 flex-1 justify-end">
+                          {row.leftSeats.map((seat) => {
+                            const pax = paxList.find((p) => p.seat_label === seat.label);
+                            const isOccupied = Boolean(pax);
+                            return (
+                              <div
+                                key={seat.label}
+                                className={`h-8 w-10 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold border transition-all ${
+                                  isOccupied
+                                    ? "bg-purple-100 text-purple-900 border-purple-300 shadow-2xs"
+                                    : "bg-surface-container text-text-secondary border-border-hairline"
+                                }`}
+                                title={pax ? `${pax.full_name} (${seat.label})` : `Seat ${seat.label}: Available`}
+                              >
+                                <span>{seat.label}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Aisle */}
+                        <div className="w-5 text-center text-[10px] text-text-muted">||</div>
+
+                        {/* Right seats C, D */}
+                        <div className="flex gap-1.5 flex-1 justify-start">
+                          {row.rightSeats.map((seat) => {
+                            const pax = paxList.find((p) => p.seat_label === seat.label);
+                            const isOccupied = Boolean(pax);
+                            return (
+                              <div
+                                key={seat.label}
+                                className={`h-8 w-10 rounded-lg flex flex-col items-center justify-center text-[10px] font-bold border transition-all ${
+                                  isOccupied
+                                    ? "bg-purple-100 text-purple-900 border-purple-300 shadow-2xs"
+                                    : "bg-surface-container text-text-secondary border-border-hairline"
+                                }`}
+                                title={pax ? `${pax.full_name} (${seat.label})` : `Seat ${seat.label}: Available`}
+                              >
+                                <span>{seat.label}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+
+              {/* Right Column: Passenger Manifest Table */}
+              <div className="rounded-xl border border-border-hairline bg-surface p-4 flex flex-col justify-between">
+                <div>
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-text-muted mb-3 flex items-center gap-1.5">
+                    <Users className="h-3.5 w-3.5 text-primary-container" />
+                    <span>Passenger Manifest</span>
+                  </h4>
+                  <div className="space-y-2 max-h-72 overflow-y-auto pr-1 text-xs">
+                    {(() => {
+                      const booking = AdminService.getBookings().find((b) => b.id === inspectingItem.trip_id);
+                      const paxList = booking?.travellers || [];
+                      if (paxList.length === 0) {
+                        return <p className="text-text-muted italic">No passengers checked into this manifest yet.</p>;
+                      }
+                      return paxList.map((pax) => (
+                        <div key={pax.id} className="rounded-lg border border-border-hairline bg-card-surface p-2 flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-text-primary">{pax.full_name}</span>
+                            <span className="text-[10px] text-text-secondary ml-1.5">
+                              {pax.id_doc_status ? `ID: ${pax.id_doc_status}` : ""}
+                            </span>
+                          </div>
+                          <span className="font-mono font-bold text-[11px] rounded bg-purple-50 text-purple-800 border border-purple-200 px-2 py-0.5">
+                            Seat {pax.seat_label || "Unassigned"}
+                          </span>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-border-hairline flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setInspectingItem(null)}
+                    className="rounded-xl border border-border-hairline px-4 py-1.5 text-xs font-bold text-text-secondary hover:bg-surface-container"
+                  >
+                    Close Manifest
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

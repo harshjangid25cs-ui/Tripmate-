@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { CompanyAdmin } from "@/lib/admin/types";
-import { Plus, Users } from "lucide-react";
+import { Plus, Users, Trash2, Shield, Edit3 } from "lucide-react";
+import { adminUpsertCompanyPolicyAction } from "@/lib/actions/admin-ops";
 
 export function CompaniesView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
@@ -16,6 +17,11 @@ export function CompaniesView() {
   const [compName, setCompName] = useState("");
   const [compGst, setCompGst] = useState("");
   const [compLimit, setCompLimit] = useState<number>(150000);
+
+  // Policy Editor state
+  const [editingPolicyCompany, setEditingPolicyCompany] = useState<CompanyAdmin | null>(null);
+  const [policyBudget, setPolicyBudget] = useState<number>(150000);
+  const [policyRequiresApproval, setPolicyRequiresApproval] = useState<boolean>(true);
 
   // Add Member state
   const [memberEmail, setMemberEmail] = useState("");
@@ -44,6 +50,50 @@ export function CompaniesView() {
         setCompName("");
         setCompGst("");
         refresh();
+      }
+    );
+  };
+
+  const handleSavePolicy = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPolicyCompany) return;
+
+    try {
+      await adminUpsertCompanyPolicyAction({
+        companyId: editingPolicyCompany.id,
+        maxBudgetPerTrip: policyBudget,
+        requiresApproval: policyRequiresApproval,
+        reason: "Superadmin updated spending policy via admin console",
+      });
+      AdminService.updateCompany(
+        currentAdmin,
+        editingPolicyCompany.id,
+        { approval_limit: policyBudget },
+        "Updated company spending policy"
+      );
+      toast(`Spending policy saved for ${editingPolicyCompany.name}`, "success");
+      setEditingPolicyCompany(null);
+      refresh();
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Failed to update policy", "error");
+    }
+  };
+
+  const handleRemoveMember = (memberId: string, memberName: string) => {
+    if (!selectedCompany) return;
+    requestReasonModal(
+      "Remove Member",
+      `Remove ${memberName} from ${selectedCompany.name} corporate roster?`,
+      () => {
+        const res = AdminService.removeCompanyMember(currentAdmin, selectedCompany.id, memberId);
+        if (res.ok) {
+          toast(`Removed ${memberName} from roster`, "success");
+          refresh();
+          const updated = AdminService.getCompanies().find((c) => c.id === selectedCompany.id);
+          if (updated) setSelectedCompany(updated);
+        } else {
+          toast(res.error || "Failed to remove member", "error");
+        }
       }
     );
   };
@@ -145,8 +195,23 @@ export function CompaniesView() {
                 className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface"
               >
                 <Users className="h-3.5 w-3.5 text-text-secondary" />
-                <span>Manage Roster</span>
+                <span>Manage Roster ({c.member_count})</span>
               </button>
+
+              {canWrite && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingPolicyCompany(c);
+                    setPolicyBudget(c.approval_limit || 150000);
+                    setPolicyRequiresApproval(true);
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface"
+                >
+                  <Edit3 className="h-3.5 w-3.5 text-text-secondary" />
+                  <span>Spending Policy</span>
+                </button>
+              )}
             </div>
           </div>
         ))}
@@ -216,9 +281,76 @@ export function CompaniesView() {
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-primary-container hover:bg-primary-container/90 px-5 py-2 text-xs font-bold text-white shadow-xs"
+                  className="rounded-xl bg-primary-container hover:bg-primary-hover px-5 py-2 text-xs font-bold text-white shadow-xs"
                 >
                   Create Company
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Spending Policy Modal */}
+      {editingPolicyCompany && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-card-surface p-6 shadow-xl border border-border-hairline">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+              <h2 className="text-lg font-black text-text-primary flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary-container" />
+                <span>Policy: {editingPolicyCompany.name}</span>
+              </h2>
+              <button
+                type="button"
+                onClick={() => setEditingPolicyCompany(null)}
+                className="text-text-secondary hover:text-text-primary rounded-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePolicy} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1">
+                  Max Budget Per Trip (₹)
+                </label>
+                <input
+                  type="number"
+                  value={policyBudget}
+                  onChange={(e) => setPolicyBudget(Number(e.target.value))}
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs font-mono font-bold text-text-primary focus:bg-card-surface"
+                  required
+                />
+                <p className="mt-1 text-[11px] text-text-secondary">
+                  Trips with total amount greater than this require executive authorization.
+                </p>
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-xs font-bold text-text-primary cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={policyRequiresApproval}
+                    onChange={(e) => setPolicyRequiresApproval(e.target.checked)}
+                    className="rounded text-primary-600"
+                  />
+                  <span>Enforce Executive Commercial Approval</span>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-border-hairline">
+                <button
+                  type="button"
+                  onClick={() => setEditingPolicyCompany(null)}
+                  className="rounded-xl border border-border-hairline bg-surface px-4 py-2 text-xs font-bold text-text-primary hover:bg-card-surface"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-primary-container hover:bg-primary-hover px-5 py-2 text-xs font-bold text-white shadow-xs"
+                >
+                  Save Policy
                 </button>
               </div>
             </form>
@@ -262,9 +394,21 @@ export function CompaniesView() {
                         <p className="text-[10px] text-text-secondary/70">{m.designation}</p>
                       )}
                     </div>
-                    <span className="rounded bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-bold uppercase text-text-secondary">
-                      {m.role}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-bold uppercase text-text-secondary">
+                        {m.role}
+                      </span>
+                      {canWrite && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(m.id, m.full_name)}
+                          className="text-rose-600 hover:text-rose-800 p-1 rounded-lg transition-colors"
+                          title="Remove Member"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))
               )}

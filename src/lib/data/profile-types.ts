@@ -163,84 +163,31 @@ export function formatIndianPhone(phone: string | null | undefined): string {
 }
 
 /**
- * Fallback profile matching Screen 16 (Arjun Kapoor).
+ * Initial empty profile for new users (DAT-03).
+ * New users see zeros and empty states without synthetic fake data.
  */
-export const FALLBACK_PROFILE: UserProfileData = {
-  id: "fallback-user-id",
-  fullName: "Arjun Kapoor",
-  email: "arjun.kapoor@tripmate.io",
-  phone: "+91 98101 23456",
+export const EMPTY_PROFILE: UserProfileData = {
+  id: "guest",
+  fullName: "Traveler",
+  email: "",
+  phone: null,
   avatarUrl: null,
-  membershipTier: "Tripmate Explorer Tier",
-  level: 2,
-  tripsTaken: 14,
-  savedSpots: 8,
-  kmLogged: 4850,
+  membershipTier: "Member",
+  level: 1,
+  tripsTaken: 0,
+  savedSpots: 0,
+  kmLogged: 0,
   progressToNextTier: {
     tripsToNext: 3,
-    progressPct: 68,
-    nextTierName: "Voyager",
+    progressPct: 0,
+    nextTierName: "Silver",
   },
-  lastCompletedJourney: {
-    tripId: "demo-completed-trip",
-    title: "Jaipur Royal Heritage Circuit",
-    destinationName: "Jaipur",
-    coverImage:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuC3lKfU0zSJ-C0H7BCeVoX_hypMfleFjwxI4kl6ooFH-HUgRtMKl2B-DFENylJjbVZ4WWbbKUmFuT3IqpUiihsPfhT46Du1gN8q6hO4bA0zFWtFV5pARxpAC9XtPmKBVcy204NTJHEhVAduVDKaNpW0CLYPOG10Wtqys94VodYSXYwXs2w6N2bfvf3oEcGCs4wnIKZsavVTivpy6ku2jAeojvuwl4GItxgtMZ5N9rKm2L6dQvTW5-HBdg",
-    finishedDateStr: "Finished 12 Oct",
-    nights: 3,
-    staysCount: 4,
-  },
-  companyMembership: {
-    companyName: "Acme Tech Pvt Ltd",
-    gstNumber: "07AABCA1234F1Z5",
-    role: "member",
-    department: "Engineering",
-    designation: "Tech Lead",
-  },
-  savedDestinations: [
-    {
-      id: "dest-jaipur",
-      name: "Jaipur",
-      slug: "jaipur",
-      region: "Rajasthan",
-      coverImage:
-        "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80",
-      tagline: "The Royal Pink City with majestic palaces and vibrant bazaars",
-      rating: 4.8,
-    },
-    {
-      id: "dest-udaipur",
-      name: "Udaipur",
-      slug: "udaipur",
-      region: "Rajasthan",
-      coverImage:
-        "https://images.unsplash.com/photo-1615836245337-f5b9b2303f10?auto=format&fit=crop&w=800&q=80",
-      tagline: "City of shimmering lakes and fairytale palaces",
-      rating: 4.9,
-    },
-    {
-      id: "dest-munnar",
-      name: "Munnar",
-      slug: "munnar",
-      region: "Kerala",
-      coverImage:
-        "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80",
-      tagline: "Rolling tea plantations and misty Western Ghats",
-      rating: 4.9,
-    },
-    {
-      id: "dest-hampi",
-      name: "Hampi",
-      slug: "hampi",
-      region: "Karnataka",
-      coverImage:
-        "https://images.unsplash.com/photo-1600100397608-f010f443b7ec?auto=format&fit=crop&w=800&q=80",
-      tagline: "Ancient Vijayanagara ruins and surreal boulder landscapes",
-      rating: 4.85,
-    },
-  ],
+  lastCompletedJourney: null,
+  companyMembership: null,
+  savedDestinations: [],
 };
+
+export const FALLBACK_PROFILE: UserProfileData = EMPTY_PROFILE;
 
 export const FALLBACK_NOTIFICATIONS: NotificationItem[] = [
   {

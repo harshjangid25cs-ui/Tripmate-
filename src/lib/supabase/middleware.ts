@@ -2,10 +2,15 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
 import { getAuthRedirectPath, ONBOARDING_COOKIE_NAME } from "@/lib/auth-guard";
-import { ADMIN_SESSION_COOKIE, isAuthorizedAdmin } from "@/lib/admin/admin-auth";
+import { isAuthorizedAdmin } from "@/lib/admin/admin-auth";
 import { getSupabaseEnv } from "./env";
 
 export async function updateSession(request: NextRequest) {
+  // In production, /dev routes do not exist: return genuine HTTP 404
+  if (process.env.NODE_ENV === "production" && request.nextUrl.pathname.startsWith("/dev")) {
+    return NextResponse.rewrite(new URL("/_not-found", request.url), { status: 404 });
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", request.nextUrl.pathname);
 
@@ -46,10 +51,8 @@ export async function updateSession(request: NextRequest) {
   const hasCompletedOnboarding =
     request.cookies.get(ONBOARDING_COOKIE_NAME)?.value === "true";
 
-  const adminCookie = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
   const isAdminUser = isAuthorizedAdmin({
     user,
-    adminSessionCookie: adminCookie,
   });
 
   const redirectPath = getAuthRedirectPath({

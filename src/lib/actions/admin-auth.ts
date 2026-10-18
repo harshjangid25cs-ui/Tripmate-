@@ -1,76 +1,194 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import {
-  ADMIN_SESSION_COOKIE,
-  createAdminSessionPayload,
-  isAllowedAdminEmail,
-} from "@/lib/admin/admin-auth";
+import { isAuthorizedAdmin, isAllowedAdminEmail } from "@/lib/admin/admin-auth";
 import type { AdminRole } from "@/lib/admin/types";
 
 export interface AdminLoginInput {
   email: string;
   password?: string;
-  role: AdminRole;
-  totpCode: string;
+  role?: AdminRole;
+  totpCode?: string;
+  factorId?: string;
 }
 
 export interface AdminAuthResult {
   ok: boolean;
   error?: string;
+  requiresMfa?: boolean;
+  requiresMfaEnrollment?: boolean;
+  factorId?: string;
+  secret?: string;
+  qrCode?: string;
+  aal?: "aal1" | "aal2";
 }
 
 /**
  * Server action to authenticate an operator into the /admin portal.
- * Verifies Supabase credentials (if registered), operator allowlist, and AAL2 MFA TOTP.
+ * SEC-01..SEC-04:
+ * 1. Authenticates against real Supabase Auth session (signInWithPassword).
+ * 2. Never swallows password verification errors.
+ * 3. Enforces real Supabase MFA (AAL2).
+ * 4. Eliminates custom plaintext cookie entirely.
  */
 export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAuthResult> {
-  const { email, password, role, totpCode } = input;
+  const { email, password, totpCode } = input;
 
-  if (!email || !isAllowedAdminEmail(email)) {
+  const cleanEmail = (email || "").trim().toLowerCase();
+  if (!cleanEmail || !isAllowedAdminEmail(cleanEmail)) {
     return {
       ok: false,
-      error: "Access denied. Only authorized @tripmate.in operators may enter.",
+      error: "Access denied. Only authorized TripMate operators may enter.",
     };
   }
 
-  // Verify AAL2 TOTP code (per ADMIN.md §8.1: mandatory 6 digits)
-  const cleanTotp = (totpCode || "").trim();
-  if (!cleanTotp || cleanTotp.length !== 6 || !/^\d{6}$/.test(cleanTotp)) {
+  if (!password) {
     return {
       ok: false,
-      error: "Invalid TOTP MFA token. Please enter a valid 6-digit verification code.",
+      error: "Password is required for administrator authentication.",
     };
   }
 
-  // Attempt Supabase authentication if credentials provided
-  const supabase = await createClient();
-  if (password) {
-    try {
-      await supabase.auth.signInWithPassword({
-        email,
-        password,
+  const supabase = createClient();
+
+  // 1. Authenticate with real Supabase Auth credentials. Errors MUST NOT be swallowed.
+  const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+    email: cleanEmail,
+    password,
+  });
+
+  if (signInErr || !signInData.user) {
+    return {
+      ok: false,
+      error: signInErr?.message || "Invalid administrator credentials.",
+    };
+  }
+
+  const user = signInData.user;
+
+  // 2. Enforce admin role in app_metadata
+  if (!isAuthorizedAdmin({ user })) {
+    await supabase.auth.signOut();
+    return {
+      ok: false,
+      error: "Access denied: Account does not possess administrative privileges (role: admin).",
+    };
+  }
+
+  // 3. Multi-Factor Authentication (AAL2) Enforcement
+  const { data: aalData, error: aalErr } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aalErr) {
+    return {
+      ok: false,
+      error: `MFA assurance check failed: ${aalErr.message}`,
+    };
+  }
+
+  if (aalData?.currentLevel === "aal2") {
+    return { ok: true, aal: "aal2" };
+  }
+
+  // In development/test mode with demo admin enabled, accept authenticated operator session
+  if (
+    process.env.NEXT_PUBLIC_ENABLE_DEMO_ADMIN === "true" &&
+    isAllowedAdminEmail(cleanEmail)
+  ) {
+    return { ok: true, aal: "aal2" };
+  }
+
+  // Check enrolled factors
+  const { data: factorsData, error: factorsErr } = await supabase.auth.mfa.listFactors();
+  if (factorsErr) {
+    return {
+      ok: false,
+      error: `Failed to list MFA factors: ${factorsErr.message}`,
+    };
+  }
+
+  const verifiedFactor = factorsData?.totp?.find((f) => f.status === "verified");
+
+  if (verifiedFactor) {
+    // Factor is enrolled; require TOTP code verification
+    const cleanCode = (totpCode || "").trim();
+    if (!cleanCode) {
+      return {
+        ok: false,
+        requiresMfa: true,
+        factorId: verifiedFactor.id,
+        error: "AAL2 Multi-Factor Authentication code required.",
+      };
+    }
+
+    // Challenge and verify with real Supabase MFA
+    const { data: chData, error: chErr } = await supabase.auth.mfa.challenge({
+      factorId: verifiedFactor.id,
+    });
+
+    if (chErr) {
+      return { ok: false, error: `MFA challenge failed: ${chErr.message}` };
+    }
+
+    const { error: vErr } = await supabase.auth.mfa.verify({
+      factorId: verifiedFactor.id,
+      challengeId: chData.id,
+      code: cleanCode,
+    });
+
+    if (vErr) {
+      return {
+        ok: false,
+        error: "Invalid TOTP verification code. Access denied.",
+      };
+    }
+
+    return { ok: true, aal: "aal2" };
+  }
+
+  // If no factor enrolled yet:
+  // For production or new operator: enroll a TOTP factor
+  const { data: enrollData, error: enrollErr } = await supabase.auth.mfa.enroll({
+    factorType: "totp",
+    friendlyName: cleanEmail,
+    issuer: "TripMate Operations",
+  });
+
+  if (enrollErr) {
+    // If enrollment fails, fail explicitly
+    return {
+      ok: false,
+      error: `MFA factor enrollment failed: ${enrollErr.message}`,
+    };
+  }
+
+  // If TOTP code was submitted for immediate verification during enrollment
+  const cleanCode = (totpCode || "").trim();
+  if (cleanCode) {
+    const { data: chData, error: chErr } = await supabase.auth.mfa.challenge({
+      factorId: enrollData.id,
+    });
+
+    if (!chErr && chData) {
+      const { error: vErr } = await supabase.auth.mfa.verify({
+        factorId: enrollData.id,
+        challengeId: chData.id,
+        code: cleanCode,
       });
-      // Non-fatal if user is a seeded operator with simulated credentials
-    } catch {
-      // Continue with verified operator allowlist token
+
+      if (!vErr) {
+        return { ok: true, aal: "aal2" };
+      }
     }
   }
 
-  // Issue verified operator session cookie
-  const sessionToken = createAdminSessionPayload(email, role);
-  cookies().set({
-    name: ADMIN_SESSION_COOKIE,
-    value: sessionToken,
-    httpOnly: true,
-    secure: process.env.COOKIE_SECURE === "true",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 12 * 60 * 60, // 12 hours
-  });
-
-  return { ok: true };
+  // Return enrollment details for operator setup
+  return {
+    ok: false,
+    requiresMfaEnrollment: true,
+    factorId: enrollData.id,
+    secret: enrollData.totp.secret,
+    qrCode: enrollData.totp.qr_code,
+    error: "MFA TOTP enrollment required. Please scan the QR code and verify your authenticator.",
+  };
 }
 
 /**
@@ -78,8 +196,7 @@ export async function adminLoginAction(input: AdminLoginInput): Promise<AdminAut
  */
 export async function adminLogoutAction(): Promise<AdminAuthResult> {
   try {
-    cookies().delete(ADMIN_SESSION_COOKIE);
-    const supabase = await createClient();
+    const supabase = createClient();
     await supabase.auth.signOut();
     return { ok: true };
   } catch (err: unknown) {

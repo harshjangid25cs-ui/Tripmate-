@@ -13,7 +13,7 @@ interface PageProps {
 
 export default async function StopsSelectionPage({ params }: PageProps) {
   const tripData = await getValidatedDraftTrip(params.tripId, "stops");
-  const stops = await getStopsForDestination(tripData.trip.destination_id);
+  const stops = await getStopsForDestination(tripData.trip.destination_id, tripData.trip.id);
 
   return <StopsSelectionView tripData={tripData} stops={stops} />;
 }

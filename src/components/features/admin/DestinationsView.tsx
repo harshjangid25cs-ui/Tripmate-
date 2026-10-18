@@ -3,11 +3,15 @@
 import React, { useState, useEffect } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
-import type { DestinationAdmin } from "@/lib/admin/types";
+import type { DestinationAdmin, DestinationHighlight } from "@/lib/admin/types";
 import {
   adminUpsertDestinationAction,
   adminDeleteDestinationAction,
   adminToggleDestinationStatusAction,
+  adminUpsertDestinationHighlightAction,
+  adminDeleteDestinationHighlightAction,
+  adminUpsertHotelAction,
+  adminUpsertStopAction,
 } from "@/lib/actions/admin-ops";
 import {
   CheckCircle2,
@@ -18,6 +22,10 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  Navigation,
+  Sparkles,
+  Building,
+  Milestone,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -47,6 +55,19 @@ export function DestinationsView() {
   // Edit / Create Form state
   const [formData, setFormData] = useState<Partial<DestinationAdmin>>({});
 
+  // Sub-items inside modal: Highlights & Matrix
+  const [modalHighlights, setModalHighlights] = useState<DestinationHighlight[]>([]);
+  const [newHighTitle, setNewHighTitle] = useState("");
+  const [newHighCategory, setNewHighCategory] = useState("Sightseeing");
+  const newHighDuration = "2 Hours";
+  const [newHighBadge, setNewHighBadge] = useState("");
+  const [newHighDesc, setNewHighDesc] = useState("");
+  const [newHighPhoto, setNewHighPhoto] = useState("");
+  const [isSavingHighlight, setIsSavingHighlight] = useState(false);
+
+  const allHotels = AdminService.getHotels();
+  const allStops = AdminService.getStops();
+
   const canWrite = hasPermission("catalog_write");
 
   const refresh = () => {
@@ -56,6 +77,16 @@ export function DestinationsView() {
   useEffect(() => {
     return AdminService.subscribe(refresh);
   }, []);
+
+  // When opening edit modal, populate highlights
+  useEffect(() => {
+    if (formData.id) {
+      const highs = AdminService.getHighlightsForDestination(formData.id);
+      setModalHighlights(highs.length > 0 ? highs : formData.highlights || []);
+    } else {
+      setModalHighlights([]);
+    }
+  }, [formData.id, formData.highlights]);
 
   const handleMakeBookable = (dest: DestinationAdmin, currentVal: boolean) => {
     if (!canWrite) {
@@ -156,6 +187,153 @@ export function DestinationsView() {
     );
   };
 
+  const handleAutoFillCoords = () => {
+    const slug = (formData.slug || "").toLowerCase();
+    const name = (formData.name || "").toLowerCase();
+    
+    if (slug.includes("jaipur") || name.includes("jaipur")) {
+      setFormData((prev) => ({ ...prev, latitude: 26.9124, longitude: 75.7873, local_radius_km: 40 }));
+      toast("Auto-filled coordinates for Jaipur (26.9124°N, 75.7873°E)", "success");
+      return;
+    }
+    if (slug.includes("udaipur") || name.includes("udaipur")) {
+      setFormData((prev) => ({ ...prev, latitude: 24.5854, longitude: 73.7125, local_radius_km: 40 }));
+      toast("Auto-filled coordinates for Udaipur (24.5854°N, 73.7125°E)", "success");
+      return;
+    }
+    if (slug.includes("jaisalmer") || name.includes("jaisalmer")) {
+      setFormData((prev) => ({ ...prev, latitude: 26.9157, longitude: 70.9083, local_radius_km: 50 }));
+      toast("Auto-filled coordinates for Jaisalmer (26.9157°N, 70.9083°E)", "success");
+      return;
+    }
+    if (slug.includes("jodhpur") || name.includes("jodhpur")) {
+      setFormData((prev) => ({ ...prev, latitude: 26.2389, longitude: 73.0243, local_radius_km: 40 }));
+      toast("Auto-filled coordinates for Jodhpur (26.2389°N, 73.0243°E)", "success");
+      return;
+    }
+
+    if (typeof window !== "undefined" && navigator.geolocation) {
+      toast("Detecting live coordinates from GPS...", "info");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setFormData((prev) => ({
+            ...prev,
+            latitude: Number(pos.coords.latitude.toFixed(6)),
+            longitude: Number(pos.coords.longitude.toFixed(6)),
+            local_radius_km: 40,
+          }));
+          toast(`Detected GPS: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`, "success");
+        },
+        () => {
+          setFormData((prev) => ({ ...prev, latitude: 26.9124, longitude: 75.7873, local_radius_km: 40 }));
+          toast("Defaulted to Jaipur hub coordinates (26.9124, 75.7873)", "info");
+        }
+      );
+    } else {
+      setFormData((prev) => ({ ...prev, latitude: 26.9124, longitude: 75.7873, local_radius_km: 40 }));
+      toast("Set to Jaipur hub coordinates", "info");
+    }
+  };
+
+  const handleAddHighlight = async () => {
+    if (!formData.id) {
+      toast("Please save the destination first before adding highlights", "error");
+      return;
+    }
+    if (!newHighTitle.trim()) {
+      toast("Highlight title is required", "error");
+      return;
+    }
+
+    setIsSavingHighlight(true);
+    try {
+      const res = await adminUpsertDestinationHighlightAction({
+        destinationId: formData.id,
+        title: newHighTitle.trim(),
+        category: newHighCategory,
+        durationText: newHighDuration,
+        badge: newHighBadge.trim() || null,
+        description: newHighDesc.trim() || null,
+        sortOrder: modalHighlights.length + 1,
+      });
+
+      if (res.ok) {
+        toast(`Added attraction '${newHighTitle}'`, "success");
+        setNewHighTitle("");
+        setNewHighDesc("");
+        setNewHighBadge("");
+        setNewHighPhoto("");
+        await refreshOperationalData();
+        if (formData.id) {
+          setModalHighlights(AdminService.getHighlightsForDestination(formData.id));
+        }
+      } else {
+        toast(res.error || "Failed to save attraction", "error");
+      }
+    } finally {
+      setIsSavingHighlight(false);
+    }
+  };
+
+  const handleDeleteHighlight = async (hId: string, title: string) => {
+    const res = await adminDeleteDestinationHighlightAction({ id: hId });
+    if (res.ok) {
+      AdminService.deleteHighlight(currentAdmin, hId);
+      setModalHighlights((prev) => prev.filter((h) => h.id !== hId));
+      toast(`Deleted highlight '${title}'`, "success");
+      await refreshOperationalData();
+    } else {
+      toast("Failed to delete highlight", "error");
+    }
+  };
+
+  const handleToggleHotel = async (hotelId: string, currentAssigned: boolean) => {
+    if (!formData.id) return;
+    const nextDestId = currentAssigned ? null : formData.id;
+    const hotel = allHotels.find((h) => h.id === hotelId);
+    if (!hotel) return;
+
+    await adminUpsertHotelAction({
+      id: hotel.id,
+      destinationId: nextDestId || "",
+      name: hotel.name,
+      description: "",
+      neighborhood: hotel.neighborhood,
+      distanceText: hotel.distance_text,
+      pricePerNight: hotel.price_per_night,
+      rating: hotel.rating,
+      badge: hotel.badge,
+      amenities: hotel.amenities,
+      imageUrl: hotel.image_url,
+      isActive: hotel.is_active,
+    });
+    hotel.destination_id = nextDestId || "";
+    toast(`${hotel.name} ${nextDestId ? "assigned to" : "removed from"} this destination`, "success");
+    refresh();
+  };
+
+  const handleToggleStop = async (stopId: string, currentAssigned: boolean) => {
+    if (!formData.id) return;
+    const nextDestId = currentAssigned ? null : formData.id;
+    const stop = allStops.find((s) => s.id === stopId);
+    if (!stop) return;
+
+    await adminUpsertStopAction({
+      id: stop.id,
+      destinationId: nextDestId,
+      name: stop.name,
+      price: stop.price,
+      pricingUnit: stop.pricing_unit,
+      distanceText: stop.distance_text,
+      turnaroundText: stop.turnaround_text,
+      amenities: stop.amenities,
+      isActive: stop.is_active,
+    });
+    stop.destination_id = nextDestId || "";
+    toast(`${stop.name} ${nextDestId ? "assigned to" : "removed from"} this destination`, "success");
+    refresh();
+  };
+
   const handleSaveForm = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.slug) {
@@ -182,6 +360,9 @@ export function DestinationsView() {
           isBookable: Boolean(formData.is_bookable),
           isActive: formData.is_active ?? true,
           isFeatured: Boolean(formData.is_featured),
+          latitude: formData.latitude !== null && formData.latitude !== undefined ? Number(formData.latitude) : null,
+          longitude: formData.longitude !== null && formData.longitude !== undefined ? Number(formData.longitude) : null,
+          localRadiusKm: Number(formData.local_radius_km) || 40,
           reason,
         });
 
@@ -222,6 +403,9 @@ export function DestinationsView() {
               min_days: Number(formData.min_days) || 2,
               max_days: Number(formData.max_days) || 7,
               max_travellers: Number(formData.max_travellers) || 10,
+              latitude: formData.latitude !== null && formData.latitude !== undefined ? Number(formData.latitude) : null,
+              longitude: formData.longitude !== null && formData.longitude !== undefined ? Number(formData.longitude) : null,
+              local_radius_km: Number(formData.local_radius_km) || 40,
             },
             reason
           );
@@ -632,6 +816,227 @@ export function DestinationsView() {
                       onChange={(e) => setFormData({ ...formData, max_travellers: Number(e.target.value) })}
                       className="w-full rounded-xl border border-slate-300 p-1.5 text-xs"
                     />
+                  </div>
+                </div>
+              </div>
+
+              {/* Geo-Coordinates & Local Sightseeing Radius */}
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-border-hairline">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-text-muted">
+                      Geo-Coordinates & Local Sightseeing Radius
+                    </h4>
+                    <p className="text-[11px] text-text-secondary">
+                      Required for real-world distance calculation and local-in-city pricing scoping.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAutoFillCoords}
+                    className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-surface-container transition-colors"
+                  >
+                    <Navigation className="h-3 w-3 text-primary-container" />
+                    <span>Auto-Fill / Use GPS</span>
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-secondary mb-1">Latitude (°N)</label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={formData.latitude ?? ""}
+                      onChange={(e) => setFormData({ ...formData, latitude: e.target.value === "" ? null : Number(e.target.value) })}
+                      className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-mono tabular-nums text-text-primary"
+                      placeholder="e.g. 26.912400"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-secondary mb-1">Longitude (°E)</label>
+                    <input
+                      type="number"
+                      step="0.000001"
+                      value={formData.longitude ?? ""}
+                      onChange={(e) => setFormData({ ...formData, longitude: e.target.value === "" ? null : Number(e.target.value) })}
+                      className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-mono tabular-nums text-text-primary"
+                      placeholder="e.g. 75.787300"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-text-secondary mb-1">Local Sightseeing Radius (km)</label>
+                    <input
+                      type="number"
+                      value={formData.local_radius_km ?? 40}
+                      onChange={(e) => setFormData({ ...formData, local_radius_km: Number(e.target.value) })}
+                      className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs font-mono tabular-nums text-text-primary"
+                      placeholder="40"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Destination Highlights Manager */}
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-border-hairline space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-primary-container" />
+                      Destination Highlights & Attractions ({modalHighlights.length})
+                    </h4>
+                    <p className="text-[11px] text-text-secondary">
+                      Sub-places and attractions displayed to customers on destination explore cards.
+                    </p>
+                  </div>
+                </div>
+
+                {formData.id ? (
+                  <div className="space-y-3">
+                    {modalHighlights.length > 0 ? (
+                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                        {modalHighlights.map((h) => (
+                          <div key={h.id} className="flex items-center justify-between rounded-xl border border-border-hairline bg-surface p-2.5 text-xs">
+                            <div className="flex-1 min-w-0 pr-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-text-primary truncate">{h.title}</span>
+                                {h.category && (
+                                  <span className="rounded-md bg-surface-container px-1.5 py-0.5 text-[10px] font-bold text-text-secondary">
+                                    {h.category}
+                                  </span>
+                                )}
+                              </div>
+                              {h.description && (
+                                <p className="text-[11px] text-text-secondary line-clamp-1">{h.description}</p>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteHighlight(h.id, h.title)}
+                              className="text-rose-600 hover:text-rose-800 p-1 rounded-lg"
+                              title="Delete Highlight"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-text-muted italic">No highlights added yet for this destination.</p>
+                    )}
+
+                    <div className="rounded-xl border border-dashed border-border-hairline bg-surface p-3 space-y-2">
+                      <span className="text-[11px] font-bold text-text-primary">Add New Attraction / Highlight</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={newHighTitle}
+                          onChange={(e) => setNewHighTitle(e.target.value)}
+                          placeholder="Attraction Title (e.g. Amber Fort)"
+                          className="rounded-lg border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                        />
+                        <input
+                          type="text"
+                          value={newHighCategory}
+                          onChange={(e) => setNewHighCategory(e.target.value)}
+                          placeholder="Category (e.g. Heritage, Fort)"
+                          className="rounded-lg border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                        />
+                      </div>
+                      <input
+                        type="text"
+                        value={newHighDesc}
+                        onChange={(e) => setNewHighDesc(e.target.value)}
+                        placeholder="Short description..."
+                        className="w-full rounded-lg border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                      />
+                      <div className="flex items-center justify-between gap-2">
+                        <input
+                          type="text"
+                          value={newHighPhoto}
+                          onChange={(e) => setNewHighPhoto(e.target.value)}
+                          placeholder="Photo URL (optional)"
+                          className="w-2/3 rounded-lg border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddHighlight}
+                          disabled={isSavingHighlight || !newHighTitle.trim()}
+                          className="rounded-lg bg-primary-container text-white px-3 py-2 text-xs font-bold hover:bg-primary-hover disabled:opacity-50"
+                        >
+                          {isSavingHighlight ? "Adding..." : "+ Add"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-xs text-text-muted">Save the destination first to manage highlights and attractions.</p>
+                )}
+              </div>
+
+              {/* Assigned Hotels & Stops Quick-Matrix */}
+              <div className="rounded-2xl bg-surface-container-low p-4 border border-border-hairline space-y-3">
+                <div>
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-text-muted">
+                    Destination Hotels & Highway Stops Matrix
+                  </h4>
+                  <p className="text-[11px] text-text-secondary">
+                    Quickly link or unlink inventory to this destination hub.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Hotels checklist */}
+                  <div className="rounded-xl border border-border-hairline bg-surface p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+                        <Building className="h-3.5 w-3.5 text-primary-container" />
+                        Hotels ({allHotels.filter(h => h.destination_id === formData.id).length} linked)
+                      </span>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                      {allHotels.map((h) => {
+                        const isLinked = h.destination_id === formData.id;
+                        return (
+                          <label key={h.id} className="flex items-center gap-2 text-xs text-text-primary cursor-pointer hover:bg-surface-container-low p-1 rounded-lg">
+                            <input
+                              type="checkbox"
+                              checked={isLinked}
+                              onChange={() => handleToggleHotel(h.id, !isLinked)}
+                              className="rounded text-primary-600"
+                            />
+                            <span className="truncate">{h.name}</span>
+                            <span className="text-[10px] text-text-muted tabular-nums ml-auto">₹{h.price_per_night}/n</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Stops checklist */}
+                  <div className="rounded-xl border border-border-hairline bg-surface p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+                        <Milestone className="h-3.5 w-3.5 text-primary-container" />
+                        Highway Stops ({allStops.filter(s => s.destination_id === formData.id).length} linked)
+                      </span>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                      {allStops.map((s) => {
+                        const isLinked = s.destination_id === formData.id;
+                        return (
+                          <label key={s.id} className="flex items-center gap-2 text-xs text-text-primary cursor-pointer hover:bg-surface-container-low p-1 rounded-lg">
+                            <input
+                              type="checkbox"
+                              checked={isLinked}
+                              onChange={() => handleToggleStop(s.id, !isLinked)}
+                              className="rounded text-primary-600"
+                            />
+                            <span className="truncate">{s.name}</span>
+                            <span className="text-[10px] text-text-muted tabular-nums ml-auto">{s.turnaround_text || s.distance_text || "Stop"}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>

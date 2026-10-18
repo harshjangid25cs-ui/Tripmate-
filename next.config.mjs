@@ -6,6 +6,52 @@ try {
   // Ignore
 }
 
+// Extract exact Supabase hostname from environment variable to replace *.supabase.co wildcard
+let supabaseHostname = undefined;
+if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  try {
+    supabaseHostname = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname;
+  } catch {
+    // Ignore invalid URL
+  }
+}
+
+const remotePatterns = [
+  ...(supabaseHostname
+    ? [
+        {
+          protocol: "https",
+          hostname: supabaseHostname,
+        },
+      ]
+    : [
+        {
+          protocol: "https",
+          hostname: "*.supabase.co",
+        },
+      ]),
+  {
+    protocol: "https",
+    hostname: "images.unsplash.com",
+  },
+  {
+    protocol: "https",
+    hostname: "lh3.googleusercontent.com",
+  },
+  ...(process.env.NODE_ENV !== "production"
+    ? [
+        {
+          protocol: "http",
+          hostname: "127.0.0.1",
+        },
+        {
+          protocol: "http",
+          hostname: "localhost",
+        },
+      ]
+    : []),
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
@@ -15,32 +61,7 @@ const nextConfig = {
     optimizePackageImports: ["lucide-react", "date-fns"],
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "**",
-      },
-      {
-        protocol: "http",
-        hostname: "**",
-      },
-      {
-        protocol: "https",
-        hostname: "lh3.googleusercontent.com",
-      },
-      {
-        protocol: "http",
-        hostname: "127.0.0.1",
-      },
-      {
-        protocol: "http",
-        hostname: "localhost",
-      },
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-      },
-    ],
+    remotePatterns,
   },
 };
 

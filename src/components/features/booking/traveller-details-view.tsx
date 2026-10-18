@@ -116,6 +116,19 @@ export function TravellerDetailsView({
       return;
     }
 
+    const MIME_TO_EXT: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/webp": "webp",
+      "application/pdf": "pdf",
+    };
+
+    const ext = MIME_TO_EXT[file.type];
+    if (!ext) {
+      setErrorMsg("Only JPG, PNG, WebP, and PDF files are allowed.");
+      return;
+    }
+
     setUploadingIndex(index);
     setErrorMsg(null);
 
@@ -125,7 +138,6 @@ export function TravellerDetailsView({
         data: { user },
       } = await supabase.auth.getUser();
 
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "pdf";
       const userPrefix = user?.id || "anonymous";
       const filePath = `${userPrefix}/${trip.id}/passenger_${index + 1}_${Date.now()}.${ext}`;
 

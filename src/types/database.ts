@@ -178,6 +178,9 @@ export interface Database {
           origin_label: string | null;
           drive_hours: number | null;
           drive_km: number | null;
+          latitude: number | null;
+          longitude: number | null;
+          local_radius_km: number;
           is_featured: boolean;
           is_bookable: boolean;
           is_active: boolean;
@@ -202,6 +205,9 @@ export interface Database {
           origin_label?: string | null;
           drive_hours?: number | null;
           drive_km?: number | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          local_radius_km?: number;
           is_featured?: boolean;
           is_bookable?: boolean;
           is_active?: boolean;
@@ -225,6 +231,9 @@ export interface Database {
           origin_label?: string | null;
           drive_hours?: number | null;
           drive_km?: number | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          local_radius_km?: number;
           is_featured?: boolean;
           is_bookable?: boolean;
           is_active?: boolean;
@@ -241,6 +250,8 @@ export interface Database {
           category: string | null;
           duration_text: string | null;
           badge: string | null;
+          description: string | null;
+          image_path: string | null;
           sort_order: number;
           created_at: string;
         };
@@ -251,6 +262,8 @@ export interface Database {
           category?: string | null;
           duration_text?: string | null;
           badge?: string | null;
+          description?: string | null;
+          image_path?: string | null;
           sort_order?: number;
           created_at?: string;
         };
@@ -259,6 +272,8 @@ export interface Database {
           category?: string | null;
           duration_text?: string | null;
           badge?: string | null;
+          description?: string | null;
+          image_path?: string | null;
           sort_order?: number;
         };
         Relationships: [];
@@ -277,6 +292,11 @@ export interface Database {
           rating: number | null;
           badge: string | null;
           categories: string[];
+          pricing_scope: "local_city_only" | "origin_transit_included";
+          included_hotel_ids: string[];
+          included_vehicle_ids: string[];
+          included_stop_ids: string[];
+          local_sightseeing_km_per_day: number;
           is_featured: boolean;
           image_path: string | null;
           is_active: boolean;
@@ -295,6 +315,11 @@ export interface Database {
           rating?: number | null;
           badge?: string | null;
           categories?: string[];
+          pricing_scope?: "local_city_only" | "origin_transit_included";
+          included_hotel_ids?: string[];
+          included_vehicle_ids?: string[];
+          included_stop_ids?: string[];
+          local_sightseeing_km_per_day?: number;
           is_featured?: boolean;
           image_path?: string | null;
           is_active?: boolean;
@@ -313,6 +338,11 @@ export interface Database {
           rating?: number | null;
           badge?: string | null;
           categories?: string[];
+          pricing_scope?: "local_city_only" | "origin_transit_included";
+          included_hotel_ids?: string[];
+          included_vehicle_ids?: string[];
+          included_stop_ids?: string[];
+          local_sightseeing_km_per_day?: number;
           is_featured?: boolean;
           image_path?: string | null;
           is_active?: boolean;
@@ -545,6 +575,11 @@ export interface Database {
           cancelled_at: string | null;
           cancellation_reason: string | null;
           refund_amount: number | null;
+          origin_name: string | null;
+          origin_lat: number | null;
+          origin_lng: number | null;
+          calculated_distance_km: number;
+          transit_mode: "local_only" | "live_origin_to_destination";
           created_at: string;
           updated_at: string;
         };
@@ -564,6 +599,11 @@ export interface Database {
           traveler_count?: number;
           status?: "draft" | "pending_approval" | "confirmed" | "cancelled" | "completed";
           currency?: string;
+          origin_name?: string | null;
+          origin_lat?: number | null;
+          origin_lng?: number | null;
+          calculated_distance_km?: number;
+          transit_mode?: "local_only" | "live_origin_to_destination";
           created_at?: string;
           updated_at?: string;
         };
@@ -582,6 +622,11 @@ export interface Database {
           cancelled_at?: string | null;
           cancellation_reason?: string | null;
           refund_amount?: number | null;
+          origin_name?: string | null;
+          origin_lat?: number | null;
+          origin_lng?: number | null;
+          calculated_distance_km?: number;
+          transit_mode?: "local_only" | "live_origin_to_destination";
           subtotal_amount?: number;
           service_fee?: number;
           tax_amount?: number;
@@ -1366,6 +1411,63 @@ export interface Database {
         Args: {
           p_trip_id: string;
           p_coupon_code: string;
+        };
+        Returns: Json;
+      };
+      admin_upsert_destination_highlight: {
+        Args: {
+          p_destination_id: string;
+          p_title: string;
+          p_category?: string | null;
+          p_duration_text?: string | null;
+          p_badge?: string | null;
+          p_sort_order?: number;
+          p_description?: string | null;
+          p_image_path?: string | null;
+          p_id?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_delete_destination_highlight: {
+        Args: {
+          p_id: string;
+        };
+        Returns: boolean;
+      };
+      admin_upsert_circuit_itinerary_template: {
+        Args: {
+          p_circuit_id: string;
+          p_items: Json;
+        };
+        Returns: boolean;
+      };
+      admin_override_booking_items: {
+        Args: {
+          p_trip_id: string;
+          p_hotel_id?: string | null;
+          p_vehicle_id?: string | null;
+          p_stop_ids?: string[] | null;
+          p_custom_adjustment?: number | null;
+          p_notes?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_send_customer_notification: {
+        Args: {
+          p_profile_id: string;
+          p_trip_id?: string | null;
+          p_type?: string | null;
+          p_message: string;
+        };
+        Returns: Json;
+      };
+      admin_upsert_company_policy: {
+        Args: {
+          p_company_id: string;
+          p_type: string;
+          p_rule_text: string;
+          p_limit_value?: number | null;
+          p_policy_id?: string | null;
         };
         Returns: Json;
       };

@@ -50,6 +50,7 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
       if (res.ok) {
         const data = (await res.json()) as { id?: string };
         providerMessageId = data.id;
+        status = "sent";
       } else {
         const errData = await res.text();
         status = "failed";
@@ -60,8 +61,9 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
       errorMessage = err instanceof Error ? err.message : "Network error contacting email provider.";
     }
   } else {
-    // Demo/Sandbox fallback
-    providerMessageId = `msg_${Math.random().toString(36).substring(2, 10)}`;
+    // OPS-01: When RESEND_API_KEY is missing, log status as "failed", NEVER "sent"
+    status = "failed";
+    errorMessage = "RESEND_API_KEY is missing. Email dispatch skipped.";
   }
 
   // 2. Always persist transactional log to public.email_logs in Supabase

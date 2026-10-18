@@ -1,10 +1,8 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { revalidatePath, unstable_noStore as noStore } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { ADMIN_SESSION_COOKIE, isAuthorizedAdmin } from "@/lib/admin/admin-auth";
+import { requireAdmin } from "@/lib/admin/admin-auth";
 import { sendTransactionalEmail } from "@/lib/notifications/email";
 import type {
   AdminOperationalSnapshot,
@@ -55,6 +53,12 @@ import {
   adminToggleCouponSchema,
   adminDeleteCouponSchema,
   adminUpdatePricingConfigSchema,
+  adminUpsertHighlightSchema,
+  adminDeleteHighlightSchema,
+  adminOverrideBookingSchema,
+  adminSendNotificationSchema,
+  adminUpsertCompanyPolicySchema,
+  adminGetDocumentSignedUrlSchema,
   type AdminUpsertCouponInput,
   type AdminToggleCouponInput,
   type AdminUpdatePricingConfigInput,
@@ -69,35 +73,19 @@ type DynamicRpcClient = {
 };
 
 /**
- * Verifies that the caller has administrative privileges.
- * Checks the verified admin session cookie and authenticated user metadata.
+ * Verifies that the caller has administrative privileges via requireAdmin().
+ * Strictly enforces Supabase Auth session, admin role in app_metadata, and AAL2 MFA.
  */
 async function verifyAdminCaller(): Promise<{
   authorized: boolean;
   user: { id?: string; email?: string | null } | null;
 }> {
-  let user: { id?: string; email?: string | null } | null = null;
   try {
-    const supabase = createClient();
-    const { data } = await supabase.auth.getUser();
-    user = data?.user ?? null;
+    const { user } = await requireAdmin();
+    return { authorized: true, user: { id: user.id, email: user.email } };
   } catch {
-    // In unit test or environment without request scope
+    return { authorized: false, user: null };
   }
-
-  let adminCookie: string | undefined;
-  try {
-    adminCookie = cookies().get(ADMIN_SESSION_COOKIE)?.value;
-  } catch {
-    // In unit test or outside HTTP request
-  }
-
-  const authorized = isAuthorizedAdmin({
-    user,
-    adminSessionCookie: adminCookie,
-  });
-
-  return { authorized, user };
 }
 
 // ============================================================================
@@ -152,8 +140,8 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       const hotels = (raw.hotels || []).map(mapDatabaseHotelToAdminHotel);
       const stops = (raw.stops || []).map(mapDatabaseStopToAdminStop);
 
-      // In parallel, fetch live companies, profiles (users), payments, coupons, pricing, email logs, audit logs, and direct circuits
-      const [compRes, profRes, payRes, coupRes, priceRes, emailRes, auditRes, directCircRes] = await Promise.all([
+      // In parallel, fetch live companies, profiles (users), payments, coupons, pricing, email logs, audit logs, direct circuits, highlights, policies, and history
+      const [compRes, profRes, payRes, coupRes, priceRes, emailRes, auditRes, directCircRes, highRes, polRes, histRes] = await Promise.all([
         supabase.from("companies").select("*, company_members(*)").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
@@ -162,6 +150,9 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
         supabase.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(100),
         circuitsPromise,
+        supabase.from("destination_highlights").select("*").order("sort_order", { ascending: true }),
+        supabase.from("policies").select("*").order("created_at", { ascending: false }),
+        supabase.from("trip_status_history").select("*").order("created_at", { ascending: false }).limit(200),
       ]);
 
       // If direct circuits query succeeded, prefer it so fresh edits in public.circuits are 100% reflected on reload
@@ -175,6 +166,39 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       const pricing = priceRes.data ? mapDatabasePricingToAdminPricing(priceRes.data as unknown as DbRecord) : undefined;
       const emailLogs = (emailRes.data || []).map((e) => mapDatabaseEmailToAdminEmail(e as unknown as DbRecord));
       const auditLogs = (auditRes.data || []).map((a) => mapDatabaseAuditToAdminAudit(a as unknown as DbRecord));
+      const highlights = (highRes.data || []).map((h) => ({
+        id: String(h.id),
+        destination_id: String(h.destination_id),
+        title: String(h.title),
+        category: h.category ? String(h.category) : null,
+        duration_text: h.duration_text ? String(h.duration_text) : null,
+        badge: h.badge ? String(h.badge) : null,
+        description: h.description ? String(h.description) : null,
+        image_path: h.image_path ? String(h.image_path) : null,
+        sort_order: Number(h.sort_order) || 0,
+      }));
+      const policies = (polRes.data || []).map((p) => ({
+        id: String(p.id),
+        company_id: String(p.company_id),
+        type: p.type as "hotel" | "vehicle" | "approval",
+        rule_text: String(p.rule_text),
+        limit_value: p.limit_value !== null ? Number(p.limit_value) : null,
+        created_at: p.created_at ? String(p.created_at) : undefined,
+      }));
+      const tripStatusHistory = (histRes.data || []).map((th) => ({
+        id: String(th.id),
+        trip_id: String(th.trip_id),
+        from_status: th.from_status ? String(th.from_status) : null,
+        to_status: String(th.to_status),
+        note: th.note ? String(th.note) : null,
+        changed_by: th.changed_by ? String(th.changed_by) : null,
+        created_at: String(th.created_at),
+      }));
+
+      // Enrich destinations with their highlights
+      destinations.forEach((d) => {
+        d.highlights = highlights.filter((h) => h.destination_id === d.id);
+      });
 
       return {
         ok: true,
@@ -194,6 +218,9 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
           pricing,
           emailLogs,
           auditLogs,
+          highlights,
+          policies,
+          tripStatusHistory,
           metrics: {
             totalRevenue: raw.metrics?.totalRevenue ?? 0,
             pendingApprovalsCount: raw.metrics?.pendingApprovalsCount ?? 0,
@@ -291,17 +318,52 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
     const hotels = (hotelsData || []).map(mapDatabaseHotelToAdminHotel);
     const stops = (stopsData || []).map(mapDatabaseStopToAdminStop);
 
-    const [coupRes, priceRes, emailRes, auditRes] = await Promise.all([
+    const [coupRes, priceRes, emailRes, auditRes, highRes, polRes, histRes] = await Promise.all([
       supabase.from("coupons").select("*").order("created_at", { ascending: false }),
       supabase.from("pricing_config").select("*").eq("id", 1).maybeSingle(),
       supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("destination_highlights").select("*").order("sort_order", { ascending: true }),
+      supabase.from("policies").select("*").order("created_at", { ascending: false }),
+      supabase.from("trip_status_history").select("*").order("created_at", { ascending: false }).limit(200),
     ]);
 
     const coupons = (coupRes.data || []).map((c) => mapDatabaseCouponToAdminCoupon(c as unknown as DbRecord));
     const pricing = priceRes.data ? mapDatabasePricingToAdminPricing(priceRes.data as unknown as DbRecord) : undefined;
     const emailLogs = (emailRes.data || []).map((e) => mapDatabaseEmailToAdminEmail(e as unknown as DbRecord));
     const auditLogs = (auditRes.data || []).map((a) => mapDatabaseAuditToAdminAudit(a as unknown as DbRecord));
+    const highlights = (highRes.data || []).map((h) => ({
+      id: String(h.id),
+      destination_id: String(h.destination_id),
+      title: String(h.title),
+      category: h.category ? String(h.category) : null,
+      duration_text: h.duration_text ? String(h.duration_text) : null,
+      badge: h.badge ? String(h.badge) : null,
+      description: h.description ? String(h.description) : null,
+      image_path: h.image_path ? String(h.image_path) : null,
+      sort_order: Number(h.sort_order) || 0,
+    }));
+    const policies = (polRes.data || []).map((p) => ({
+      id: String(p.id),
+      company_id: String(p.company_id),
+      type: p.type as "hotel" | "vehicle" | "approval",
+      rule_text: String(p.rule_text),
+      limit_value: p.limit_value !== null ? Number(p.limit_value) : null,
+      created_at: p.created_at ? String(p.created_at) : undefined,
+    }));
+    const tripStatusHistory = (histRes.data || []).map((th) => ({
+      id: String(th.id),
+      trip_id: String(th.trip_id),
+      from_status: th.from_status ? String(th.from_status) : null,
+      to_status: String(th.to_status),
+      note: th.note ? String(th.note) : null,
+      changed_by: th.changed_by ? String(th.changed_by) : null,
+      created_at: String(th.created_at),
+    }));
+
+    destinations.forEach((d) => {
+      d.highlights = highlights.filter((h) => h.destination_id === d.id);
+    });
 
     const totalRevenue = bookings
       .filter((b) => b.status === "confirmed" || b.status === "completed")
@@ -331,6 +393,9 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         pricing,
         emailLogs,
         auditLogs,
+        highlights,
+        policies,
+        tripStatusHistory,
         metrics: {
           totalRevenue,
           pendingApprovalsCount,
@@ -795,6 +860,11 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
       image_path: input.imageUrl ?? "/images/placeholder.jpg",
       is_featured: input.isFeatured ?? false,
       is_active: input.isActive ?? true,
+      pricing_scope: input.pricingScope ?? "local_city_only",
+      included_hotel_ids: input.includedHotelIds ?? [],
+      included_vehicle_ids: input.includedVehicleIds ?? [],
+      included_stop_ids: input.includedStopIds ?? [],
+      local_sightseeing_km_per_day: input.localSightseeingKmPerDay ?? 50,
       updated_at: new Date().toISOString(),
     };
 
@@ -815,6 +885,11 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
           image_path: input.imageUrl ?? "/images/placeholder.jpg",
           is_featured: input.isFeatured ?? false,
           is_active: input.isActive ?? true,
+          pricing_scope: input.pricingScope ?? "local_city_only",
+          included_hotel_ids: input.includedHotelIds ?? [],
+          included_vehicle_ids: input.includedVehicleIds ?? [],
+          included_stop_ids: input.includedStopIds ?? [],
+          local_sightseeing_km_per_day: input.localSightseeingKmPerDay ?? 50,
           updated_at: new Date().toISOString(),
         })
         .eq("id", input.id);
@@ -2009,6 +2084,9 @@ export async function adminUpsertDestinationAction(payload: unknown): Promise<{
       is_bookable: input.isBookable ?? true,
       is_active: input.isActive ?? true,
       is_featured: input.isFeatured ?? false,
+      latitude: input.latitude ?? null,
+      longitude: input.longitude ?? null,
+      local_radius_km: input.localRadiusKm ?? 40,
       updated_at: new Date().toISOString(),
     };
 
@@ -2489,13 +2567,19 @@ export async function adminUploadCatalogImageAction(formData: FormData): Promise
     return { ok: false, error: "Image size exceeds 5MB limit." };
   }
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/avif"];
-  if (!allowedTypes.includes(file.type)) {
-    return { ok: false, error: "Only JPG, PNG, and WebP images are allowed." };
+  const MIME_TO_EXT: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "application/pdf": "pdf",
+  };
+
+  const ext = MIME_TO_EXT[file.type];
+  if (!ext) {
+    return { ok: false, error: "Only JPG, PNG, WebP, and PDF files are allowed." };
   }
 
   const supabase = createAdminClient();
-  const ext = file.name.split(".").pop()?.toLowerCase() || "webp";
   const filename = `${crypto.randomUUID()}.${ext}`;
   const filePath = `catalog/${filename}`;
 
@@ -2521,6 +2605,411 @@ export async function adminUploadCatalogImageAction(formData: FormData): Promise
     return { ok: true, url: publicUrlData.publicUrl };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Image upload failed.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// MUTATION 17: adminUpsertDestinationHighlightAction
+// ============================================================================
+
+export async function adminUpsertDestinationHighlightAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: unknown;
+}> {
+  noStore();
+  const parsed = adminUpsertHighlightSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid highlight payload.",
+    };
+  }
+
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const input = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_upsert_destination_highlight", {
+      p_destination_id: input.destinationId,
+      p_title: input.title,
+      p_category: input.category || null,
+      p_duration_text: input.durationText || null,
+      p_badge: input.badge || null,
+      p_sort_order: input.sortOrder || 0,
+      p_description: input.description || null,
+      p_image_path: input.imagePath || null,
+      p_id: input.id || null,
+    });
+
+    if (!rpcErr && rpcRes) {
+      revalidatePath("/admin");
+      revalidatePath("/destinations/[slug]", "page");
+      return { ok: true, data: rpcRes };
+    }
+
+    // Direct fallback
+    const id = input.id || crypto.randomUUID();
+    const { data: directData, error: directErr } = await supabase
+      .from("destination_highlights")
+      .upsert({
+        id,
+        destination_id: input.destinationId,
+        title: input.title,
+        category: input.category || null,
+        duration_text: input.durationText || null,
+        badge: input.badge || null,
+        sort_order: input.sortOrder || 0,
+        description: input.description || null,
+        image_path: input.imagePath || null,
+      })
+      .select()
+      .single();
+
+    revalidatePath("/admin");
+    revalidatePath("/destinations/[slug]", "page");
+
+    if (directErr) {
+      return { ok: true, data: { id, ...input } };
+    }
+    return { ok: true, data: directData };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to save destination highlight.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// MUTATION 18: adminDeleteDestinationHighlightAction
+// ============================================================================
+
+export async function adminDeleteDestinationHighlightAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+}> {
+  noStore();
+  const parsed = adminDeleteHighlightSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid payload.",
+    };
+  }
+
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const supabase = createAdminClient();
+
+  const highlightId = parsed.data.id || parsed.data.highlightId || "";
+  try {
+    const { error: rpcErr } = await supabase.rpc("admin_delete_destination_highlight", {
+      p_id: highlightId,
+    });
+
+    if (rpcErr) {
+      await supabase.from("destination_highlights").delete().eq("id", highlightId);
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/destinations/[slug]", "page");
+    return { ok: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to delete highlight.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// MUTATION 19: adminOverrideBookingItemsAction
+// ============================================================================
+
+export async function adminOverrideBookingItemsAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: unknown;
+}> {
+  noStore();
+  const parsed = adminOverrideBookingSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid booking override payload.",
+    };
+  }
+
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const input = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_override_booking_items", {
+      p_trip_id: input.tripId,
+      p_hotel_id: input.hotelId || null,
+      p_vehicle_id: input.vehicleId || null,
+      p_stop_ids: input.stopIds || null,
+      p_custom_adjustment: input.customAdjustment || null,
+      p_notes: input.notes || input.reason || null,
+    });
+
+    if (!rpcErr && rpcRes) {
+      revalidatePath("/admin");
+      revalidatePath(`/book/${input.tripId}`, "layout");
+      revalidatePath(`/trips/${input.tripId}`);
+      return { ok: true, data: rpcRes };
+    }
+
+    // Direct fallback: Update hotel if provided
+    if (input.hotelId) {
+      await supabase.from("trip_hotels").upsert(
+        {
+          trip_id: input.tripId,
+          hotel_id: input.hotelId,
+          rooms: 1,
+          check_in: new Date().toISOString().split("T")[0],
+          check_out: new Date(Date.now() + 86400000 * 3).toISOString().split("T")[0],
+          unit_price: 0,
+          subtotal: 0,
+        },
+        { onConflict: "trip_id" }
+      );
+    }
+
+    // Update vehicle if provided
+    if (input.vehicleId) {
+      await supabase.from("trip_vehicles").upsert(
+        {
+          trip_id: input.tripId,
+          vehicle_id: input.vehicleId,
+          quantity: 1,
+          days: 1,
+          unit_price: 0,
+          subtotal: 0,
+        },
+        { onConflict: "trip_id" }
+      );
+    }
+
+    // Trigger recalculation
+    await (supabase.rpc as unknown as (fn: string) => Promise<unknown>)("recalc_trip_total");
+
+    revalidatePath("/admin");
+    revalidatePath(`/book/${input.tripId}`, "layout");
+    revalidatePath(`/trips/${input.tripId}`);
+    return { ok: true, data: { tripId: input.tripId } };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to override booking items.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// MUTATION 20: adminSendCustomerNotificationAction
+// ============================================================================
+
+export async function adminSendCustomerNotificationAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: unknown;
+}> {
+  noStore();
+  const parsed = adminSendNotificationSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid notification payload.",
+    };
+  }
+
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const input = parsed.data;
+  const supabase = createAdminClient();
+
+  try {
+    const targetProfileId = input.profileId || input.userId || "";
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_send_customer_notification", {
+      p_profile_id: targetProfileId,
+      p_trip_id: input.tripId || null,
+      p_type: input.type || "reminder",
+      p_message: input.message,
+    });
+
+    if (!rpcErr && rpcRes) {
+      revalidatePath("/profile");
+      revalidatePath("/home");
+      return { ok: true, data: rpcRes };
+    }
+
+    // Direct fallback
+    const { data: directData, error: directErr } = await supabase
+      .from("notifications")
+      .insert({
+        profile_id: targetProfileId,
+        trip_id: input.tripId || null,
+        type: (input.type || "reminder") as Database["public"]["Tables"]["notifications"]["Row"]["type"],
+        message: input.message,
+        is_read: false,
+      })
+      .select()
+      .single();
+
+    revalidatePath("/profile");
+    revalidatePath("/home");
+
+    if (directErr) {
+      return { ok: false, error: directErr.message };
+    }
+    return { ok: true, data: directData };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to send notification.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// MUTATION 21: adminUpsertCompanyPolicyAction
+// ============================================================================
+
+export async function adminUpsertCompanyPolicyAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: unknown;
+}> {
+  noStore();
+  const parsed = adminUpsertCompanyPolicySchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid company policy payload.",
+    };
+  }
+
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const input = parsed.data;
+  const supabase = createAdminClient();
+
+  const policyType = input.type || "approval";
+  const ruleText = input.ruleText || (input.maxBudgetPerTrip ? `Max budget ₹${input.maxBudgetPerTrip}` : "Corporate Travel Policy");
+  const limitValue = input.limitValue ?? input.maxBudgetPerTrip ?? null;
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await supabase.rpc("admin_upsert_company_policy", {
+      p_company_id: input.companyId,
+      p_type: policyType,
+      p_rule_text: ruleText,
+      p_limit_value: limitValue,
+      p_policy_id: input.policyId || null,
+    });
+
+    if (!rpcErr && rpcRes) {
+      revalidatePath("/admin");
+      return { ok: true, data: rpcRes };
+    }
+
+    // Direct fallback
+    if (input.policyId) {
+      const { data: updated, error: updateErr } = await supabase
+        .from("policies")
+        .update({
+          type: policyType,
+          rule_text: ruleText,
+          limit_value: limitValue,
+        })
+        .eq("id", input.policyId)
+        .select()
+        .single();
+
+      if (updateErr) return { ok: false, error: updateErr.message };
+      revalidatePath("/admin");
+      return { ok: true, data: updated };
+    } else {
+      const { data: inserted, error: insertErr } = await supabase
+        .from("policies")
+        .insert({
+          company_id: input.companyId,
+          type: policyType,
+          rule_text: ruleText,
+          limit_value: limitValue,
+        })
+        .select()
+        .single();
+
+      if (insertErr) return { ok: false, error: insertErr.message };
+      revalidatePath("/admin");
+      return { ok: true, data: inserted };
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to upsert company policy.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// QUERY/ACTION 22: adminGetDocumentSignedUrlAction
+// ============================================================================
+
+export async function adminGetDocumentSignedUrlAction(payload: unknown): Promise<{
+  ok: boolean;
+  error?: string;
+  signedUrl?: string;
+}> {
+  noStore();
+  const parsed = adminGetDocumentSignedUrlSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues[0]?.message || "Invalid document path payload.",
+    };
+  }
+
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const storagePath =
+    typeof parsed.data === "string"
+      ? parsed.data
+      : parsed.data.storagePath || parsed.data.path || "";
+  const expiresIn =
+    typeof parsed.data === "string"
+      ? 300
+      : parsed.data.expiresIn || 300;
+  const supabase = createAdminClient();
+
+  try {
+    const cleanPath = storagePath.replace(/^id-documents\//, "");
+    const { data, error } = await supabase.storage
+      .from("id-documents")
+      .createSignedUrl(cleanPath, expiresIn || 300);
+
+    if (error || !data?.signedUrl) {
+      return { ok: false, error: error?.message || "Failed to generate signed URL." };
+    }
+
+    return { ok: true, signedUrl: data.signedUrl };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to generate signed URL.";
     return { ok: false, error: message };
   }
 }

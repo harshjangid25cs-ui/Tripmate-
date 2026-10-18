@@ -77,6 +77,96 @@ describe("Production Razorpay, Dynamic Coupons & Transactional Email Tests", () 
     });
   });
 
+  describe("Razorpay Webhook Handler & Idempotency (DAT-01 / DAT-02)", () => {
+    const webhookSecret = "whsec_test_secret_123456";
+
+    it("rejects webhook request when x-razorpay-signature is invalid (401)", async () => {
+      const origSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+      process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret;
+
+      const { POST } = await import("@/app/api/webhooks/razorpay/route");
+      const { NextRequest } = await import("next/server");
+
+      const body = JSON.stringify({ event: "payment.captured", payload: {} });
+      const request = new NextRequest("http://localhost:3000/api/webhooks/razorpay", {
+        method: "POST",
+        headers: {
+          "x-razorpay-signature": "invalid_forged_signature_123",
+          "content-type": "application/json",
+        },
+        body,
+      });
+
+      const res = await POST(request);
+      expect(res.status).toBe(401);
+      const data = await res.json();
+      expect(data.error).toContain("Invalid webhook cryptographic signature");
+
+      if (origSecret) process.env.RAZORPAY_WEBHOOK_SECRET = origSecret;
+      else delete process.env.RAZORPAY_WEBHOOK_SECRET;
+    });
+
+    it("verifies webhook signature against raw request body and accepts valid HMAC", async () => {
+      const origSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+      process.env.RAZORPAY_WEBHOOK_SECRET = webhookSecret;
+
+      const { POST } = await import("@/app/api/webhooks/razorpay/route");
+      const { NextRequest } = await import("next/server");
+
+      const body = JSON.stringify({
+        event: "payment.captured",
+        payload: {
+          payment: {
+            entity: {
+              id: "pay_test_idempotent_1",
+              amount: 500000,
+              currency: "INR",
+              method: "upi",
+              notes: {},
+            },
+          },
+        },
+      });
+
+      const validSig = crypto
+        .createHmac("sha256", webhookSecret)
+        .update(body)
+        .digest("hex");
+
+      const req1 = new NextRequest("http://localhost:3000/api/webhooks/razorpay", {
+        method: "POST",
+        headers: {
+          "x-razorpay-signature": validSig,
+          "content-type": "application/json",
+        },
+        body,
+      });
+
+      const res1 = await POST(req1);
+      expect(res1.status).toBe(200);
+      const data1 = await res1.json();
+      expect(data1.received).toBe(true);
+
+      // Sending the exact same event a second time (idempotency check)
+      const req2 = new NextRequest("http://localhost:3000/api/webhooks/razorpay", {
+        method: "POST",
+        headers: {
+          "x-razorpay-signature": validSig,
+          "content-type": "application/json",
+        },
+        body,
+      });
+
+      const res2 = await POST(req2);
+      expect(res2.status).toBe(200);
+      const data2 = await res2.json();
+      expect(data2.received).toBe(true);
+
+      if (origSecret) process.env.RAZORPAY_WEBHOOK_SECRET = origSecret;
+      else delete process.env.RAZORPAY_WEBHOOK_SECRET;
+    });
+  });
+
   describe("Payment Provider Dynamic Resolution", () => {
     const originalEnv = { ...process.env };
 
@@ -218,8 +308,11 @@ describe("Production Razorpay, Dynamic Coupons & Transactional Email Tests", () 
     });
   });
 
-  describe("Transactional Email Dispatcher", () => {
-    it("dispatches transactional email and logs payload", async () => {
+  describe("Transactional Email Dispatcher (OPS-01)", () => {
+    it("logs status 'failed' when RESEND_API_KEY is missing, never 'sent'", async () => {
+      const origKey = process.env.RESEND_API_KEY;
+      delete process.env.RESEND_API_KEY;
+
       const res = await sendTransactionalEmail({
         to: "traveler@example.com",
         template: "booking_confirmed",
@@ -230,8 +323,12 @@ describe("Production Razorpay, Dynamic Coupons & Transactional Email Tests", () 
         sentBy: "Test Dispatcher",
       });
 
-      expect(res.ok).toBe(true);
-      expect(res.messageId).toBeDefined();
+      expect(res.ok).toBe(false);
+      expect(res.error).toContain("RESEND_API_KEY is missing");
+
+      if (origKey) {
+        process.env.RESEND_API_KEY = origKey;
+      }
     }, 15000);
   });
 });

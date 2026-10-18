@@ -10,6 +10,7 @@ import { getVehicleImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { selectTripVehicle, clearTripVehicleAction } from "@/lib/actions/trips";
 import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
+import { LocationCoverageScopeBar } from "./LocationCoverageScopeBar";
 
 interface VehicleSelectionViewProps {
   tripData: ValidatedDraftTrip;
@@ -229,6 +230,19 @@ export function VehicleSelectionView({
             <p className="font-body-md text-body-md text-text-secondary leading-snug">
               All options include verified drivers or self-drive handover at airport/station.
             </p>
+          </div>
+
+          {/* Location & Coverage Scope Bar */}
+          <div className="px-margin-mobile">
+            <LocationCoverageScopeBar
+              tripId={trip.id}
+              destinationName={destination?.name ?? "Jaipur"}
+              destinationLat={Number(destination?.latitude) || 26.9124}
+              destinationLng={Number(destination?.longitude) || 75.7873}
+              initialTransitMode={trip.transit_mode as "local_only" | "live_origin_to_destination" | null}
+              initialOriginName={trip.origin_name}
+              initialCalculatedKm={trip.calculated_distance_km}
+            />
           </div>
 
           {/* Vehicle Category Switcher (Car Rental vs Bike & Scooter) */}

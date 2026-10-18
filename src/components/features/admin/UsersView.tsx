@@ -4,15 +4,50 @@ import React, { useState } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { UserAdmin } from "@/lib/admin/types";
-import { Search, KeyRound } from "lucide-react";
+import { Search, KeyRound, Bell } from "lucide-react";
+import { adminSendCustomerNotificationAction } from "@/lib/actions/admin-ops";
 
 export function UsersView() {
   const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
   const [users, setUsers] = useState<UserAdmin[]>(() => AdminService.getUsers());
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState<UserAdmin | null>(null);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifTitle, setNotifTitle] = useState("");
+  const [notifMessage, setNotifMessage] = useState("");
+  const [notifType, setNotifType] = useState<"booking" | "system" | "offer">("system");
+  const [isSending, setIsSending] = useState(false);
 
   const canSuspend = hasPermission("users_suspend");
   const refresh = () => setUsers(AdminService.getUsers());
+
+  const handleSendNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUser || !notifTitle.trim() || !notifMessage.trim()) return;
+
+    setIsSending(true);
+    try {
+      const res = await adminSendCustomerNotificationAction({
+        userId: selectedUser.id,
+        title: notifTitle.trim(),
+        message: notifMessage.trim(),
+        type: notifType,
+      });
+
+      if (res.ok) {
+        toast(`Live notification broadcasted to ${selectedUser.full_name}`, "success");
+        setIsNotifOpen(false);
+        setNotifTitle("");
+        setNotifMessage("");
+      } else {
+        toast(res.error || "Failed to send notification", "error");
+      }
+    } catch (err: unknown) {
+      toast(err instanceof Error ? err.message : "Error sending notification", "error");
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   const filteredUsers = users.filter((u) => {
     const q = searchQuery.toLowerCase().trim();
@@ -130,6 +165,21 @@ export function UsersView() {
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
+                        onClick={() => {
+                          setSelectedUser(u);
+                          setNotifTitle("TripMate Notification");
+                          setNotifMessage("");
+                          setIsNotifOpen(true);
+                        }}
+                        className="rounded-xl border border-border-hairline bg-surface px-2.5 py-1.5 text-xs font-semibold text-text-primary hover:bg-card-surface flex items-center gap-1"
+                        title="Send Live In-App Notification"
+                      >
+                        <Bell className="h-3.5 w-3.5 text-primary-container" />
+                        <span className="hidden sm:inline">Notify</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => handleSendResetEmail(u)}
                         className="rounded-xl border border-border-hairline bg-surface px-2.5 py-1.5 text-xs font-semibold text-text-primary hover:bg-card-surface flex items-center gap-1"
                         title="Send Password Reset Email"
@@ -159,6 +209,98 @@ export function UsersView() {
           </table>
         </div>
       </div>
+
+      {/* Send Live Notification Modal */}
+      {isNotifOpen && selectedUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in">
+          <div className="w-full max-w-md rounded-3xl bg-surface p-6 shadow-2xl border border-border-hairline">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+              <h3 className="text-base font-bold text-text-primary flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary-container" />
+                <span>Send Live Notification</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsNotifOpen(false)}
+                className="text-text-muted hover:text-text-primary rounded-lg p-1"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSendNotification} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1">
+                  Recipient
+                </label>
+                <p className="text-xs font-bold text-text-primary">
+                  {selectedUser.full_name} ({selectedUser.email})
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1">
+                  Type
+                </label>
+                <select
+                  value={notifType}
+                  onChange={(e) => setNotifType(e.target.value as "booking" | "system" | "offer")}
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                >
+                  <option value="system">System Notice</option>
+                  <option value="booking">Booking / Itinerary Update</option>
+                  <option value="offer">Special Offer / Promotion</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1">
+                  Title
+                </label>
+                <input
+                  type="text"
+                  value={notifTitle}
+                  onChange={(e) => setNotifTitle(e.target.value)}
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                  placeholder="e.g. Important update regarding your upcoming trip"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1">
+                  Message
+                </label>
+                <textarea
+                  rows={3}
+                  value={notifMessage}
+                  onChange={(e) => setNotifMessage(e.target.value)}
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2 text-xs text-text-primary"
+                  placeholder="Write your live message..."
+                  required
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-border-hairline">
+                <button
+                  type="button"
+                  onClick={() => setIsNotifOpen(false)}
+                  className="rounded-xl border border-border-hairline px-4 py-2 text-xs font-bold text-text-secondary hover:bg-surface-container"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSending}
+                  className="rounded-xl bg-primary-container text-white px-5 py-2 text-xs font-bold hover:bg-primary-hover disabled:opacity-50"
+                >
+                  Broadcast Live Notification
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

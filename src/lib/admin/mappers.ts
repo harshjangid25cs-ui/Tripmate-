@@ -64,6 +64,33 @@ export function mapDatabaseTripToAdminBooking(t: DbRecord): AdminBooking {
       }
     : null;
 
+  const tripHotel = Array.isArray(t.trip_hotels) ? asRecord(t.trip_hotels[0]) : asRecord(t.trip_hotels);
+  const hotelObj = asRecord(tripHotel.hotels);
+
+  const rawStops = Array.isArray(t.trip_stops) ? t.trip_stops : [];
+  const stop_ids: string[] = [];
+  const stops = rawStops.map((st: unknown) => {
+    const s = asRecord(st);
+    const stopMaster = asRecord(s.stops);
+    const stopId = String(s.stop_id || stopMaster.id || "");
+    if (stopId) stop_ids.push(stopId);
+    return mapDatabaseStopToAdminStop(stopMaster.id ? stopMaster : s);
+  });
+
+  const rawHistory = Array.isArray(t.trip_status_history) ? t.trip_status_history : [];
+  const status_history = rawHistory.map((h: unknown) => {
+    const hist = asRecord(h);
+    return {
+      id: String(hist.id || ""),
+      trip_id: String(hist.trip_id || t.id || ""),
+      from_status: hist.from_status ? String(hist.from_status) : null,
+      to_status: String(hist.to_status || "draft"),
+      note: hist.note ? String(hist.note) : null,
+      changed_by: hist.changed_by ? String(hist.changed_by) : null,
+      created_at: hist.created_at ? String(hist.created_at) : new Date().toISOString(),
+    };
+  });
+
   return {
     id: String(t.id || ""),
     booking_ref: String(t.booking_ref || `TM-${String(t.id || "000000").slice(0, 6)}`),
@@ -73,7 +100,9 @@ export function mapDatabaseTripToAdminBooking(t: DbRecord): AdminBooking {
     customer_phone: String(profile.phone || ""),
     kind: t.booking_kind === "commercial" ? "commercial" : "normal",
     destination_name: String(destination.name || "Jaipur"),
+    destination_id: destination.id ? String(destination.id) : t.destination_id ? String(t.destination_id) : undefined,
     circuit_name: circuit.title ? String(circuit.title) : undefined,
+    circuit_id: circuit.id ? String(circuit.id) : t.circuit_id ? String(t.circuit_id) : undefined,
     start_date: t.start_date ? String(t.start_date) : "",
     end_date: t.end_date ? String(t.end_date) : "",
     days: Number(t.total_days) || 1,
@@ -90,6 +119,16 @@ export function mapDatabaseTripToAdminBooking(t: DbRecord): AdminBooking {
     driver: driverAdmin,
     driver_id: tripVehicle.driver_id ? String(tripVehicle.driver_id) : null,
     vehicle_id: tripVehicle.vehicle_id ? String(tripVehicle.vehicle_id) : null,
+    hotel_id: tripHotel.hotel_id ? String(tripHotel.hotel_id) : null,
+    hotel_name: hotelObj.name ? String(hotelObj.name) : undefined,
+    stop_ids,
+    stops: stops.length > 0 ? stops : undefined,
+    origin_name: t.origin_name ? String(t.origin_name) : null,
+    origin_lat: t.origin_lat !== null && t.origin_lat !== undefined ? Number(t.origin_lat) : null,
+    origin_lng: t.origin_lng !== null && t.origin_lng !== undefined ? Number(t.origin_lng) : null,
+    calculated_distance_km: Number(t.calculated_distance_km) || 0,
+    transit_mode: (t.transit_mode || "local_only") as AdminBooking["transit_mode"],
+    status_history: status_history.length > 0 ? status_history : undefined,
     travellers,
     notes: [],
     created_at: t.created_at ? String(t.created_at) : new Date().toISOString(),
@@ -148,6 +187,22 @@ export function mapDatabaseCommercialToAdminApproval(c: DbRecord): AdminApproval
 export function mapDatabaseCircuitToAdminTrip(c: DbRecord): AdminTrip {
   const destination = asRecord(c.destinations);
   const destName = String(destination.name || c.destination_name || "Custom");
+  const incHotels = Array.isArray(c.included_hotel_ids)
+    ? (c.included_hotel_ids as string[])
+    : Array.isArray(c.hotel_ids)
+    ? (c.hotel_ids as string[])
+    : [];
+  const incVehicles = Array.isArray(c.included_vehicle_ids)
+    ? (c.included_vehicle_ids as string[])
+    : Array.isArray(c.vehicle_ids)
+    ? (c.vehicle_ids as string[])
+    : [];
+  const incStops = Array.isArray(c.included_stop_ids)
+    ? (c.included_stop_ids as string[])
+    : Array.isArray(c.stop_ids)
+    ? (c.stop_ids as string[])
+    : [];
+
   return {
     id: String(c.id || ""),
     destination_id: String(c.destination_id || ""),
@@ -167,9 +222,14 @@ export function mapDatabaseCircuitToAdminTrip(c: DbRecord): AdminTrip {
     allow_car: c.allow_car !== undefined ? Boolean(c.allow_car) : true,
     allow_bike: c.allow_bike !== undefined ? Boolean(c.allow_bike) : false,
     vehicle_required: c.vehicle_required !== undefined ? Boolean(c.vehicle_required) : true,
-    hotel_ids: Array.isArray(c.hotel_ids) ? (c.hotel_ids as string[]) : [],
-    vehicle_ids: Array.isArray(c.vehicle_ids) ? (c.vehicle_ids as string[]) : [],
-    stop_ids: Array.isArray(c.stop_ids) ? (c.stop_ids as string[]) : [],
+    hotel_ids: incHotels,
+    vehicle_ids: incVehicles,
+    stop_ids: incStops,
+    pricing_scope: (c.pricing_scope || "local_city_only") as AdminTrip["pricing_scope"],
+    included_hotel_ids: incHotels,
+    included_vehicle_ids: incVehicles,
+    included_stop_ids: incStops,
+    local_sightseeing_km_per_day: Number(c.local_sightseeing_km_per_day) || 50,
   };
 }
 
@@ -259,6 +319,22 @@ export function mapDatabaseStopToAdminStop(s: DbRecord): AdminStop {
  * Maps a Supabase `destinations` row to `AdminDestination` (`DestinationAdmin`).
  */
 export function mapDatabaseDestinationToAdminDestination(d: DbRecord): AdminDestination {
+  const rawHighlights = Array.isArray(d.destination_highlights) ? d.destination_highlights : [];
+  const highlights = rawHighlights.map((hi: unknown) => {
+    const h = asRecord(hi);
+    return {
+      id: String(h.id || ""),
+      destination_id: String(h.destination_id || d.id || ""),
+      title: String(h.title || "Highlight"),
+      category: h.category ? String(h.category) : null,
+      duration_text: h.duration_text ? String(h.duration_text) : null,
+      badge: h.badge ? String(h.badge) : null,
+      description: h.description ? String(h.description) : null,
+      image_path: h.image_path ? String(h.image_path) : null,
+      sort_order: Number(h.sort_order) || 0,
+    };
+  });
+
   return {
     id: String(d.id || ""),
     slug: String(d.slug || ""),
@@ -277,6 +353,9 @@ export function mapDatabaseDestinationToAdminDestination(d: DbRecord): AdminDest
     origin_label: String(d.origin_label || "Delhi NCR"),
     drive_hours: d.drive_hours !== null && d.drive_hours !== undefined ? Number(d.drive_hours) : null,
     drive_km: d.drive_km !== null && d.drive_km !== undefined ? Number(d.drive_km) : null,
+    latitude: d.latitude !== null && d.latitude !== undefined ? Number(d.latitude) : null,
+    longitude: d.longitude !== null && d.longitude !== undefined ? Number(d.longitude) : null,
+    local_radius_km: Number(d.local_radius_km) || 40,
     is_featured: Boolean(d.is_featured),
     is_bookable: Boolean(d.is_bookable ?? true),
     is_active: Boolean(d.is_active ?? true),
@@ -286,6 +365,7 @@ export function mapDatabaseDestinationToAdminDestination(d: DbRecord): AdminDest
     min_days: 2,
     max_days: 7,
     max_travellers: 20,
+    highlights: highlights.length > 0 ? highlights : undefined,
   };
 }
 

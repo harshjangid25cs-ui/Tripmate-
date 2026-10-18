@@ -141,14 +141,37 @@ function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 5000): Promise<T> {
 }
 
 export async function getHotelsForDestination(
-  destinationId?: string | null
+  destinationId?: string | null,
+  tripId?: string | null
 ): Promise<Hotel[]> {
   noStore();
   try {
     const supabase = await createClient();
+    let allowedHotelIds: string[] | null = null;
+    if (tripId) {
+      const { data: trip } = await supabase
+        .from("trips")
+        .select("circuit_id")
+        .eq("id", tripId)
+        .maybeSingle();
+      if (trip?.circuit_id) {
+        const { data: circuit } = await supabase
+          .from("circuits")
+          .select("included_hotel_ids")
+          .eq("id", trip.circuit_id)
+          .maybeSingle();
+        if (circuit?.included_hotel_ids && circuit.included_hotel_ids.length > 0) {
+          allowedHotelIds = circuit.included_hotel_ids;
+        }
+      }
+    }
+
     let query = supabase.from("hotels").select("*").eq("is_active", true);
     if (destinationId) {
       query = query.eq("destination_id", destinationId);
+    }
+    if (allowedHotelIds && allowedHotelIds.length > 0) {
+      query = query.in("id", allowedHotelIds);
     }
     const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
@@ -161,16 +184,39 @@ export async function getHotelsForDestination(
 }
 
 export async function getVehicles(
-  type?: "car" | "bike"
+  type?: "car" | "bike",
+  tripId?: string | null
 ): Promise<Vehicle[]> {
   noStore();
   try {
     const supabase = await createClient();
+    let allowedVehicleIds: string[] | null = null;
+    if (tripId) {
+      const { data: trip } = await supabase
+        .from("trips")
+        .select("circuit_id")
+        .eq("id", tripId)
+        .maybeSingle();
+      if (trip?.circuit_id) {
+        const { data: circuit } = await supabase
+          .from("circuits")
+          .select("included_vehicle_ids")
+          .eq("id", trip.circuit_id)
+          .maybeSingle();
+        if (circuit?.included_vehicle_ids && circuit.included_vehicle_ids.length > 0) {
+          allowedVehicleIds = circuit.included_vehicle_ids;
+        }
+      }
+    }
+
     let query = supabase.from("vehicles").select("*").eq("is_active", true);
     if (type) {
       query = query.eq("type", type);
     } else {
       query = query.in("type", ["car", "bike"]);
+    }
+    if (allowedVehicleIds && allowedVehicleIds.length > 0) {
+      query = query.in("id", allowedVehicleIds);
     }
     const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
@@ -183,21 +229,41 @@ export async function getVehicles(
 }
 
 export async function getStopsForDestination(
-  destinationId?: string | null
+  destinationId?: string | null,
+  tripId?: string | null
 ): Promise<Stop[]> {
   noStore();
   try {
     const supabase = await createClient();
-    const query = supabase
-      .from("stops")
-      .select("*")
-      .eq("is_active", true);
+    let allowedStopIds: string[] | null = null;
+    if (tripId) {
+      const { data: trip } = await supabase
+        .from("trips")
+        .select("circuit_id")
+        .eq("id", tripId)
+        .maybeSingle();
+      if (trip?.circuit_id) {
+        const { data: circuit } = await supabase
+          .from("circuits")
+          .select("included_stop_ids")
+          .eq("id", trip.circuit_id)
+          .maybeSingle();
+        if (circuit?.included_stop_ids && circuit.included_stop_ids.length > 0) {
+          allowedStopIds = circuit.included_stop_ids;
+        }
+      }
+    }
+
+    let query = supabase.from("stops").select("*").eq("is_active", true);
+    if (allowedStopIds && allowedStopIds.length > 0) {
+      query = query.in("id", allowedStopIds);
+    }
     const { data, error } = await withTimeout(query, 5000);
     if (error || !data || data.length === 0) {
       return [];
     }
     const mapped = (data as StopRow[]).map(mapStop);
-    if (destinationId) {
+    if (destinationId && (!allowedStopIds || allowedStopIds.length === 0)) {
       return mapped.filter(
         (s) => s.destinationId === destinationId || s.destinationId === null
       );
@@ -207,6 +273,7 @@ export async function getStopsForDestination(
     return [];
   }
 }
+
 
 export interface ConfirmedTripDetails {
   trip: TripRow;

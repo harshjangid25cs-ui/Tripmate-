@@ -9,6 +9,7 @@ import { getDestinationImageUrl, getHighlightImageUrl } from "@/lib/data/images"
 import { formatCurrency } from "@/lib/format";
 import { toggleSavedItem } from "@/lib/data/saved-items";
 import { createNormalTripDraft } from "@/lib/actions/trips";
+import { LocationCoverageScopeBar } from "@/components/features/booking/LocationCoverageScopeBar";
 
 interface DestinationDetailViewProps {
   destination: Destination;
@@ -235,6 +236,18 @@ export function DestinationDetailView({
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Location & Coverage Scope Bar */}
+        <div className="w-full px-4 pt-1">
+          <LocationCoverageScopeBar
+            destinationName={destination.name}
+            destinationLat={destination.latitude ? Number(destination.latitude) : 26.9124}
+            destinationLng={destination.longitude ? Number(destination.longitude) : 75.7873}
+            initialTransitMode="local_only"
+            initialOriginName="Local City Scope"
+            initialCalculatedKm={0}
+          />
         </div>
 
         {/* Things to see & experience carousel */}

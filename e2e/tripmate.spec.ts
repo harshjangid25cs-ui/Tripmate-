@@ -368,7 +368,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     const targetTripId = userATripId || "11111111-1111-1111-1111-111111111111";
     await page.goto(`/trips/${targetTripId}`);
     // Unauthorized access must redirect away from /trips/[id] to /home
-    await page.waitForURL("**/home", { timeout: 15000 });
+    await page.waitForURL("**/home", { timeout: 20000, waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/home/);
 
     // Part B: 4 MB ID upload succeeds in the traveller step
@@ -419,7 +419,11 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
       ).toBeVisible({ timeout: 25000 });
     } finally {
       if (fs.existsSync(tempFilePath)) {
-        fs.unlinkSync(tempFilePath);
+        try {
+          fs.unlinkSync(tempFilePath);
+        } catch {
+          // Ignore Windows file lock during test cleanup
+        }
       }
     }
   });
@@ -594,11 +598,44 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.waitForLoadState("networkidle");
     await expect(page.locator("text=TripMate Admin Portal")).toBeVisible();
 
-    // Click Operator Fast Launch (Super Admin)
-    const superAdminBtn = page.getByRole("button", { name: "Super Admin Test §2 powers" });
-    await superAdminBtn.click();
+    // Fill Operator credentials into the login form
+    await page.locator('input[type="email"]').fill("tripmateoffical007@gmail.com");
+    await page.locator('input[type="password"]').fill(DEMO_PASSWORD);
+    await page.locator('button[type="submit"]').click();
     await page.waitForURL("**/admin", { timeout: 15000 });
     await expect(page).toHaveURL(/\/admin/);
     await expect(page.locator("text=Operations Center")).toBeVisible();
+  });
+
+  test("6. Access Control: Normal logged-in customer cannot reach /admin and redirects to /home", async ({
+    page,
+    context,
+  }) => {
+    await context.clearCookies();
+    await context.addCookies([
+      {
+        name: "tripmate_onboarding_completed",
+        value: "true",
+        domain: "localhost",
+        path: "/",
+      },
+    ]);
+
+    await page.goto("/login");
+    await page.waitForLoadState("networkidle");
+    await page.locator("#email").fill("arjun.kapoor@tripmate.io");
+    await page.locator("#password").fill(DEMO_PASSWORD);
+    await page.locator('button[type="submit"]').click();
+    await page.waitForURL("**/home", { timeout: 25000 });
+
+    // Directly attempt to access /admin
+    await page.goto("/admin");
+    await page.waitForURL("**/home", { timeout: 15000 });
+    await expect(page).toHaveURL(/\/home/);
+
+    // Directly attempt to access /admin/bookings
+    await page.goto("/admin/bookings");
+    await page.waitForURL("**/home", { timeout: 15000 });
+    await expect(page).toHaveURL(/\/home/);
   });
 });

@@ -27,6 +27,9 @@ export interface Destination {
   isFeatured: boolean;
   isBookable: boolean;
   isActive: boolean;
+  latitude?: number | null;
+  longitude?: number | null;
+  localRadiusKm?: number;
 }
 
 export interface DestinationHighlight {
@@ -37,6 +40,8 @@ export interface DestinationHighlight {
   durationText: string;
   badge: string;
   sortOrder: number;
+  description?: string | null;
+  imagePath?: string | null;
 }
 
 export interface Circuit {
@@ -56,9 +61,14 @@ export interface Circuit {
   isFeatured: boolean;
   imagePath: string | null;
   isActive: boolean;
+  pricingScope?: "local_city_only" | "origin_transit_included";
+  includedHotelIds?: string[];
+  includedVehicleIds?: string[];
+  includedStopIds?: string[];
+  localSightseeingKmPerDay?: number;
 }
 
-function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 5000): Promise<T> {
+function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 15000): Promise<T> {
   return Promise.race([
     Promise.resolve(promise),
     new Promise<T>((_, reject) => {
@@ -77,7 +87,7 @@ export async function getDestinations(category?: string): Promise<Destination[]>
     let query = supabase
       .from("destinations")
       .select(
-        "id, slug, name, region, tagline, description, hero_image_path, starting_price, rating, review_count, recommended_days, best_season, badge, categories, origin_label, drive_hours, drive_km, is_featured, is_bookable, is_active"
+        "id, slug, name, region, tagline, description, hero_image_path, starting_price, rating, review_count, recommended_days, best_season, badge, categories, origin_label, drive_hours, drive_km, is_featured, is_bookable, is_active, latitude, longitude, local_radius_km"
       )
       .eq("is_active", true)
       .order("is_bookable", { ascending: false });
@@ -92,7 +102,7 @@ export async function getDestinations(category?: string): Promise<Destination[]>
       return [];
     }
 
-    const rows = data as unknown as DestinationRow[];
+    const rows = data as unknown as (DestinationRow & { latitude?: number | null; longitude?: number | null; local_radius_km?: number })[];
     return rows.map((d) => ({
       id: d.id,
       slug: d.slug,
@@ -114,6 +124,9 @@ export async function getDestinations(category?: string): Promise<Destination[]>
       isFeatured: d.is_featured,
       isBookable: d.is_bookable,
       isActive: d.is_active,
+      latitude: d.latitude ? Number(d.latitude) : 26.9124,
+      longitude: d.longitude ? Number(d.longitude) : 75.7873,
+      localRadiusKm: d.local_radius_km ?? 40,
     }));
   } catch (err) {
     console.error("Failed to query destinations from Supabase:", err);
@@ -131,14 +144,14 @@ export async function getDestinationBySlug(
       supabase
         .from("destinations")
         .select(
-          "id, slug, name, region, tagline, description, hero_image_path, starting_price, rating, review_count, recommended_days, best_season, badge, categories, origin_label, drive_hours, drive_km, is_featured, is_bookable, is_active"
+          "id, slug, name, region, tagline, description, hero_image_path, starting_price, rating, review_count, recommended_days, best_season, badge, categories, origin_label, drive_hours, drive_km, is_featured, is_bookable, is_active, latitude, longitude, local_radius_km"
         )
         .eq("slug", slug.toLowerCase())
         .single(),
-      5000
+      15000
     );
 
-    const d = rawD as unknown as DestinationRow | null;
+    const d = rawD as unknown as (DestinationRow & { latitude?: number | null; longitude?: number | null; local_radius_km?: number }) | null;
 
     if (error || !d || d.is_active === false) {
       if (error && error.code !== "PGRST116") {
@@ -150,13 +163,13 @@ export async function getDestinationBySlug(
     const { data: rawHighlights } = await withTimeout(
       supabase
         .from("destination_highlights")
-        .select("id, destination_id, title, category, duration_text, badge, sort_order")
+        .select("id, destination_id, title, category, duration_text, badge, sort_order, description, image_path")
         .eq("destination_id", d.id)
         .order("sort_order", { ascending: true }),
-      5000
+      15000
     );
 
-    const highlightRows = (rawHighlights ?? []) as unknown as HighlightRow[];
+    const highlightRows = (rawHighlights ?? []) as unknown as (HighlightRow & { description?: string | null; image_path?: string | null })[];
 
     const destination: Destination = {
       id: d.id,
@@ -179,6 +192,9 @@ export async function getDestinationBySlug(
       isFeatured: d.is_featured,
       isBookable: d.is_bookable,
       isActive: d.is_active,
+      latitude: d.latitude ? Number(d.latitude) : 26.9124,
+      longitude: d.longitude ? Number(d.longitude) : 75.7873,
+      localRadiusKm: d.local_radius_km ?? 40,
     };
 
     const highlights: DestinationHighlight[] = highlightRows.map((h) => ({
@@ -189,6 +205,8 @@ export async function getDestinationBySlug(
       durationText: h.duration_text ?? "",
       badge: h.badge ?? "",
       sortOrder: h.sort_order,
+      description: h.description ?? null,
+      imagePath: h.image_path ?? null,
     }));
 
     return { destination, highlights };

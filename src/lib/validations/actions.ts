@@ -187,6 +187,11 @@ export const adminUpsertCircuitSchema = z.object({
   imageUrl: z.string().optional(),
   isFeatured: z.boolean().optional(),
   isActive: z.boolean().optional(),
+  pricingScope: z.enum(["local_city_only", "origin_transit_included"]).optional(),
+  includedHotelIds: z.array(z.string()).optional(),
+  includedVehicleIds: z.array(z.string()).optional(),
+  includedStopIds: z.array(z.string()).optional(),
+  localSightseeingKmPerDay: z.number().int().min(1).optional(),
   reason: z.string().trim().optional(),
 });
 
@@ -291,6 +296,9 @@ export const adminUpsertDestinationSchema = z.object({
   isBookable: z.boolean().optional(),
   isActive: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
+  latitude: z.number().nullable().optional(),
+  longitude: z.number().nullable().optional(),
+  localRadiusKm: z.number().int().min(1).optional(),
   reason: z.string().trim().optional(),
 });
 
@@ -428,3 +436,85 @@ export type AdminUpdatePricingConfigInput = z.infer<typeof adminUpdatePricingCon
 export type ApplyCustomerCouponInput = z.infer<typeof applyCustomerCouponSchema>;
 export type CreateRazorpayOrderInput = z.infer<typeof createRazorpayOrderSchema>;
 export type VerifyRazorpayPaymentInput = z.infer<typeof verifyRazorpayPaymentSchema>;
+
+export const adminUpsertHighlightSchema = z.object({
+  id: z.string().min(1).optional(),
+  destinationId: z.string().min(1, "Destination ID is required."),
+  title: z.string().trim().min(2, "Title must be at least 2 characters."),
+  category: z.string().optional().nullable(),
+  durationText: z.string().optional().nullable(),
+  badge: z.string().optional().nullable(),
+  sortOrder: z.number().int().optional(),
+  description: z.string().optional().nullable(),
+  imagePath: z.string().optional().nullable(),
+  reason: z.string().trim().optional(),
+});
+export type AdminUpsertHighlightInput = z.infer<typeof adminUpsertHighlightSchema>;
+
+export const adminDeleteHighlightSchema = z
+  .object({
+    id: z.string().min(1).optional(),
+    highlightId: z.string().min(1).optional(),
+    reason: z.string().trim().optional(),
+  })
+  .refine((data) => Boolean(data.id || data.highlightId), {
+    message: "Highlight ID is required.",
+  });
+export type AdminDeleteHighlightInput = z.infer<typeof adminDeleteHighlightSchema>;
+
+export const adminOverrideBookingSchema = z.object({
+  tripId: z.string().min(1, "Trip ID is required."),
+  hotelId: z.string().nullable().optional(),
+  vehicleId: z.string().nullable().optional(),
+  stopIds: z.array(z.string()).optional(),
+  customAdjustment: z.number().optional(),
+  customAdjustmentAmount: z.number().optional(),
+  notes: z.string().optional(),
+  reason: z.string().trim().optional(),
+});
+export type AdminOverrideBookingInput = z.infer<typeof adminOverrideBookingSchema>;
+
+export const adminSendNotificationSchema = z
+  .object({
+    profileId: z.string().min(1).optional(),
+    userId: z.string().min(1).optional(),
+    tripId: z.string().nullable().optional(),
+    type: z.string().optional(),
+    title: z.string().trim().optional(),
+    message: z.string().trim().min(1, "Message is required."),
+    reason: z.string().trim().optional(),
+  })
+  .refine((data) => Boolean(data.profileId || data.userId), {
+    message: "Profile ID or User ID is required.",
+  });
+export type AdminSendNotificationInput = z.infer<typeof adminSendNotificationSchema>;
+
+export const adminUpsertCompanyPolicySchema = z.object({
+  companyId: z.string().min(1, "Company ID is required."),
+  policyId: z.string().optional(),
+  type: z.enum(["hotel", "vehicle", "approval"]).optional().default("approval"),
+  ruleText: z.string().trim().optional(),
+  limitValue: z.number().min(0).nullable().optional(),
+  maxBudgetPerTrip: z.number().min(0).optional(),
+  requiresApproval: z.boolean().optional(),
+  allowedVehicleTypes: z.array(z.string()).optional(),
+  reason: z.string().trim().optional(),
+});
+export type AdminUpsertCompanyPolicyInput = z.infer<typeof adminUpsertCompanyPolicySchema>;
+
+export const adminGetDocumentSignedUrlSchema = z.union([
+  z.string().trim().min(1, "Path is required."),
+  z.object({
+    storagePath: z.string().trim().min(1, "Path is required."),
+    path: z.string().trim().min(1, "Path is required.").optional(),
+    expiresIn: z.number().int().min(10).max(3600).optional().default(300),
+  }),
+]);
+export type AdminGetDocumentSignedUrlInput = z.infer<typeof adminGetDocumentSignedUrlSchema>;
+
+// Aliases for explicit consistency
+export const adminUpsertDestinationHighlightSchema = adminUpsertHighlightSchema;
+export const adminDeleteDestinationHighlightSchema = adminDeleteHighlightSchema;
+export const adminOverrideBookingItemsSchema = adminOverrideBookingSchema;
+export const adminSendCustomerNotificationSchema = adminSendNotificationSchema;
+
