@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
+import { haversineDistanceKm, KNOWN_CITIES } from "@/lib/geo/distance";
 
 export type HotelRow = Database["public"]["Tables"]["hotels"]["Row"];
 export type VehicleRow = Database["public"]["Tables"]["vehicles"]["Row"];
@@ -36,6 +37,9 @@ export interface Hotel {
 
 export interface Vehicle {
   id: string;
+  destinationId?: string | null;
+  destinationName?: string | null;
+  city?: string | null;
   type: "car" | "bike" | "bus";
   name: string;
   subtitle: string | null;
@@ -72,7 +76,51 @@ export interface Stop {
 
 
 
-function mapHotel(row: HotelRow): Hotel {
+const KNOWN_HOTEL_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  // Sansar Chandra Road / Alsisar Haveli (~1.2 km from MI Road / Ajmeri Gate center)
+  "alsisar haveli": { lat: 26.9219, lng: 75.795 },
+  "sansar chandra road": { lat: 26.9219, lng: 75.795 },
+  // C-Scheme / Diggi Palace (~1.5 km from center)
+  "diggi palace": { lat: 26.906, lng: 75.798 },
+  "diggi palace heritage hotel": { lat: 26.906, lng: 75.798 },
+  "c-scheme": { lat: 26.906, lng: 75.798 },
+  // Bani Park / Shahpura Haveli (~1.8 km from center)
+  "shahpura haveli": { lat: 26.927, lng: 75.7925 },
+  "shahpura haveli & heritage suites": { lat: 26.927, lng: 75.7925 },
+  "bani park": { lat: 26.927, lng: 75.7925 },
+  // Amer Road / Amber (~8.5 km from center)
+  "amer": { lat: 26.9855, lng: 75.8513 },
+  "amer road": { lat: 26.95, lng: 75.83 },
+  // Civil Lines (~2.5 km from center)
+  "civil lines": { lat: 26.902, lng: 75.778 },
+};
+
+function calculateHotelCenterDistance(
+  hotel: HotelRow,
+  destLat: number,
+  destLng: number
+): number {
+  const nameKey = hotel.name.toLowerCase().trim();
+  const hoodKey = (hotel.neighborhood || "").toLowerCase().trim();
+  const coord = KNOWN_HOTEL_COORDINATES[nameKey] || KNOWN_HOTEL_COORDINATES[hoodKey];
+  if (coord) {
+    return haversineDistanceKm(destLat, destLng, coord.lat, coord.lng);
+  }
+  if (hotel.distance_text) {
+    const match = hotel.distance_text.match(/([\d.]+)\s*km/i);
+    if (match && match[1]) {
+      const parsed = parseFloat(match[1]);
+      if (!isNaN(parsed)) return parsed;
+    }
+  }
+  return 5.0;
+}
+
+function mapHotel(row: HotelRow, computedDistKm?: number): Hotel {
+  let distanceText = row.distance_text;
+  if (!distanceText && computedDistKm !== undefined) {
+    distanceText = `${computedDistKm.toFixed(1)} km from center`;
+  }
   return {
     id: row.id,
     destinationId: row.destination_id,
@@ -81,7 +129,7 @@ function mapHotel(row: HotelRow): Hotel {
     rating: Number(row.rating ?? 4.8),
     reviewCount: row.review_count ?? 0,
     neighborhood: row.neighborhood,
-    distanceText: row.distance_text,
+    distanceText,
     badge: row.badge,
     pricePerNight: Number(row.price_per_night),
     imagePaths: row.image_paths ?? [],
@@ -90,9 +138,15 @@ function mapHotel(row: HotelRow): Hotel {
   };
 }
 
-function mapVehicle(row: VehicleRow): Vehicle {
+function mapVehicle(
+  row: VehicleRow & { destinations?: { name?: string | null } | null }
+): Vehicle {
+  const destName = row.destinations?.name ?? "Jaipur";
   return {
     id: row.id,
+    destinationId: row.destination_id ?? null,
+    destinationName: destName,
+    city: destName,
     type: row.type as "car" | "bike" | "bus",
     name: row.name,
     subtitle: row.subtitle,
@@ -148,27 +202,55 @@ export async function getHotelsForDestination(
   try {
     const supabase = await createClient();
     let allowedHotelIds: string[] | null = null;
+    let resolvedDestId = destinationId;
+
     if (tripId) {
       const { data: trip } = await supabase
         .from("trips")
-        .select("circuit_id")
+        .select("destination_id, circuit_id")
         .eq("id", tripId)
         .maybeSingle();
+      if (trip?.destination_id && !resolvedDestId) {
+        resolvedDestId = trip.destination_id;
+      }
       if (trip?.circuit_id) {
         const { data: circuit } = await supabase
           .from("circuits")
-          .select("included_hotel_ids")
+          .select("destination_id, included_hotel_ids")
           .eq("id", trip.circuit_id)
           .maybeSingle();
+        if (circuit?.destination_id && !resolvedDestId) {
+          resolvedDestId = circuit.destination_id;
+        }
         if (circuit?.included_hotel_ids && circuit.included_hotel_ids.length > 0) {
           allowedHotelIds = circuit.included_hotel_ids;
         }
       }
     }
 
+    // Resolve destination center coordinates for Haversine distance calculations
+    let destLat = KNOWN_CITIES.jaipur?.lat ?? 26.9124;
+    let destLng = KNOWN_CITIES.jaipur?.lng ?? 75.7873;
+
+    if (resolvedDestId) {
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedDestId);
+      const destQuery = supabase.from("destinations").select("id, name, latitude, longitude");
+      const { data: dest } = isUuid
+        ? await destQuery.eq("id", resolvedDestId).maybeSingle()
+        : await destQuery.ilike("slug", resolvedDestId).maybeSingle();
+
+      if (dest) {
+        resolvedDestId = dest.id;
+        if (typeof dest.latitude === "number" && typeof dest.longitude === "number") {
+          destLat = dest.latitude;
+          destLng = dest.longitude;
+        }
+      }
+    }
+
     let query = supabase.from("hotels").select("*").eq("is_active", true);
-    if (destinationId) {
-      query = query.eq("destination_id", destinationId);
+    if (resolvedDestId) {
+      query = query.eq("destination_id", resolvedDestId);
     }
     if (allowedHotelIds && allowedHotelIds.length > 0) {
       query = query.in("id", allowedHotelIds);
@@ -177,7 +259,21 @@ export async function getHotelsForDestination(
     if (error || !data || data.length === 0) {
       return [];
     }
-    return (data as HotelRow[]).map(mapHotel);
+
+    const rawHotels = data as HotelRow[];
+
+    // Calculate Haversine distance and sort closest to city center / landmark first
+    const hotelsWithDistance = rawHotels.map((h) => {
+      const dist = calculateHotelCenterDistance(h, destLat, destLng);
+      return {
+        hotel: mapHotel(h, dist),
+        distanceKm: dist,
+      };
+    });
+
+    hotelsWithDistance.sort((a, b) => a.distanceKm - b.distanceKm);
+
+    return hotelsWithDistance.map((item) => item.hotel);
   } catch {
     return [];
   }
@@ -185,35 +281,59 @@ export async function getHotelsForDestination(
 
 export async function getVehicles(
   type?: "car" | "bike",
-  tripId?: string | null
+  tripId?: string | null,
+  destinationId?: string | null
 ): Promise<Vehicle[]> {
   noStore();
   try {
     const supabase = await createClient();
     let allowedVehicleIds: string[] | null = null;
+    let resolvedDestId = destinationId;
+
     if (tripId) {
       const { data: trip } = await supabase
         .from("trips")
-        .select("circuit_id")
+        .select("destination_id, circuit_id")
         .eq("id", tripId)
         .maybeSingle();
+      if (trip?.destination_id && !resolvedDestId) {
+        resolvedDestId = trip.destination_id;
+      }
       if (trip?.circuit_id) {
         const { data: circuit } = await supabase
           .from("circuits")
-          .select("included_vehicle_ids")
+          .select("destination_id, included_vehicle_ids")
           .eq("id", trip.circuit_id)
           .maybeSingle();
+        if (circuit?.destination_id && !resolvedDestId) {
+          resolvedDestId = circuit.destination_id;
+        }
         if (circuit?.included_vehicle_ids && circuit.included_vehicle_ids.length > 0) {
           allowedVehicleIds = circuit.included_vehicle_ids;
         }
       }
     }
 
-    let query = supabase.from("vehicles").select("*").eq("is_active", true);
+    // Resolve destination UUID if slug passed
+    if (resolvedDestId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedDestId)) {
+      const { data: dest } = await supabase
+        .from("destinations")
+        .select("id")
+        .ilike("slug", resolvedDestId)
+        .maybeSingle();
+      if (dest?.id) {
+        resolvedDestId = dest.id;
+      }
+    }
+
+    let query = supabase.from("vehicles").select("*, destinations(name)").eq("is_active", true);
     if (type) {
       query = query.eq("type", type);
     } else {
       query = query.in("type", ["car", "bike"]);
+    }
+    if (resolvedDestId) {
+      query = query.or(`destination_id.eq.${resolvedDestId},destination_id.is.null`);
     }
     if (allowedVehicleIds && allowedVehicleIds.length > 0) {
       query = query.in("id", allowedVehicleIds);
@@ -222,7 +342,7 @@ export async function getVehicles(
     if (error || !data || data.length === 0) {
       return [];
     }
-    return (data as VehicleRow[]).map(mapVehicle);
+    return (data as (VehicleRow & { destinations?: { name?: string | null } | null })[]).map(mapVehicle);
   } catch {
     return [];
   }

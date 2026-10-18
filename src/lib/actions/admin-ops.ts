@@ -303,7 +303,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
 
     const { data: vehiclesData } = await supabase
       .from("vehicles")
-      .select("*")
+      .select("*, destinations (name)")
       .order("created_at", { ascending: false });
 
     const { data: driversData } = await supabase
@@ -1252,6 +1252,7 @@ export async function adminUpsertVehicleAction(payload: unknown): Promise<{
   try {
     const vehiclePayload = {
       id: input.id,
+      destination_id: input.destinationId ?? null,
       name: input.name,
       type: input.type,
       subtitle: input.subtitle ?? "",
@@ -1281,6 +1282,7 @@ export async function adminUpsertVehicleAction(payload: unknown): Promise<{
     // Direct fallback
     const dbPayload: Database["public"]["Tables"]["vehicles"]["Insert"] = {
       id: input.id || crypto.randomUUID(),
+      destination_id: input.destinationId ?? null,
       type: input.type,
       name: input.name,
       subtitle: input.subtitle ?? null,

@@ -187,9 +187,14 @@ export function HotelsView() {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-base font-bold text-text-primary">{h.name}</h3>
-                  <p className="text-xs text-text-secondary mt-0.5">
-                    {h.destination_name} · {h.neighborhood}
-                  </p>
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-bold text-text-primary">
+                      📍 {h.destination_name || "Jaipur"}
+                    </span>
+                    {h.neighborhood && (
+                      <span className="text-xs text-text-secondary">· {h.neighborhood}</span>
+                    )}
+                  </div>
                 </div>
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
@@ -306,13 +311,24 @@ export function HotelsView() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Destination</label>
+                  <label className="block text-xs font-bold text-text-primary mb-1">
+                    City / Destination <span className="text-primary">*</span>
+                  </label>
                   <select
                     value={formData.destination_id || ""}
-                    onChange={(e) => setFormData({ ...formData, destination_id: e.target.value })}
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-xs"
+                    onChange={(e) => {
+                      const destId = e.target.value;
+                      const d = destinations.find((item) => item.id === destId);
+                      setFormData({
+                        ...formData,
+                        destination_id: destId,
+                        destination_name: d?.name || "Jaipur",
+                      });
+                    }}
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary"
                     required
                   >
+                    <option value="">Select destination...</option>
                     {destinations.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name}

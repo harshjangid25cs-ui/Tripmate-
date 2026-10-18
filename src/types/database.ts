@@ -418,6 +418,7 @@ export interface Database {
       vehicles: {
         Row: {
           id: string;
+          destination_id: string | null;
           type: "car" | "bike" | "bus";
           name: string;
           subtitle: string | null;
@@ -437,6 +438,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          destination_id?: string | null;
           type: "car" | "bike" | "bus";
           name: string;
           subtitle?: string | null;
@@ -455,6 +457,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: {
+          destination_id?: string | null;
           type?: "car" | "bike" | "bus";
           name?: string;
           subtitle?: string | null;

@@ -225,6 +225,9 @@ export interface HotelAdmin {
 
 export interface VehicleAdmin {
   id: string;
+  destination_id?: string | null;
+  destination_name?: string | null;
+  city?: string | null;
   type: "car" | "bike" | "bus";
   name: string;
   subtitle: string;

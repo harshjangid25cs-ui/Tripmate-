@@ -28,6 +28,7 @@ export function VehiclesView() {
   const [formData, setFormData] = useState<Partial<VehicleAdmin>>({});
 
   const canWrite = hasPermission("catalog_write");
+  const destinations = AdminService.getDestinations();
   const refresh = () => setVehicles(AdminService.getVehicles());
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export function VehiclesView() {
         AdminService.updateVehicle(currentAdmin, veh.id, { is_active: nextVal }, reason);
         await adminUpsertVehicleAction({
           id: veh.id,
+          destinationId: veh.destination_id ?? undefined,
           name: veh.name,
           type: veh.type,
           pricePerDay: veh.price_per_day,
@@ -83,8 +85,8 @@ export function VehiclesView() {
 
   const handleSaveForm = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.type) {
-      toast("Name and vehicle type are required", "error");
+    if (!formData.name || !formData.type || !formData.destination_id) {
+      toast("Name, vehicle type, and destination are required", "error");
       return;
     }
 
@@ -93,12 +95,16 @@ export function VehiclesView() {
       return;
     }
 
+    const dest = destinations.find((d) => d.id === formData.destination_id);
+    const destName = dest ? dest.name : "Jaipur";
+
     requestReasonModal(
       formData.id ? "Update Vehicle" : "Add Vehicle",
       `Save modifications to fleet vehicle ${formData.name}.`,
       async (reason) => {
         await adminUpsertVehicleAction({
           id: formData.id,
+          destinationId: formData.destination_id,
           name: formData.name!,
           type: formData.type!,
           subtitle: formData.subtitle || "",
@@ -115,12 +121,25 @@ export function VehiclesView() {
         });
 
         if (formData.id) {
-          AdminService.updateVehicle(currentAdmin, formData.id, formData, reason);
+          AdminService.updateVehicle(
+            currentAdmin,
+            formData.id,
+            {
+              ...formData,
+              destination_id: formData.destination_id,
+              destination_name: destName,
+              city: destName,
+            },
+            reason
+          );
           toast(`Updated vehicle ${formData.name}`, "success");
         } else {
           AdminService.createVehicle(
             currentAdmin,
             {
+              destination_id: formData.destination_id,
+              destination_name: destName,
+              city: destName,
               type: formData.type!,
               name: formData.name!,
               subtitle: formData.subtitle || "",
@@ -160,6 +179,9 @@ export function VehiclesView() {
             onClick={() => {
               setFormData({
                 name: "",
+                destination_id: destinations[0]?.id || "",
+                destination_name: destinations[0]?.name || "Jaipur",
+                city: destinations[0]?.name || "Jaipur",
                 type: "car",
                 subtitle: "Compact Sedan · AC",
                 capacity: 4,
@@ -193,9 +215,14 @@ export function VehiclesView() {
                   <div className="flex items-center gap-1.5">
                     <span className="text-base font-black text-text-primary">{v.name}</span>
                   </div>
-                  <span className="inline-block mt-0.5 rounded-md bg-surface text-text-secondary border border-border-hairline px-2 py-0.5 text-[10px] font-extrabold uppercase">
-                    {v.type}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                    <span className="inline-block rounded-md bg-surface text-text-secondary border border-border-hairline px-2 py-0.5 text-[10px] font-extrabold uppercase">
+                      {v.type}
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-bold text-text-primary">
+                      📍 {v.destination_name || v.city || "Jaipur"}
+                    </span>
+                  </div>
                 </div>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
@@ -310,14 +337,31 @@ export function VehiclesView() {
             <form onSubmit={handleSaveForm} className="mt-4 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-text-secondary mb-1">Vehicle Name</label>
-                  <input
-                    type="text"
-                    value={formData.name || ""}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary focus:bg-card-surface"
+                  <label className="block text-xs font-bold text-text-secondary mb-1">
+                    City / Destination <span className="text-primary">*</span>
+                  </label>
+                  <select
+                    value={formData.destination_id || ""}
+                    onChange={(e) => {
+                      const destId = e.target.value;
+                      const d = destinations.find((item) => item.id === destId);
+                      setFormData({
+                        ...formData,
+                        destination_id: destId,
+                        destination_name: d?.name || "Jaipur",
+                        city: d?.name || "Jaipur",
+                      });
+                    }}
+                    className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs font-bold text-text-primary focus:bg-card-surface"
                     required
-                  />
+                  >
+                    <option value="">Select destination...</option>
+                    {destinations.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-text-secondary mb-1">Category Type</label>
@@ -336,6 +380,17 @@ export function VehiclesView() {
                     <option value="bus">Luxury Bus / Coach (Commercial Fleet)</option>
                   </select>
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-text-secondary mb-1">Vehicle Name</label>
+                <input
+                  type="text"
+                  value={formData.name || ""}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full rounded-xl border border-border-hairline bg-surface p-2.5 text-xs text-text-primary focus:bg-card-surface"
+                  required
+                />
               </div>
 
               <div>

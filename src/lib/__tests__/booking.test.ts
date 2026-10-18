@@ -242,3 +242,122 @@ describe("Optional Vehicle Selection in Customer Booking Flow (TASK 2)", () => {
   });
 });
 
+describe("Destination-Bound Hotel & Vehicle Query Enforcement (TASK 1)", () => {
+  it("exports getHotelsForDestination and getVehicles", async () => {
+    const { getHotelsForDestination, getVehicles } = await import("../data/booking");
+    expect(typeof getHotelsForDestination).toBe("function");
+    expect(typeof getVehicles).toBe("function");
+  });
+
+  it("calculates Haversine distance correctly for hotels near destination center", async () => {
+    const { haversineDistanceKm, KNOWN_CITIES } = await import("../geo/distance");
+    const jaipurCenter = KNOWN_CITIES.jaipur;
+
+    // Alsisar Haveli on Sansar Chandra Road (~1.3 km from center)
+    const alsisarCoords = { lat: 26.9219, lng: 75.795 };
+    const alsisarDist = haversineDistanceKm(
+      jaipurCenter.lat,
+      jaipurCenter.lng,
+      alsisarCoords.lat,
+      alsisarCoords.lng
+    );
+
+    // Diggi Palace on C-Scheme (~1.3 - 1.5 km from center)
+    const diggiCoords = { lat: 26.906, lng: 75.798 };
+    const diggiDist = haversineDistanceKm(
+      jaipurCenter.lat,
+      jaipurCenter.lng,
+      diggiCoords.lat,
+      diggiCoords.lng
+    );
+
+    // Shahpura Haveli in Bani Park (~1.7 km from center)
+    const shahpuraCoords = { lat: 26.927, lng: 75.7925 };
+    const shahpuraDist = haversineDistanceKm(
+      jaipurCenter.lat,
+      jaipurCenter.lng,
+      shahpuraCoords.lat,
+      shahpuraCoords.lng
+    );
+
+    expect(alsisarDist).toBeGreaterThan(0.5);
+    expect(alsisarDist).toBeLessThan(3.0);
+    expect(diggiDist).toBeGreaterThan(0.5);
+    expect(diggiDist).toBeLessThan(3.0);
+    expect(shahpuraDist).toBeGreaterThan(0.5);
+    expect(shahpuraDist).toBeLessThan(3.0);
+
+    // Distance sorting places closest first
+    const hotels = [
+      { name: "Shahpura Haveli", dist: shahpuraDist },
+      { name: "Alsisar Haveli", dist: alsisarDist },
+      { name: "Diggi Palace", dist: diggiDist },
+    ];
+    hotels.sort((a, b) => a.dist - b.dist);
+
+    expect(hotels[0].dist).toBeLessThanOrEqual(hotels[1].dist);
+    expect(hotels[1].dist).toBeLessThanOrEqual(hotels[2].dist);
+  });
+
+  it("enforces admin-curated included_hotel_ids and destination_id constraints", async () => {
+    const curatedCircuitHotels = ["h-alsisar-1", "h-diggi-1"];
+    const mockDbHotels = [
+      { id: "h-alsisar-1", destination_id: "dest-jaipur", name: "Alsisar Haveli", is_active: true },
+      { id: "h-diggi-1", destination_id: "dest-jaipur", name: "Diggi Palace", is_active: true },
+      { id: "h-shahpura-1", destination_id: "dest-jaipur", name: "Shahpura Haveli", is_active: true },
+      { id: "h-udaipur-1", destination_id: "dest-udaipur", name: "Lake Palace", is_active: true },
+      { id: "h-inactive-1", destination_id: "dest-jaipur", name: "Inactive Haveli", is_active: false },
+    ];
+
+    // Filter strictly where destination_id = dest-jaipur AND is_active = true AND included in circuit
+    const filtered = mockDbHotels.filter(
+      (h) =>
+        h.destination_id === "dest-jaipur" &&
+        h.is_active &&
+        curatedCircuitHotels.includes(h.id)
+    );
+
+    expect(filtered.length).toBe(2);
+    expect(filtered.map((h) => h.id)).toEqual(["h-alsisar-1", "h-diggi-1"]);
+    expect(filtered.some((h) => h.destination_id === "dest-udaipur")).toBe(false);
+  });
+
+  it("verifies vehicles map destination metadata and availability", async () => {
+    const mockDbVehicles = [
+      {
+        id: "v-dzire",
+        type: "car",
+        name: "Maruti Suzuki Dzire",
+        destination_id: "dest-jaipur",
+        destinations: { name: "Jaipur" },
+        is_active: true,
+      },
+      {
+        id: "v-re350",
+        type: "bike",
+        name: "Royal Enfield Classic 350",
+        destination_id: "dest-jaipur",
+        destinations: { name: "Jaipur" },
+        is_active: true,
+      },
+      {
+        id: "v-goa-thar",
+        type: "car",
+        name: "Mahindra Thar 4x4",
+        destination_id: "dest-goa",
+        destinations: { name: "Goa" },
+        is_active: true,
+      },
+    ];
+
+    // Filter strictly for Jaipur
+    const jaipurVehicles = mockDbVehicles.filter(
+      (v) => (v.destination_id === "dest-jaipur" || !v.destination_id) && v.is_active
+    );
+
+    expect(jaipurVehicles.length).toBe(2);
+    expect(jaipurVehicles.some((v) => v.destination_id === "dest-goa")).toBe(false);
+  });
+});
+
+

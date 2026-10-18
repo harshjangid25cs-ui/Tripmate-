@@ -237,8 +237,13 @@ export function mapDatabaseCircuitToAdminTrip(c: DbRecord): AdminTrip {
  * Maps a Supabase `vehicles` row to `AdminVehicle` (`VehicleAdmin`).
  */
 export function mapDatabaseVehicleToAdminVehicle(v: DbRecord): AdminVehicle {
+  const destination = asRecord(v.destinations);
+  const destName = String(destination.name || v.destination_name || v.city || "Jaipur");
   return {
     id: String(v.id || ""),
+    destination_id: v.destination_id ? String(v.destination_id) : null,
+    destination_name: destName,
+    city: destName,
     type: (v.type || "car") as "car" | "bike" | "bus",
     name: String(v.name || "Fleet Vehicle"),
     subtitle: String(v.subtitle || ""),

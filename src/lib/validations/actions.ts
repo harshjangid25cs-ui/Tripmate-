@@ -218,6 +218,7 @@ export const adminControlActiveTripSchema = z.object({
 
 export const adminUpsertVehicleSchema = z.object({
   id: z.string().min(1).optional(),
+  destinationId: z.string().min(1).optional(),
   name: z.string().trim().min(2, "Vehicle name must be at least 2 characters."),
   type: z.enum(["car", "bike", "bus"], {
     errorMap: () => ({ message: "Vehicle type must be car, bike, or bus." }),

@@ -496,6 +496,13 @@ export function VehicleSelectionView({
                             {vehicle.subtitle}
                           </p>
                         )}
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-container text-text-primary text-[11px] font-semibold border border-border-hairline">
+                            <span className="material-symbols-outlined text-[13px] text-primary">location_on</span>
+                            <span>{vehicle.city || vehicle.destinationName || destination?.name || "Jaipur"} Hub</span>
+                          </span>
+                          <span className="text-text-secondary text-[11px]">• Local Verified Fleet</span>
+                        </div>
                       </div>
                       {isSelected && (
                         <div className="flex items-center gap-1 px-2.5 py-1 bg-primary/10 rounded-full text-primary font-label-md text-label-md font-semibold">

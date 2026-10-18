@@ -70,6 +70,7 @@ export default async function CommercialConfirmedPage({
       company: FALLBACK_COMPANY,
       vehicle: {
         id: fallbackBus.id,
+        destination_id: "11111111-1111-1111-1111-111111111111",
         type: "bus" as const,
         name: fallbackBus.name,
         subtitle: fallbackBus.subtitle,
