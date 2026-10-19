@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { createClient } from "@/lib/supabase/server";
 import { getValidatedDraftTrip } from "@/lib/data/booking-guards";
 import { TravellerDetailsView } from "@/components/features/booking/traveller-details-view";

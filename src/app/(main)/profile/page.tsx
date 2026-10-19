@@ -3,6 +3,7 @@ import { getUserProfileData, getUserNotifications } from "@/lib/data/profile";
 import { ProfileView } from "@/components/features/profile/profile-view";
 
 export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export default async function ProfilePage() {
   const [profile, notifications] = await Promise.all([

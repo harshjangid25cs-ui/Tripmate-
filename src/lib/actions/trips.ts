@@ -744,6 +744,15 @@ export async function processTripPayment({
         });
       }
 
+      try {
+        revalidatePath("/trips");
+        revalidatePath("/admin");
+        revalidatePath(`/trips/${tripId}`);
+        revalidatePath(`/book/${tripId}`, "layout");
+      } catch {
+        // Ignore in non-request test contexts
+      }
+
       return {
         ok: true,
         tripId,
@@ -768,6 +777,15 @@ export async function processTripPayment({
         relatedBookingRef: data.booking_ref,
         sentBy: "TripMate Payment System",
       });
+    }
+
+    try {
+      revalidatePath("/trips");
+      revalidatePath("/admin");
+      revalidatePath(`/trips/${tripId}`);
+      revalidatePath(`/book/${tripId}`, "layout");
+    } catch {
+      // Ignore in non-request test contexts
     }
 
     return {
@@ -860,6 +878,14 @@ export async function cancelTripBooking({
         });
       }
 
+      try {
+        revalidatePath("/trips");
+        revalidatePath("/admin");
+        revalidatePath(`/trips/${tripId}`);
+      } catch {
+        // Ignore in non-request test contexts
+      }
+
       return {
         ok: true,
         refundAmount: refund,
@@ -875,6 +901,14 @@ export async function cancelTripBooking({
         relatedTripId: tripId,
         sentBy: "TripMate Concierge",
       });
+    }
+
+    try {
+      revalidatePath("/trips");
+      revalidatePath("/admin");
+      revalidatePath(`/trips/${tripId}`);
+    } catch {
+      // Ignore in non-request test contexts
     }
 
     return {

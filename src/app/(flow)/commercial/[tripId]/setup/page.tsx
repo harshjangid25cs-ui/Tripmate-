@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import * as React from "react";
 import { redirect } from "next/navigation";
 import { getCommercialDraftDetails, FALLBACK_COMPANY } from "@/lib/data/commercial";

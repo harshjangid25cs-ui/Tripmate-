@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
 import type { IdReviewItem } from "@/lib/admin/types";
@@ -16,6 +17,7 @@ import {
 } from "lucide-react";
 
 export function DocumentsView() {
+  const router = useRouter();
   const { currentAdmin, hasPermission, requestReasonModal, toast } = useAdmin();
   const [reviews, setReviews] = useState<IdReviewItem[]>(() => AdminService.getIdReviews());
   const [activePreview, setActivePreview] = useState<IdReviewItem | null>(null);
@@ -104,6 +106,7 @@ export function DocumentsView() {
           toast(`ID for ${item.passenger_name} approved!`, "success");
           setActivePreview(null);
           refresh();
+          router.refresh();
         } else {
           toast(res.error || "Approval failed", "error");
         }
@@ -143,6 +146,7 @@ export function DocumentsView() {
       setRejectNote("");
       setActivePreview(null);
       refresh();
+      router.refresh();
     } else {
       toast(res.error || "Rejection failed", "error");
     }

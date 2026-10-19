@@ -75,8 +75,30 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie);
     });
-    return redirectResponse;
+    return applyNoCacheHeaders(redirectResponse, request.nextUrl.pathname);
   }
 
-  return supabaseResponse;
+  return applyNoCacheHeaders(supabaseResponse, request.nextUrl.pathname);
+}
+
+function applyNoCacheHeaders(response: NextResponse, pathname: string): NextResponse {
+  const isNoCacheRoute =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/book") ||
+    pathname.startsWith("/trips") ||
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/commercial") ||
+    pathname.startsWith("/tickets") ||
+    pathname.startsWith("/auth");
+
+  if (isNoCacheRoute) {
+    response.headers.set(
+      "Cache-Control",
+      "private, no-cache, no-store, max-age=0, must-revalidate"
+    );
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+  }
+  return response;
 }

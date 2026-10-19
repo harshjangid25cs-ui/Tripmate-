@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextResponse, type NextRequest } from "next/server";
 import { verifyRazorpayWebhookSignature } from "@/lib/payments/razorpay";
 import { executePaymentConfirmation } from "@/lib/payments/completion";

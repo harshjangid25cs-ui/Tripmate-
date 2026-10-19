@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/notifications/email";
 
@@ -108,6 +109,15 @@ export async function executePaymentConfirmation(
           });
         }
       }
+    }
+
+    try {
+      revalidatePath("/trips");
+      revalidatePath("/admin");
+      revalidatePath(`/book/${tripId}`, "layout");
+      revalidatePath(`/trips/${tripId}`);
+    } catch {
+      // Ignore in non-request test contexts
     }
 
     return {

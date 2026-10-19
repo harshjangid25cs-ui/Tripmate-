@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import * as React from "react";
 import { getConfirmedCommercialTrip, FALLBACK_COMPANY, FALLBACK_BUSES } from "@/lib/data/commercial";
 import { CommercialConfirmedView } from "@/components/features/commercial/commercial-confirmed-view";

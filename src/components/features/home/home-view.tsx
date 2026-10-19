@@ -6,7 +6,7 @@ import { CatalogImage } from "@/components/ui/CatalogImage";
 import type { Destination, Circuit } from "@/lib/data/destinations";
 import { getDestinationImageUrl, getCircuitImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
-import { toggleSavedItem } from "@/lib/data/saved-items";
+import { toggleSavedItem, getSavedItemIds } from "@/lib/data/saved-items";
 import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface HomeViewProps {
@@ -40,6 +40,29 @@ export function HomeView({
   const [savedIds, setSavedIds] = React.useState<Set<string>>(new Set());
   const [comingSoonToast, setComingSoonToast] = React.useState<string | null>(null);
   const [showNotifications, setShowNotifications] = React.useState(false);
+
+  // Fetch user wishlist dynamically on mount into client memory (isolated from public cached catalog)
+  React.useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      getSavedItemIds("destination"),
+      getSavedItemIds("circuit"),
+    ])
+      .then(([savedDests, savedCircuits]) => {
+        if (!mounted) return;
+        const combined = new Set<string>();
+        savedDests.forEach((id) => combined.add(id));
+        savedCircuits.forEach((id) => combined.add(id));
+        setSavedIds(combined);
+      })
+      .catch(() => {
+        // Fallback gracefully for unauthenticated or offline users
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Live Supabase Realtime synchronization for catalog additions/edits
   const realtimeTables = React.useMemo(() => ["destinations", "circuits"], []);

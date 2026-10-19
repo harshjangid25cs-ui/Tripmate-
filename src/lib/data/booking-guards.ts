@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
@@ -67,6 +68,12 @@ export async function getValidatedDraftTrip(
   tripId: string,
   targetStep: BookingStep
 ): Promise<ValidatedDraftTrip> {
+  try {
+    noStore();
+  } catch {
+    // Ignore in non-request test contexts
+  }
+
   let supabase;
   try {
     supabase = await createClient();

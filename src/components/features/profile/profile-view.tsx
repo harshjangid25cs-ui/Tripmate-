@@ -88,6 +88,25 @@ export function ProfileView({
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.clear();
+        // Clear user-specific storage keys
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const key = window.localStorage.key(i);
+          if (
+            key &&
+            (key.startsWith("sb-") ||
+              key.includes("supabase") ||
+              key.includes("user") ||
+              key.includes("trip"))
+          ) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((k) => window.localStorage.removeItem(k));
+      }
+      setNotifications([]);
       await supabase.auth.signOut();
       router.replace("/login");
       router.refresh();
@@ -123,6 +142,7 @@ export function ProfileView({
       }));
 
       setIsEditOpen(false);
+      router.refresh();
       showToast("Profile updated successfully!");
     } catch (err) {
       setEditError(err instanceof Error ? err.message : "Error saving profile.");

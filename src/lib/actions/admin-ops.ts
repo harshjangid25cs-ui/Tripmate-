@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath, unstable_noStore as noStore } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_noStore as noStore } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAdmin } from "@/lib/admin/admin-auth";
 import { sendTransactionalEmail } from "@/lib/notifications/email";
@@ -73,6 +73,29 @@ import {
 type DynamicRpcClient = {
   rpc: (fn: string, args: Record<string, unknown>) => Promise<unknown>;
 };
+
+function safeRevalidateTag(tag: string) {
+  try {
+    revalidateTag(tag);
+  } catch {
+    // Ignore in non-request test contexts
+  }
+}
+
+function safeRevalidatePath(originalPath: string, type?: "page" | "layout") {
+  try {
+    revalidatePath(originalPath, type);
+  } catch {
+    // Ignore in non-request test contexts
+  }
+}
+
+export function invalidateCatalogCache() {
+  safeRevalidateTag("catalog");
+  safeRevalidatePath("/home");
+  safeRevalidatePath("/destinations/[slug]", "page");
+  safeRevalidatePath("/admin");
+}
 
 /**
  * Verifies that the caller has administrative privileges via requireAdmin().
@@ -936,10 +959,9 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
       // Safe audit ignore
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
-    revalidatePath("/trips");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
+    safeRevalidatePath("/trips");
 
     if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
       return { ok: true, data: (rpcRes as { data: unknown }).data };
@@ -947,10 +969,9 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
 
     return { ok: true, data: dbPayload };
   } catch {
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
-    revalidatePath("/trips");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
+    safeRevalidatePath("/trips");
     return { ok: true, data: input };
   }
 }
@@ -1006,17 +1027,15 @@ export async function adminDeleteCircuitAction(payload: unknown): Promise<{
       // Safe audit ignore
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
-    revalidatePath("/trips");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
+    safeRevalidatePath("/trips");
 
     return { ok: true, data: { circuitId } };
   } catch {
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
-    revalidatePath("/trips");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
+    safeRevalidatePath("/trips");
     return { ok: true, data: { circuitId } };
   }
 }
@@ -1053,10 +1072,9 @@ export async function adminToggleCircuitStatusAction(payload: unknown): Promise<
     });
 
     if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
-      revalidatePath("/admin");
-      revalidatePath("/home");
-      revalidatePath("/book", "layout");
-      revalidatePath("/trips");
+      invalidateCatalogCache();
+      safeRevalidatePath("/book", "layout");
+      safeRevalidatePath("/trips");
       return { ok: true, data: { circuitId, isActive } };
     }
 
@@ -1065,16 +1083,14 @@ export async function adminToggleCircuitStatusAction(payload: unknown): Promise<
       .update({ is_active: isActive, updated_at: new Date().toISOString() })
       .eq("id", circuitId);
 
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
-    revalidatePath("/trips");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
+    safeRevalidatePath("/trips");
     return { ok: true, data: { circuitId, isActive } };
   } catch {
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
-    revalidatePath("/trips");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
+    safeRevalidatePath("/trips");
     return { ok: true, data: { circuitId, isActive } };
   }
 }
@@ -2089,9 +2105,8 @@ export async function adminUpsertDestinationAction(payload: unknown): Promise<{
     });
 
     if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
-      revalidatePath("/admin");
-      revalidatePath("/home");
-      revalidatePath("/book", "layout");
+      invalidateCatalogCache();
+      safeRevalidatePath("/book", "layout");
       return { ok: true, data: (rpcRes as { data: unknown }).data };
     }
 
@@ -2123,18 +2138,16 @@ export async function adminUpsertDestinationAction(payload: unknown): Promise<{
       .select()
       .single();
 
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
 
     if (directErr) {
       return { ok: true, data: dbPayload };
     }
     return { ok: true, data: directData };
   } catch {
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
     return { ok: true, data: input };
   }
 }
@@ -2190,14 +2203,12 @@ export async function adminDeleteDestinationAction(payload: unknown): Promise<{
       // Safe audit ignore
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
     return { ok: true, data: { destinationId } };
   } catch {
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
     return { ok: true, data: { destinationId } };
   }
 }
@@ -2248,14 +2259,12 @@ export async function adminToggleDestinationStatusAction(payload: unknown): Prom
       // Safe audit ignore
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
     return { ok: true, data: { destinationId, isActive } };
   } catch {
-    revalidatePath("/admin");
-    revalidatePath("/home");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
     return { ok: true, data: { destinationId, isActive } };
   }
 }
@@ -2297,8 +2306,8 @@ export async function adminUpsertCouponAction(rawInput: AdminUpsertCouponInput):
     });
 
     if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
-      revalidatePath("/admin");
-      revalidatePath("/book", "layout");
+      invalidateCatalogCache();
+      safeRevalidatePath("/book", "layout");
       return { ok: true, data: (rpcRes as { data: unknown }).data };
     }
 
@@ -2341,15 +2350,15 @@ export async function adminUpsertCouponAction(rawInput: AdminUpsertCouponInput):
       }
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
 
     if (directErr) {
       return { ok: true, data: dbPayload };
     }
     return { ok: true, data: directData };
   } catch {
-    revalidatePath("/admin");
+    invalidateCatalogCache();
     return { ok: true, data: input };
   }
 }
@@ -2383,8 +2392,8 @@ export async function adminToggleCouponAction(rawInput: AdminToggleCouponInput):
     });
 
     if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
-      revalidatePath("/admin");
-      revalidatePath("/book", "layout");
+      invalidateCatalogCache();
+      safeRevalidatePath("/book", "layout");
       return { ok: true, data: (rpcRes as { data: unknown }).data };
     }
 
@@ -2413,15 +2422,15 @@ export async function adminToggleCouponAction(rawInput: AdminToggleCouponInput):
       }
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
 
     if (directErr) {
       return { ok: true, data: { id: input.id, is_active: input.isActive } };
     }
     return { ok: true, data: directData };
   } catch {
-    revalidatePath("/admin");
+    invalidateCatalogCache();
     return { ok: true, data: input };
   }
 }
@@ -2477,8 +2486,8 @@ export async function adminDeleteCouponAction(payload: unknown): Promise<{
       // Safe audit ignore
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book", "layout");
     return { ok: true, data: { couponId } };
   } catch {
     revalidatePath("/admin");
@@ -2583,10 +2592,10 @@ export async function adminUpdatePricingConfigAction(rawInput: AdminUpdatePricin
       // Safe trigger ignore
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/book/[tripId]/checkout", "page");
-    revalidatePath("/", "layout");
-    revalidatePath("/book", "layout");
+    invalidateCatalogCache();
+    safeRevalidatePath("/book/[tripId]/checkout", "page");
+    safeRevalidatePath("/", "layout");
+    safeRevalidatePath("/book", "layout");
 
     return { ok: true, data: directData };
   } catch (err: unknown) {
@@ -2654,6 +2663,7 @@ export async function adminUploadCatalogImageAction(formData: FormData): Promise
       .from("catalog-images")
       .getPublicUrl(filePath);
 
+    invalidateCatalogCache();
     return { ok: true, url: publicUrlData.publicUrl };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Image upload failed.";
@@ -2701,8 +2711,7 @@ export async function adminUpsertDestinationHighlightAction(payload: unknown): P
     });
 
     if (!rpcErr && rpcRes) {
-      revalidatePath("/admin");
-      revalidatePath("/destinations/[slug]", "page");
+      invalidateCatalogCache();
       return { ok: true, data: rpcRes };
     }
 
@@ -2724,8 +2733,7 @@ export async function adminUpsertDestinationHighlightAction(payload: unknown): P
       .select()
       .single();
 
-    revalidatePath("/admin");
-    revalidatePath("/destinations/[slug]", "page");
+    invalidateCatalogCache();
 
     if (directErr) {
       return { ok: true, data: { id, ...input } };
@@ -2771,8 +2779,7 @@ export async function adminDeleteDestinationHighlightAction(payload: unknown): P
       await supabase.from("destination_highlights").delete().eq("id", highlightId);
     }
 
-    revalidatePath("/admin");
-    revalidatePath("/destinations/[slug]", "page");
+    invalidateCatalogCache();
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to delete highlight.";

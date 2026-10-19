@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { getConfirmedTripDetails } from "@/lib/data/booking";
 import { BookingConfirmationView } from "@/components/features/booking/booking-confirmation-view";
 

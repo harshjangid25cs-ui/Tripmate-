@@ -199,6 +199,7 @@ export function CommercialBusSeatingView({
     const submitRes = await submitCommercialBookingAction(trip.id);
 
     if (submitRes.ok) {
+      router.refresh();
       router.push(`/commercial/${trip.id}/confirmed`);
     } else {
       setErrorMessage(submitRes.error || "Failed to submit commercial booking.");

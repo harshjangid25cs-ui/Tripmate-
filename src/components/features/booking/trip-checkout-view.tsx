@@ -281,6 +281,7 @@ export function TripCheckoutView({ tripData, trip: propTrip, paymentConfig, pric
         return;
       }
 
+      router.refresh();
       router.push(`/book/${trip.id}/confirmed`);
     } catch {
       setErrorMsg("Network error submitting UTR payment. Please retry.");
@@ -430,6 +431,7 @@ export function TripCheckoutView({ tripData, trip: propTrip, paymentConfig, pric
           return;
         }
 
+        router.refresh();
         router.push(`/book/${trip.id}/confirmed`);
         return;
       } catch {
@@ -488,6 +490,7 @@ export function TripCheckoutView({ tripData, trip: propTrip, paymentConfig, pric
             });
 
             if (verifyRes.ok) {
+              router.refresh();
               router.push(`/book/${trip.id}/confirmed`);
             } else {
               setErrorMsg(verifyRes.error || "Payment verification failed.");
@@ -527,6 +530,7 @@ export function TripCheckoutView({ tripData, trip: propTrip, paymentConfig, pric
       }
 
       // Success path navigates to confirmation screen
+      router.refresh();
       router.push(`/book/${trip.id}/confirmed`);
     } catch {
       setErrorMsg("Network error processing payment. Please retry.");
