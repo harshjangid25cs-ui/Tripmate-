@@ -25,6 +25,8 @@ import {
   AdminUsersView,
 } from "@/components/features/admin/AdminDynamicViews";
 
+import { AdminViewSkeleton } from "@/components/features/admin/AdminViewSkeleton";
+
 function AdminPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -102,11 +104,11 @@ export default function AdminPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex h-64 w-full items-center justify-center">
-          <div className="flex items-center gap-2 text-sm font-bold text-text-secondary">
-            <span className="h-4 w-4 rounded-full border-2 border-primary-container border-t-transparent animate-spin" />
-            <span>Loading Operations Engine...</span>
-          </div>
+        <div className="flex w-full min-h-[calc(100vh-4rem)]">
+          <div className="hidden lg:block w-64 bg-surface-dark border-r border-border-hairline shrink-0" />
+          <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">
+            <AdminViewSkeleton />
+          </main>
         </div>
       }
     >

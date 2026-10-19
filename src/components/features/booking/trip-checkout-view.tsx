@@ -901,7 +901,10 @@ export function TripCheckoutView({ tripData, trip: propTrip, paymentConfig, pric
                             <img
                               src={qrDataUrl}
                               alt="Direct UPI QR Code"
-                              className="w-44 h-44 border border-border-hairline/40 rounded-xl p-1 bg-white"
+                              width={176}
+                              height={176}
+                              decoding="async"
+                              className="w-44 h-44 aspect-square border border-border-hairline/40 rounded-xl p-1 bg-white"
                             />
                           ) : (
                             <div className="w-44 h-44 flex items-center justify-center bg-surface rounded-xl border border-border-hairline">

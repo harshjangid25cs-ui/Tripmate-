@@ -88,6 +88,7 @@ export function HomeView({
   const handleWishlistToggle = async (e: React.MouseEvent, type: "destination" | "circuit", id: string) => {
     e.preventDefault();
     e.stopPropagation();
+    const previousSet = new Set(savedIds);
     const isSaved = savedIds.has(id);
     const nextSet = new Set(savedIds);
     if (isSaved) {
@@ -95,8 +96,19 @@ export function HomeView({
     } else {
       nextSet.add(id);
     }
+    // Optimistic UI update
     setSavedIds(nextSet);
-    await toggleSavedItem(type, id);
+
+    try {
+      await toggleSavedItem(type, id);
+    } catch {
+      // Revert state on failure and alert user
+      setSavedIds(previousSet);
+      setComingSoonToast("Unable to sync wishlist right now. Please try again.");
+      setTimeout(() => {
+        setComingSoonToast(null);
+      }, 3000);
+    }
   };
 
   const handleNonBookableClick = (name: string) => {
@@ -241,7 +253,7 @@ export function HomeView({
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`filter-chip shrink-0 px-4 py-2 rounded-full font-label-md text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm border ${
+                className={`filter-chip shrink-0 px-4 py-2 rounded-full font-label-md text-xs font-semibold flex items-center gap-1.5 shadow-sm border transition-transform duration-100 ease-out active:scale-95 will-change-transform select-none ${
                   isSelected
                     ? "bg-primary-container text-on-primary border-transparent"
                     : "bg-card-surface border-border-hairline text-text-primary hover:bg-surface-container-low"

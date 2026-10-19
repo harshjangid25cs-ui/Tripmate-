@@ -18,6 +18,7 @@ function LoginForm() {
   const [infoMsg, setInfoMsg] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    router.prefetch("/home");
     const error = searchParams.get("error");
     const errorDesc = searchParams.get("error_description");
     if (errorDesc) {
@@ -27,7 +28,7 @@ function LoginForm() {
     } else if (error) {
       setErrorMsg(`Authentication error: ${error}`);
     }
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   const supabase = React.useMemo(() => createClient(), []);
 

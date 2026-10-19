@@ -24,6 +24,10 @@ export default function SplashScreen() {
   }, [router]);
 
   React.useEffect(() => {
+    // Intelligent prefetching for the next funnel view
+    router.prefetch("/login");
+    router.prefetch("/onboarding");
+
     // Smooth progress bar animations
     const t1 = setTimeout(() => {
       setProgressWidth("65%");
@@ -42,7 +46,7 @@ export default function SplashScreen() {
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [handleNavigate]);
+  }, [handleNavigate, router]);
 
   return (
     <main

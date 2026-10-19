@@ -429,7 +429,10 @@ export function PricingView() {
                 <img
                   src={previewQrUrl}
                   alt="Live Merchant UPI QR Preview"
-                  className="w-36 h-36"
+                  width={144}
+                  height={144}
+                  decoding="async"
+                  className="w-36 h-36 aspect-square"
                 />
               ) : (
                 <div className="w-36 h-36 flex items-center justify-center bg-surface">

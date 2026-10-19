@@ -299,6 +299,8 @@ export function DocumentsView() {
               <img
                 src={activePreview.doc_url}
                 alt="Government ID"
+                loading="lazy"
+                decoding="async"
                 className="max-h-[360px] w-auto rounded-xl object-contain shadow-md"
               />
               <p className="mt-3 text-[10px] text-slate-400">

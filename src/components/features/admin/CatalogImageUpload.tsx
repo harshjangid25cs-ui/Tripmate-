@@ -149,6 +149,10 @@ export function CatalogImageUpload({
                 key={value}
                 src={resolveCatalogImageUrl(value) || value}
                 alt="Preview"
+                width={48}
+                height={48}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover"
                 onError={() => setImageError(true)}
                 onLoad={() => setImageError(false)}

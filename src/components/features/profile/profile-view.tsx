@@ -131,19 +131,40 @@ export function ProfileView({
     }
   };
 
-  // Handle notification read
+  // Handle notification read with optimistic update and rollback
   const handleMarkNotificationRead = async (id: string) => {
+    const prevNotifications = [...notifications];
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
-    await markNotificationReadAction(id);
+    try {
+      const res = await markNotificationReadAction(id);
+      if (!res.ok) {
+        setNotifications(prevNotifications);
+        showToast("Failed to mark notification as read.");
+      }
+    } catch {
+      setNotifications(prevNotifications);
+      showToast("Failed to mark notification as read.");
+    }
   };
 
-  // Handle mark all notifications read
+  // Handle mark all notifications read with optimistic update and rollback
   const handleMarkAllRead = async () => {
+    const prevNotifications = [...notifications];
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    await markAllNotificationsReadAction();
-    showToast("All notifications marked as read.");
+    try {
+      const res = await markAllNotificationsReadAction();
+      if (!res.ok) {
+        setNotifications(prevNotifications);
+        showToast("Failed to mark all as read.");
+      } else {
+        showToast("All notifications marked as read.");
+      }
+    } catch {
+      setNotifications(prevNotifications);
+      showToast("Failed to mark all as read.");
+    }
   };
 
   return (

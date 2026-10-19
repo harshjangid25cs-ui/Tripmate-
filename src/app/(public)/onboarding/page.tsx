@@ -59,6 +59,10 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [currentSlide, setCurrentSlide] = React.useState(0);
 
+  React.useEffect(() => {
+    router.prefetch("/login");
+  }, [router]);
+
   const completeOnboardingAndNavigate = React.useCallback(() => {
     // Persist completion in cookie (1 year) and localStorage
     document.cookie = `${ONBOARDING_COOKIE_NAME}=true; path=/; max-age=31536000; SameSite=Lax`;

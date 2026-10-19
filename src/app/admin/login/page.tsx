@@ -221,7 +221,10 @@ export default function AdminLoginPage() {
                     <img
                       src={mfaQrCode}
                       alt="TOTP QR Code"
-                      className="w-44 h-44 rounded-lg border border-border-hairline bg-white p-2"
+                      width={176}
+                      height={176}
+                      decoding="async"
+                      className="w-44 h-44 aspect-square rounded-lg border border-border-hairline bg-white p-2"
                     />
                   ) : (
                     <div
