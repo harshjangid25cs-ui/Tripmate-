@@ -9,6 +9,7 @@ import { createRazorpayOrderAction, verifyRazorpayPaymentAction } from "@/lib/ac
 import { formatCurrency } from "@/lib/format";
 import { buildUpiPaymentUri, generateUpiQrDataUrl, isValidUtr } from "@/lib/payments/upi-qr";
 import { submitDirectUpiPaymentAction } from "@/lib/actions/admin-ops";
+import { createClient } from "@/lib/supabase/client";
 
 declare global {
   interface Window {
@@ -35,23 +36,190 @@ function loadRazorpayScript(): Promise<boolean> {
   });
 }
 
-interface TripCheckoutViewProps {
-  tripData: ValidatedDraftTrip;
-  pricingConfig?: {
-    merchant_upi_vpa?: string;
-    merchant_payee_name?: string;
-    active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo";
-    upi_auto_confirm?: boolean;
-  };
+export interface PaymentConfigProp {
+  merchantUpiVpa?: string;
+  merchantPayeeName?: string;
+  activePaymentGateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo";
+  upiAutoConfirm?: boolean;
+  merchant_upi_vpa?: string;
+  merchant_payee_name?: string;
+  active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo";
+  upi_auto_confirm?: boolean;
+  gst_rate?: number;
+  service_fee?: number;
+  gstRate?: number;
+  serviceFee?: number;
 }
 
-export function TripCheckoutView({ tripData, pricingConfig }: TripCheckoutViewProps) {
+export interface TripCheckoutViewProps {
+  tripData?: ValidatedDraftTrip;
+  trip?: ValidatedDraftTrip["trip"];
+  paymentConfig?: PaymentConfigProp;
+  pricingConfig?: PaymentConfigProp;
+}
+
+export function TripCheckoutView({ tripData, trip: propTrip, paymentConfig, pricingConfig }: TripCheckoutViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { trip, hotel, vehicle, stops, destination } = tripData;
 
-  const merchantVpa = pricingConfig?.merchant_upi_vpa || "tripmate@upi";
-  const merchantPayeeName = pricingConfig?.merchant_payee_name || "TripMate Travels";
+  const trip = propTrip || tripData?.trip;
+  if (!trip) {
+    throw new Error("TripCheckoutView requires either a trip or tripData prop.");
+  }
+  const hotel = tripData?.hotel ?? null;
+  const vehicle = tripData?.vehicle ?? null;
+  const stops = tripData?.stops ?? [];
+  const destination = tripData?.destination ?? null;
+
+  // Initial values resolved with priority: paymentConfig > pricingConfig > default
+  const resolvedInitialVpa =
+    paymentConfig?.merchantUpiVpa ||
+    paymentConfig?.merchant_upi_vpa ||
+    pricingConfig?.merchantUpiVpa ||
+    pricingConfig?.merchant_upi_vpa ||
+    "tripmate@upi";
+
+  const resolvedInitialPayee =
+    paymentConfig?.merchantPayeeName ||
+    paymentConfig?.merchant_payee_name ||
+    pricingConfig?.merchantPayeeName ||
+    pricingConfig?.merchant_payee_name ||
+    "TripMate Travels";
+
+  const resolvedInitialGateway =
+    paymentConfig?.activePaymentGateway ||
+    paymentConfig?.active_payment_gateway ||
+    pricingConfig?.activePaymentGateway ||
+    pricingConfig?.active_payment_gateway ||
+    "auto";
+
+  // Reactive state for merchant UPI parameters
+  const [merchantVpa, setMerchantVpa] = React.useState(resolvedInitialVpa);
+  const [merchantPayeeName, setMerchantPayeeName] = React.useState(resolvedInitialPayee);
+  const [activeGateway, setActiveGateway] = React.useState(resolvedInitialGateway);
+
+  // Sync state when props change
+  React.useEffect(() => {
+    const vpa =
+      paymentConfig?.merchantUpiVpa ||
+      paymentConfig?.merchant_upi_vpa ||
+      pricingConfig?.merchantUpiVpa ||
+      pricingConfig?.merchant_upi_vpa;
+    if (vpa && vpa.trim()) {
+      setMerchantVpa((prev) => (vpa.trim() !== prev ? vpa.trim() : prev));
+    }
+
+    const payee =
+      paymentConfig?.merchantPayeeName ||
+      paymentConfig?.merchant_payee_name ||
+      pricingConfig?.merchantPayeeName ||
+      pricingConfig?.merchant_payee_name;
+    if (payee && payee.trim()) {
+      setMerchantPayeeName((prev) => (payee.trim() !== prev ? payee.trim() : prev));
+    }
+
+    const gateway =
+      paymentConfig?.activePaymentGateway ||
+      paymentConfig?.active_payment_gateway ||
+      pricingConfig?.activePaymentGateway ||
+      pricingConfig?.active_payment_gateway;
+    if (gateway) {
+      setActiveGateway((prev) => (gateway !== prev ? gateway : prev));
+    }
+  }, [
+    paymentConfig?.merchantUpiVpa,
+    paymentConfig?.merchant_upi_vpa,
+    paymentConfig?.merchantPayeeName,
+    paymentConfig?.merchant_payee_name,
+    paymentConfig?.activePaymentGateway,
+    paymentConfig?.active_payment_gateway,
+    pricingConfig?.merchantUpiVpa,
+    pricingConfig?.merchant_upi_vpa,
+    pricingConfig?.merchantPayeeName,
+    pricingConfig?.merchant_payee_name,
+    pricingConfig?.activePaymentGateway,
+    pricingConfig?.active_payment_gateway,
+  ]);
+
+  // Real-time synchronization from Supabase WebSocket & on-mount freshness check
+  React.useEffect(() => {
+    let active = true;
+    let supabaseClient: ReturnType<typeof createClient> | null = null;
+
+    try {
+      supabaseClient = createClient();
+    } catch {
+      return;
+    }
+
+    // 1. Fetch live active row on mount to bypass any browser cache
+    void (async () => {
+      try {
+        const { data } = await supabaseClient!
+          .from("pricing_config")
+          .select("merchant_upi_vpa, merchant_payee_name, active_payment_gateway, upi_auto_confirm")
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (!active || !data) return;
+        const row = data as {
+          merchant_upi_vpa?: string | null;
+          merchant_payee_name?: string | null;
+          active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo" | null;
+        };
+        if (row.merchant_upi_vpa?.trim()) {
+          setMerchantVpa(row.merchant_upi_vpa.trim());
+        }
+        if (row.merchant_payee_name?.trim()) {
+          setMerchantPayeeName(row.merchant_payee_name.trim());
+        }
+        if (row.active_payment_gateway) {
+          setActiveGateway(row.active_payment_gateway);
+        }
+      } catch {
+        // Fallback silently if offline
+      }
+    })();
+
+    // 2. Subscribe to Supabase Realtime postgres_changes broadcast
+    const channel = supabaseClient
+      .channel(`pricing-config-live-${Math.random().toString(36).slice(2, 7)}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "pricing_config",
+        },
+        (payload) => {
+          if (!active) return;
+          const newRow = payload.new as {
+            merchant_upi_vpa?: string | null;
+            merchant_payee_name?: string | null;
+            active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo" | null;
+          } | null;
+
+          if (newRow?.merchant_upi_vpa?.trim()) {
+            setMerchantVpa(newRow.merchant_upi_vpa.trim());
+          }
+          if (newRow?.merchant_payee_name?.trim()) {
+            setMerchantPayeeName(newRow.merchant_payee_name.trim());
+          }
+          if (newRow?.active_payment_gateway) {
+            setActiveGateway(newRow.active_payment_gateway);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      if (supabaseClient) {
+        supabaseClient.removeChannel(channel);
+      }
+    };
+  }, []);
 
   // UPI sub-mode: Direct UPI QR (default) vs Instant UPI VPA
   const [upiSubMode, setUpiSubMode] = React.useState<"direct_qr" | "instant">("direct_qr");
@@ -125,6 +293,14 @@ export function TripCheckoutView({ tripData, pricingConfig }: TripCheckoutViewPr
   const [upiId, setUpiId] = React.useState("traveler@okhdfcbank");
   const [upiVerified, setUpiVerified] = React.useState(true);
   const [isVerifyingUpi, setIsVerifyingUpi] = React.useState(false);
+
+  // Sync active payment gateway mode
+  React.useEffect(() => {
+    if (activeGateway === "direct_upi_utr") {
+      setPaymentMethod("upi");
+      setUpiSubMode("direct_qr");
+    }
+  }, [activeGateway]);
 
   // Card demo fields
   const [cardNumber, setCardNumber] = React.useState("4532 •••• •••• 8829");

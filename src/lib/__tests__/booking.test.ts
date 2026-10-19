@@ -252,6 +252,8 @@ describe("Destination-Bound Hotel & Vehicle Query Enforcement (TASK 1)", () => {
   it("calculates Haversine distance correctly for hotels near destination center", async () => {
     const { haversineDistanceKm, KNOWN_CITIES } = await import("../geo/distance");
     const jaipurCenter = KNOWN_CITIES.jaipur;
+    expect(jaipurCenter).toBeDefined();
+    if (!jaipurCenter) return;
 
     // Alsisar Haveli on Sansar Chandra Road (~1.3 km from center)
     const alsisarCoords = { lat: 26.9219, lng: 75.795 };
@@ -295,8 +297,8 @@ describe("Destination-Bound Hotel & Vehicle Query Enforcement (TASK 1)", () => {
     ];
     hotels.sort((a, b) => a.dist - b.dist);
 
-    expect(hotels[0].dist).toBeLessThanOrEqual(hotels[1].dist);
-    expect(hotels[1].dist).toBeLessThanOrEqual(hotels[2].dist);
+    expect(hotels[0]!.dist).toBeLessThanOrEqual(hotels[1]!.dist);
+    expect(hotels[1]!.dist).toBeLessThanOrEqual(hotels[2]!.dist);
   });
 
   it("enforces admin-curated included_hotel_ids and destination_id constraints", async () => {

@@ -78,8 +78,8 @@ export function PricingView() {
     requestReasonModal(
       "Update Global Pricing Config",
       `Adjust service fee to ₹${pricing.service_fee} and GST rate to ${(pricing.gst_rate * 100).toFixed(1)}%. Affects newly calculated drafts.`,
-      (reason) => {
-        AdminService.updatePricing(
+      async (reason) => {
+        await AdminService.updatePricing(
           currentAdmin,
           {
             service_fee: Number(pricing.service_fee),
@@ -107,8 +107,8 @@ export function PricingView() {
     requestReasonModal(
       "Update Merchant UPI Gateway Settings",
       `Set merchant UPI VPA to ${merchantVpa}, payee name to "${merchantPayeeName}", gateway mode to "${activeGateway}".`,
-      (reason) => {
-        AdminService.updatePricing(
+      async (reason) => {
+        await AdminService.updatePricing(
           currentAdmin,
           {
             service_fee: Number(pricing.service_fee),

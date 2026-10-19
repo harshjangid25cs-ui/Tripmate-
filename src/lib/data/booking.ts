@@ -649,3 +649,95 @@ export async function getConfirmedTripDetails(
   };
 }
 
+export interface LivePaymentConfig {
+  merchantUpiVpa: string;
+  merchantPayeeName: string;
+  activePaymentGateway: "auto" | "direct_upi_utr" | "razorpay" | "demo";
+  upiAutoConfirm: boolean;
+  gstRate: number;
+  serviceFee: number;
+  merchant_upi_vpa: string;
+  merchant_payee_name: string;
+  active_payment_gateway: "auto" | "direct_upi_utr" | "razorpay" | "demo";
+  upi_auto_confirm: boolean;
+  gst_rate: number;
+  service_fee: number;
+}
+
+export async function getLivePaymentConfig(): Promise<LivePaymentConfig> {
+  noStore();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("pricing_config")
+      .select("merchant_upi_vpa, merchant_payee_name, active_payment_gateway, upi_auto_confirm, gst_rate, service_fee")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error || !data) {
+      return {
+        merchantUpiVpa: "tripmate@upi",
+        merchantPayeeName: "TripMate Travels",
+        activePaymentGateway: "auto",
+        upiAutoConfirm: true,
+        gstRate: 0.18,
+        serviceFee: 999,
+        merchant_upi_vpa: "tripmate@upi",
+        merchant_payee_name: "TripMate Travels",
+        active_payment_gateway: "auto",
+        upi_auto_confirm: true,
+        gst_rate: 0.18,
+        service_fee: 999,
+      };
+    }
+
+    const row = data as {
+      merchant_upi_vpa?: string | null;
+      merchant_payee_name?: string | null;
+      active_payment_gateway?: string | null;
+      upi_auto_confirm?: boolean | null;
+      gst_rate?: number | null;
+      service_fee?: number | null;
+    };
+
+    const vpa = row.merchant_upi_vpa?.trim() || "tripmate@upi";
+    const payee = row.merchant_payee_name?.trim() || "TripMate Travels";
+    const gateway = (row.active_payment_gateway as LivePaymentConfig["activePaymentGateway"]) || "auto";
+    const autoConfirm = row.upi_auto_confirm ?? true;
+    const gstRate = Number(row.gst_rate) || 0.18;
+    const serviceFee = Number(row.service_fee) || 999;
+
+    return {
+      merchantUpiVpa: vpa,
+      merchantPayeeName: payee,
+      activePaymentGateway: gateway,
+      upiAutoConfirm: autoConfirm,
+      gstRate,
+      serviceFee,
+      merchant_upi_vpa: vpa,
+      merchant_payee_name: payee,
+      active_payment_gateway: gateway,
+      upi_auto_confirm: autoConfirm,
+      gst_rate: gstRate,
+      service_fee: serviceFee,
+    };
+  } catch {
+    return {
+      merchantUpiVpa: "tripmate@upi",
+      merchantPayeeName: "TripMate Travels",
+      activePaymentGateway: "auto",
+      upiAutoConfirm: true,
+      gstRate: 0.18,
+      serviceFee: 999,
+      merchant_upi_vpa: "tripmate@upi",
+      merchant_payee_name: "TripMate Travels",
+      active_payment_gateway: "auto",
+      upi_auto_confirm: true,
+      gst_rate: 0.18,
+      service_fee: 999,
+    };
+  }
+}
+
+

@@ -349,7 +349,7 @@ export class AdminService {
     return { ...currentState.pricing };
   }
 
-  static updatePricing(
+  static async updatePricing(
     actor: AdminActor,
     updates: Partial<PricingConfig>,
     reason: string
@@ -368,7 +368,7 @@ export class AdminService {
     this.notify();
 
     try {
-      void adminUpdatePricingConfigAction({
+      await adminUpdatePricingConfigAction({
         serviceFee: Number(currentState.pricing.service_fee),
         gstRate: Number(currentState.pricing.gst_rate),
         demoCouponCode: currentState.pricing.demo_coupon_code,

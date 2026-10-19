@@ -148,7 +148,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
         supabase.from("coupons").select("*").order("created_at", { ascending: false }),
-        supabase.from("pricing_config").select("*").eq("id", 1).maybeSingle(),
+        supabase.from("pricing_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
         supabase.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(100),
         circuitsPromise,
@@ -332,7 +332,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
 
     const [coupRes, priceRes, emailRes, auditRes, highRes, polRes, histRes, payRes] = await Promise.all([
       supabase.from("coupons").select("*").order("created_at", { ascending: false }),
-      supabase.from("pricing_config").select("*").eq("id", 1).maybeSingle(),
+      supabase.from("pricing_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
       supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("admin_audit_logs").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("destination_highlights").select("*").order("sort_order", { ascending: true }),
@@ -2520,13 +2520,30 @@ export async function adminUpdatePricingConfigAction(rawInput: AdminUpdatePricin
       p_upi_auto_confirm: input.upiAutoConfirm,
     });
 
-    if (!rpcErr && rpcRes && (rpcRes as { ok: boolean }).ok) {
+    if (!rpcErr && rpcRes) {
+      try {
+        await supabase.from("admin_audit_logs").insert({
+          actor_id: user?.id || "admin",
+          actor_name: user?.email || "Admin",
+          actor_role: "superadmin",
+          action: "UPDATE_PRICING_CONFIG",
+          entity_type: "pricing_config",
+          entity_id: "1",
+          after: rpcRes,
+          reason: input.reason || null,
+        });
+      } catch {
+        // Safe trigger ignore
+      }
+
       revalidatePath("/admin");
+      revalidatePath("/book/[tripId]/checkout", "page");
+      revalidatePath("/", "layout");
       revalidatePath("/book", "layout");
-      return { ok: true, data: (rpcRes as { data: unknown }).data };
+      return { ok: true, data: (rpcRes as { data?: unknown })?.data ?? rpcRes };
     }
 
-    // Direct fallback
+    // Direct fallback using service role client
     const payload = {
       service_fee: input.serviceFee,
       gst_rate: input.gstRate,
@@ -2541,38 +2558,38 @@ export async function adminUpdatePricingConfigAction(rawInput: AdminUpdatePricin
 
     const { data: directData, error: directErr } = await supabase
       .from("pricing_config")
-      .update(payload)
-      .eq("id", 1)
+      .upsert({ id: 1, ...payload })
       .select()
       .single();
 
-    if (!directErr) {
-      try {
-        await supabase.from("admin_audit_logs").insert({
-          actor_id: user?.id || "admin",
-          actor_name: user?.email || "Admin",
-          actor_role: "superadmin",
-          action: "UPDATE_PRICING_CONFIG",
-          entity_type: "pricing_config",
-          entity_id: "1",
-          after: payload,
-          reason: input.reason || null,
-        });
-      } catch {
-        // Safe trigger ignore
-      }
+    if (directErr) {
+      return { ok: false, error: directErr.message || "Failed to update pricing config." };
+    }
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "UPDATE_PRICING_CONFIG",
+        entity_type: "pricing_config",
+        entity_id: "1",
+        after: payload,
+        reason: input.reason || null,
+      });
+    } catch {
+      // Safe trigger ignore
     }
 
     revalidatePath("/admin");
+    revalidatePath("/book/[tripId]/checkout", "page");
+    revalidatePath("/", "layout");
     revalidatePath("/book", "layout");
 
-    if (directErr) {
-      return { ok: true, data: payload };
-    }
     return { ok: true, data: directData };
-  } catch {
-    revalidatePath("/admin");
-    return { ok: true, data: input };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update pricing configuration.";
+    return { ok: false, error: message };
   }
 }
 
@@ -3065,6 +3082,16 @@ export async function submitDirectUpiPaymentAction(rawInput: unknown): Promise<{
   const supabase = createAdminClient();
 
   try {
+    // 1. Fetch live active merchant UPI VPA to record alongside UTR
+    const { data: activePricing } = await supabase
+      .from("pricing_config")
+      .select("merchant_upi_vpa, merchant_payee_name")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const activeMerchantVpa = activePricing?.merchant_upi_vpa || "tripmate@upi";
+
     const { data: rpcRes, error: rpcErr } = await supabase.rpc("submit_direct_upi_payment", {
       p_trip_id: tripId,
       p_utr_number: utrNumber,
@@ -3073,6 +3100,15 @@ export async function submitDirectUpiPaymentAction(rawInput: unknown): Promise<{
 
     if (rpcErr) {
       return { ok: false, error: rpcErr.message || "Failed to submit direct UPI payment." };
+    }
+
+    // Ensure payment record has active merchant_vpa populated
+    const paymentId = (rpcRes as { payment_id?: string })?.payment_id;
+    if (paymentId) {
+      await supabase
+        .from("payments")
+        .update({ merchant_vpa: activeMerchantVpa })
+        .eq("id", paymentId);
     }
 
     // Trigger transactional booking confirmation email
@@ -3089,7 +3125,7 @@ export async function submitDirectUpiPaymentAction(rawInput: unknown): Promise<{
           to: profile.email,
           template: "booking_confirmed",
           subject: `TripMate Reservation Confirmed #${tripData.booking_ref}`,
-          content: `Your booking #${tripData.booking_ref} has been confirmed via Direct UPI Payment (UTR: ${utrNumber}). Amount paid: ₹${Number(tripData.total_amount || 0).toLocaleString("en-IN")}.`,
+          content: `Your booking #${tripData.booking_ref} has been confirmed via Direct UPI Payment to ${activeMerchantVpa} (UTR: ${utrNumber}). Amount paid: ₹${Number(tripData.total_amount || 0).toLocaleString("en-IN")}.`,
           relatedTripId: tripId,
           relatedBookingRef: tripData.booking_ref,
           sentBy: "system",
@@ -3103,6 +3139,7 @@ export async function submitDirectUpiPaymentAction(rawInput: unknown): Promise<{
     revalidatePath("/trips");
     revalidatePath(`/book/${tripId}/confirmed`);
     revalidatePath("/book", "layout");
+    revalidatePath("/book/[tripId]/checkout", "page");
 
     return { ok: true, data: rpcRes };
   } catch (err: unknown) {

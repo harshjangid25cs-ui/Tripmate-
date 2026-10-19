@@ -886,6 +886,7 @@ export interface Database {
           provider_reference: string | null;
           utr_number: string | null;
           payer_vpa: string | null;
+          merchant_vpa?: string | null;
           verification_status: "pending_verification" | "verified" | "rejected";
           created_at: string;
         };
@@ -901,11 +902,13 @@ export interface Database {
           provider_reference?: string | null;
           utr_number?: string | null;
           payer_vpa?: string | null;
+          merchant_vpa?: string | null;
           verification_status?: "pending_verification" | "verified" | "rejected";
           created_at?: string;
         };
         Update: {
           status?: "succeeded" | "failed" | "refunded";
+          merchant_vpa?: string | null;
           verification_status?: "pending_verification" | "verified" | "rejected";
         };
         Relationships: [];
