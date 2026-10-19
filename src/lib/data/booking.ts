@@ -123,7 +123,7 @@ function mapHotel(row: HotelRow, computedDistKm?: number): Hotel {
   }
   return {
     id: row.id,
-    destinationId: row.destination_id,
+    destinationId: row.destination_id ?? "",
     name: row.name,
     description: row.description,
     rating: Number(row.rating ?? 4.8),

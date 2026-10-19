@@ -366,7 +366,7 @@ export interface Database {
       hotels: {
         Row: {
           id: string;
-          destination_id: string;
+          destination_id: string | null;
           name: string;
           description: string | null;
           rating: number | null;
@@ -383,7 +383,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
-          destination_id: string;
+          destination_id?: string | null;
           name: string;
           description?: string | null;
           rating?: number | null;
@@ -399,6 +399,7 @@ export interface Database {
           updated_at?: string;
         };
         Update: {
+          destination_id?: string | null;
           name?: string;
           description?: string | null;
           rating?: number | null;

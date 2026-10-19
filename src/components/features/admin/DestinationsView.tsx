@@ -288,14 +288,17 @@ export function DestinationsView() {
   };
 
   const handleToggleHotel = async (hotelId: string, currentAssigned: boolean) => {
-    if (!formData.id) return;
+    if (!formData.id) {
+      toast("Please save this destination first before assigning hotels.", "error");
+      return;
+    }
     const nextDestId = currentAssigned ? null : formData.id;
     const hotel = allHotels.find((h) => h.id === hotelId);
     if (!hotel) return;
 
-    await adminUpsertHotelAction({
+    const res = await adminUpsertHotelAction({
       id: hotel.id,
-      destinationId: nextDestId || "",
+      destinationId: nextDestId ?? "",
       name: hotel.name,
       description: "",
       neighborhood: hotel.neighborhood,
@@ -307,18 +310,26 @@ export function DestinationsView() {
       imageUrl: hotel.image_url,
       isActive: hotel.is_active,
     });
-    hotel.destination_id = nextDestId || "";
-    toast(`${hotel.name} ${nextDestId ? "assigned to" : "removed from"} this destination`, "success");
-    refresh();
+    if (res.ok) {
+      // Optimistically update local in-memory state so checkbox re-renders immediately
+      hotel.destination_id = nextDestId || "";
+      toast(`${hotel.name} ${nextDestId ? "assigned to" : "removed from"} this destination`, "success");
+      refresh();
+    } else {
+      toast(res.error || `Failed to ${nextDestId ? "assign" : "remove"} hotel`, "error");
+    }
   };
 
   const handleToggleStop = async (stopId: string, currentAssigned: boolean) => {
-    if (!formData.id) return;
+    if (!formData.id) {
+      toast("Please save this destination first before assigning highway stops.", "error");
+      return;
+    }
     const nextDestId = currentAssigned ? null : formData.id;
     const stop = allStops.find((s) => s.id === stopId);
     if (!stop) return;
 
-    await adminUpsertStopAction({
+    const res = await adminUpsertStopAction({
       id: stop.id,
       destinationId: nextDestId,
       name: stop.name,
@@ -329,9 +340,14 @@ export function DestinationsView() {
       amenities: stop.amenities,
       isActive: stop.is_active,
     });
-    stop.destination_id = nextDestId || "";
-    toast(`${stop.name} ${nextDestId ? "assigned to" : "removed from"} this destination`, "success");
-    refresh();
+    if (res.ok) {
+      // Optimistically update local in-memory state so checkbox re-renders immediately
+      stop.destination_id = nextDestId || "";
+      toast(`${stop.name} ${nextDestId ? "assigned to" : "removed from"} this destination`, "success");
+      refresh();
+    } else {
+      toast(res.error || `Failed to ${nextDestId ? "assign" : "remove"} stop`, "error");
+    }
   };
 
   const handleSaveForm = (e: React.FormEvent) => {
@@ -1001,7 +1017,7 @@ export function DestinationsView() {
                             <input
                               type="checkbox"
                               checked={isLinked}
-                              onChange={() => handleToggleHotel(h.id, !isLinked)}
+                            onChange={() => handleToggleHotel(h.id, isLinked)}
                               className="rounded text-primary-600"
                             />
                             <span className="truncate">{h.name}</span>
@@ -1028,7 +1044,7 @@ export function DestinationsView() {
                             <input
                               type="checkbox"
                               checked={isLinked}
-                              onChange={() => handleToggleStop(s.id, !isLinked)}
+                            onChange={() => handleToggleStop(s.id, isLinked)}
                               className="rounded text-primary-600"
                             />
                             <span className="truncate">{s.name}</span>

@@ -253,7 +253,8 @@ export const adminUpsertDriverSchema = z.object({
 
 export const adminUpsertHotelSchema = z.object({
   id: z.string().min(1).optional(),
-  destinationId: z.string().min(1, "Destination ID is required."),
+  // Allow empty string or null to unlink a hotel from its destination
+  destinationId: z.string().optional().nullable(),
   name: z.string().trim().min(2, "Hotel name must be at least 2 characters."),
   description: z.string().optional(),
   neighborhood: z.string().optional(),

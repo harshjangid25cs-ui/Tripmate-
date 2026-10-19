@@ -11,11 +11,46 @@ if (!DEMO_PASSWORD) {
 }
 
 let userATripId = "";
+// Track ALL trip IDs created across every test run to clean them up in afterAll
+const createdTripIds: string[] = [];
+
+/**
+ * E2E teardown: delete all test-generated trips (and cascade-dependent records)
+ * from the real Supabase database using the service-role key so no test
+ * pollution accumulates across runs.
+ */
+async function cleanupTestTrips(tripIds: string[]): Promise<void> {
+  if (tripIds.length === 0) return;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceKey) return; // Skip silently in CI without creds
+
+  const admin = createClient(supabaseUrl, serviceKey, {
+    auth: { persistSession: false },
+  });
+
+  // Delete in cascade order: payments → invoices → trip_status_history →
+  // trip_passengers → trip_stops → trips
+  for (const tripId of tripIds) {
+    if (!tripId) continue;
+    await admin.from("payments").delete().eq("trip_id", tripId);
+    await admin.from("invoices").delete().eq("trip_id", tripId);
+    await admin.from("trip_status_history").delete().eq("trip_id", tripId);
+    await admin.from("trip_passengers").delete().eq("trip_id", tripId);
+    await admin.from("trip_stops").delete().eq("trip_id", tripId);
+    await admin.from("trips").delete().eq("id", tripId);
+  }
+}
 
 test.beforeAll(() => {
   if (!fs.existsSync(SCREENSHOT_DIR)) {
     fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
   }
+});
+
+// Global afterAll: clean up every trip this E2E run created
+test.afterAll(async () => {
+  await cleanupTestTrips(createdTripIds);
 });
 
 test.describe("TripMate End-to-End Acceptance Suite", () => {
@@ -203,6 +238,8 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     const tripId = tripIdMatch?.[1] ?? "";
     expect(tripId).toBeTruthy();
     userATripId = tripId;
+    // Register for afterAll cleanup
+    if (tripId) createdTripIds.push(tripId);
 
     await page.goto(`/trips/${tripId}`);
     await page.waitForLoadState("networkidle");
@@ -312,6 +349,12 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     // Assert booking ref matches TM-######
     const commercialRef = await page.locator("span.font-label-badge:has-text('TM-')").first().innerText();
     expect(commercialRef.trim()).toMatch(/TM-\d{6}/);
+
+    // Register commercial trip ID for afterAll cleanup
+    const commercialConfirmedUrl = page.url();
+    const commercialTripMatch = commercialConfirmedUrl.match(/\/commercial\/([a-zA-Z0-9_-]+)\/confirmed/);
+    const commercialTripId = commercialTripMatch?.[1] ?? "";
+    if (commercialTripId) createdTripIds.push(commercialTripId);
 
     // Open first passenger ticket modal
     await page.locator('button:has-text("Ticket")').first().click();
@@ -531,6 +574,8 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     const tripIdMatch = reviewUrl.match(/\/book\/([a-zA-Z0-9_-]+)\/review/);
     const tripId = tripIdMatch?.[1] ?? "";
     expect(tripId).toBeTruthy();
+    // Register for afterAll cleanup
+    if (tripId) createdTripIds.push(tripId);
 
     // Assert the review total is exactly ₹31,624
     await expect(page.locator("text=₹31,624").first()).toBeVisible({ timeout: 10000 });

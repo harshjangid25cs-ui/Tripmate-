@@ -1645,7 +1645,8 @@ export async function adminUpsertHotelAction(payload: unknown): Promise<{
   try {
     const hotelPayload = {
       id: input.id,
-      destination_id: input.destinationId,
+      // Coerce empty string to null for unlinking
+      destination_id: input.destinationId || null,
       name: input.name,
       description: input.description ?? "",
       price_per_night: input.pricePerNight,
@@ -1672,7 +1673,8 @@ export async function adminUpsertHotelAction(payload: unknown): Promise<{
     // Direct fallback
     const dbPayload: Database["public"]["Tables"]["hotels"]["Insert"] = {
       id: input.id || crypto.randomUUID(),
-      destination_id: input.destinationId,
+      // Coerce empty string to null for unlinking
+      destination_id: input.destinationId || null,
       name: input.name,
       description: input.description ?? null,
       rating: input.rating ?? 4.8,

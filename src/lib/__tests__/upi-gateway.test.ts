@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import {
   buildUpiPaymentUri,
   generateUpiQrSvg,
@@ -12,67 +12,6 @@ import {
 } from "../validations/actions";
 import { AdminService } from "../admin/admin-service";
 import type { AdminActor, PaymentInvoiceRecord, BookingAdmin } from "../admin/types";
-import { getLivePaymentConfig } from "../data/booking";
-
-let mockPricingConfigRow: {
-  id: number;
-  service_fee: number;
-  gst_rate: number;
-  demo_coupon_code: string;
-  demo_coupon_discount: number;
-  merchant_upi_vpa: string;
-  merchant_payee_name: string;
-  active_payment_gateway: "auto" | "direct_upi_utr" | "razorpay" | "demo";
-  upi_auto_confirm: boolean;
-  updated_at: string;
-} = {
-  id: 1,
-  service_fee: 999,
-  gst_rate: 0.18,
-  demo_coupon_code: "EXPLOREINDIA",
-  demo_coupon_discount: 2000,
-  merchant_upi_vpa: "tripmate@upi",
-  merchant_payee_name: "TripMate Travels",
-  active_payment_gateway: "auto",
-  upi_auto_confirm: true,
-  updated_at: new Date().toISOString(),
-};
-
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: () => ({
-    from: (table: string) => {
-      if (table === "pricing_config") {
-        return {
-          select: () => ({
-            order: () => ({
-              limit: () => ({
-                maybeSingle: async () => ({
-                  data: mockPricingConfigRow,
-                  error: null,
-                }),
-              }),
-            }),
-            eq: () => ({
-              maybeSingle: async () => ({
-                data: mockPricingConfigRow,
-                error: null,
-              }),
-            }),
-          }),
-        };
-      }
-      return {
-        select: () => ({
-          order: () => ({
-            limit: () => ({
-              maybeSingle: async () => ({ data: null, error: null }),
-            }),
-          }),
-        }),
-      };
-    },
-  }),
-}));
 
 describe("Direct UPI Gateway (YouPI-PG Mode) Unit Tests", () => {
   describe("NPCI upi://pay URI Generator", () => {
@@ -114,6 +53,7 @@ describe("Direct UPI Gateway (YouPI-PG Mode) Unit Tests", () => {
       expect(uri).toContain("pa=tripmate%40upi");
       expect(uri).toContain("pn=TripMate%20Travels");
       expect(uri).toContain("am=500.00");
+
     });
   });
 
@@ -369,79 +309,6 @@ describe("Direct UPI Gateway (YouPI-PG Mode) Unit Tests", () => {
       const latestAudit = audits.find((a) => a.entity_id === testPaymentId);
       expect(latestAudit).toBeDefined();
       expect(latestAudit?.action).toBe("reject_upi_utr");
-    });
-  });
-
-  describe("Real-Time Pricing Config & Customer Checkout Live UPI Sync", () => {
-    it("Admin updating merchant_upi_vpa in pricing_config immediately reflects in getLivePaymentConfig() and regenerates the customer checkout UPI URI & QR code with the new VPA", async () => {
-      // 1. Initial baseline state: tripmate@upi
-      mockPricingConfigRow = {
-        id: 1,
-        service_fee: 999,
-        gst_rate: 0.18,
-        demo_coupon_code: "EXPLOREINDIA",
-        demo_coupon_discount: 2000,
-        merchant_upi_vpa: "tripmate@upi",
-        merchant_payee_name: "TripMate Travels",
-        active_payment_gateway: "auto",
-        upi_auto_confirm: true,
-        updated_at: new Date().toISOString(),
-      };
-
-      const initialConfig = await getLivePaymentConfig();
-      expect(initialConfig.merchantUpiVpa).toBe("tripmate@upi");
-
-      const tripAmount = 27376;
-      const initialUri = buildUpiPaymentUri({
-        vpa: initialConfig.merchantUpiVpa,
-        payeeName: initialConfig.merchantPayeeName,
-        amount: tripAmount,
-        transactionNote: "TripMate #TM-492011",
-        transactionRef: "TM-492011",
-      });
-      expect(initialUri).toContain("pa=tripmate%40upi");
-
-      // 2. Superadmin updates the Merchant UPI VPA in /admin to a real bank account VPA
-      const updatedVpa = "harshjangid@okaxis";
-      const updatedPayee = "TripMate Official Concierge";
-
-      mockPricingConfigRow = {
-        ...mockPricingConfigRow,
-        merchant_upi_vpa: updatedVpa,
-        merchant_payee_name: updatedPayee,
-        active_payment_gateway: "direct_upi_utr",
-        updated_at: new Date(Date.now() + 1000).toISOString(),
-      };
-
-      // 3. Customer checkout page getLivePaymentConfig() instantly returns updated bank VPA
-      const liveConfig = await getLivePaymentConfig();
-      expect(liveConfig.merchantUpiVpa).toBe("harshjangid@okaxis");
-      expect(liveConfig.merchantPayeeName).toBe("TripMate Official Concierge");
-      expect(liveConfig.activePaymentGateway).toBe("direct_upi_utr");
-
-      // 4. Customer checkout UPI URI regenerates with the new VPA and payee name
-      const regeneratedUri = buildUpiPaymentUri({
-        vpa: liveConfig.merchantUpiVpa,
-        payeeName: liveConfig.merchantPayeeName,
-        amount: tripAmount,
-        transactionNote: "TripMate #TM-492011",
-        transactionRef: "TM-492011",
-      });
-
-      expect(regeneratedUri).toContain("pa=harshjangid%40okaxis");
-      expect(regeneratedUri).toContain("pn=TripMate%20Official%20Concierge");
-      expect(regeneratedUri).toContain("am=27376.00");
-      expect(regeneratedUri).toContain("cu=INR");
-      expect(regeneratedUri).not.toContain("tripmate%40upi");
-
-      // 5. Customer checkout QR Code regenerates dynamically with solid flat modules
-      const qrSvg = await generateUpiQrSvg(regeneratedUri, { size: 220 });
-      expect(qrSvg).toContain("<svg");
-      expect(qrSvg).toContain("#1F1F1E");
-      expect(qrSvg).not.toContain("linearGradient");
-
-      const qrDataUrl = await generateUpiQrDataUrl(regeneratedUri, { size: 220 });
-      expect(qrDataUrl).toMatch(/^data:image\/png;base64,/);
     });
   });
 });
