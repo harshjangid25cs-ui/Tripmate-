@@ -90,7 +90,7 @@ function safeRevalidatePath(originalPath: string, type?: "page" | "layout") {
   }
 }
 
-export function invalidateCatalogCache() {
+export async function invalidateCatalogCache() {
   safeRevalidateTag("catalog");
   safeRevalidatePath("/home");
   safeRevalidatePath("/destinations/[slug]", "page");

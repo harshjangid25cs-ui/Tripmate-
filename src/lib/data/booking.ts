@@ -250,7 +250,7 @@ export async function getHotelsForDestination(
 
     let query = supabase.from("hotels").select("*").eq("is_active", true);
     if (resolvedDestId) {
-      query = query.eq("destination_id", resolvedDestId);
+      query = query.or(`destination_id.eq.${resolvedDestId},destination_id.is.null`);
     }
     if (allowedHotelIds && allowedHotelIds.length > 0) {
       query = query.in("id", allowedHotelIds);

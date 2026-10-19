@@ -39,3 +39,19 @@ export function createClient(): SupabaseClient<Database> {
     },
   }) as unknown as SupabaseClient<Database>;
 }
+
+/**
+ * Public Supabase client without dynamic cookie access.
+ * Safe for use inside unstable_cache or background tasks where cookies() is disallowed.
+ */
+export function createPublicClient(): SupabaseClient<Database> {
+  const { url, anonKey } = getSupabaseEnv();
+  return createServerClient<Database>(url, anonKey, {
+    cookies: {
+      getAll() {
+        return [];
+      },
+      setAll() {},
+    },
+  }) as unknown as SupabaseClient<Database>;
+}

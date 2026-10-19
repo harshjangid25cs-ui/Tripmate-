@@ -18,7 +18,6 @@ function LoginForm() {
   const [infoMsg, setInfoMsg] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    router.prefetch("/home");
     const error = searchParams.get("error");
     const errorDesc = searchParams.get("error_description");
     if (errorDesc) {
@@ -28,7 +27,7 @@ function LoginForm() {
     } else if (error) {
       setErrorMsg(`Authentication error: ${error}`);
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   const supabase = React.useMemo(() => createClient(), []);
 
@@ -63,7 +62,8 @@ function LoginForm() {
           return;
         }
 
-        router.push("/home");
+        // Full navigation clears client route cache and ensures fresh session cookies are sent
+        window.location.assign("/home");
       } else {
         const { data, error } = await supabase.auth.signUp({
           email: cleanEmail,
@@ -83,7 +83,7 @@ function LoginForm() {
 
         // If email confirmation is disabled, session is returned immediately
         if (data.session) {
-          router.push("/home");
+          window.location.assign("/home");
         } else {
           setInfoMsg(
             "Account created! Please check your email inbox to verify your account, or sign in."

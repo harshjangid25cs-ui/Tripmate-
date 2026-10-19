@@ -1,18 +1,6 @@
-import { unstable_cache } from "next/cache";
+import { unstable_noStore as noStore } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
-
-// Bypass unstable_cache in pure unit-test / vitest environments
-function safeCache<TArgs extends unknown[], TReturn>(
-  fn: (...args: TArgs) => Promise<TReturn>,
-  keyParts: string[],
-  options?: { tags?: string[]; revalidate?: number | false }
-): (...args: TArgs) => Promise<TReturn> {
-  if (process.env.NODE_ENV === "test" || process.env.VITEST) {
-    return fn;
-  }
-  return unstable_cache(fn, keyParts, options);
-}
 
 type DestinationRow = Database["public"]["Tables"]["destinations"]["Row"];
 type HighlightRow = Database["public"]["Tables"]["destination_highlights"]["Row"];
@@ -92,7 +80,8 @@ function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 15000): Promise<T> 
   ]);
 }
 
-async function fetchDestinations(category?: string): Promise<Destination[]> {
+export async function getDestinations(category?: string): Promise<Destination[]> {
+  noStore();
   try {
     const supabase = createClient();
     let query = supabase
@@ -145,19 +134,10 @@ async function fetchDestinations(category?: string): Promise<Destination[]> {
   }
 }
 
-const getCachedDestinations = safeCache(
-  fetchDestinations,
-  ["destinations-catalog"],
-  { tags: ["catalog"], revalidate: 3600 }
-);
-
-export async function getDestinations(category?: string): Promise<Destination[]> {
-  return getCachedDestinations(category);
-}
-
-async function fetchDestinationBySlug(
+export async function getDestinationBySlug(
   slug: string
 ): Promise<{ destination: Destination | null; highlights: DestinationHighlight[] }> {
+  noStore();
   try {
     const supabase = createClient();
     const { data: rawD, error } = await withTimeout(
@@ -236,23 +216,12 @@ async function fetchDestinationBySlug(
   }
 }
 
-const getCachedDestinationBySlug = safeCache(
-  fetchDestinationBySlug,
-  ["destination-by-slug"],
-  { tags: ["catalog"], revalidate: 3600 }
-);
-
-export async function getDestinationBySlug(
-  slug: string
-): Promise<{ destination: Destination | null; highlights: DestinationHighlight[] }> {
-  return getCachedDestinationBySlug(slug);
-}
-
-async function fetchSearchCircuits(params: {
+export async function searchCircuits(params: {
   query?: string;
   category?: string;
   sort?: string;
 }): Promise<Circuit[]> {
+  noStore();
   const { query, category, sort } = params;
   try {
     const supabase = createClient();
@@ -313,21 +282,8 @@ async function fetchSearchCircuits(params: {
   }
 }
 
-const getCachedSearchCircuits = safeCache(
-  fetchSearchCircuits,
-  ["search-circuits"],
-  { tags: ["catalog"], revalidate: 3600 }
-);
-
-export async function searchCircuits(params: {
-  query?: string;
-  category?: string;
-  sort?: string;
-}): Promise<Circuit[]> {
-  return getCachedSearchCircuits(params);
-}
-
-async function fetchFeaturedCircuits(): Promise<Circuit[]> {
+export async function getFeaturedCircuits(): Promise<Circuit[]> {
+  noStore();
   try {
     const supabase = createClient();
     const { data, error } = await withTimeout(
@@ -371,14 +327,4 @@ async function fetchFeaturedCircuits(): Promise<Circuit[]> {
   } catch {
     return [];
   }
-}
-
-const getCachedFeaturedCircuits = safeCache(
-  fetchFeaturedCircuits,
-  ["featured-circuits"],
-  { tags: ["catalog"], revalidate: 3600 }
-);
-
-export async function getFeaturedCircuits(): Promise<Circuit[]> {
-  return getCachedFeaturedCircuits();
 }

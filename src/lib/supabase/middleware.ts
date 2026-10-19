@@ -75,7 +75,13 @@ export async function updateSession(request: NextRequest) {
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie);
     });
-    return applyNoCacheHeaders(redirectResponse, request.nextUrl.pathname);
+    redirectResponse.headers.set(
+      "Cache-Control",
+      "private, no-cache, no-store, max-age=0, must-revalidate"
+    );
+    redirectResponse.headers.set("Pragma", "no-cache");
+    redirectResponse.headers.set("Expires", "0");
+    return redirectResponse;
   }
 
   return applyNoCacheHeaders(supabaseResponse, request.nextUrl.pathname);

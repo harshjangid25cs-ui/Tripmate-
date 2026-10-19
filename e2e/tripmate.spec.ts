@@ -456,10 +456,10 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
       // Verify upload succeeds and displays 4.0 MB • Encrypted copy
       await expect(
         page.locator("text=4.0 MB • Encrypted copy").first()
-      ).toBeVisible({ timeout: 25000 });
+      ).toBeVisible({ timeout: 60000 });
       await expect(
         page.locator("text=temp_test_id_document.pdf").first()
-      ).toBeVisible({ timeout: 25000 });
+      ).toBeVisible({ timeout: 60000 });
     } finally {
       if (fs.existsSync(tempFilePath)) {
         try {

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <rect width="100%" height="100%" fill="#FBF9F5" />
+  <circle cx="400" cy="240" r="48" fill="#E8E2D8" />
+  <path d="M200 440 L340 280 L440 380 L520 300 L640 440 Z" fill="#D5C3B2" />
+  <path d="M160 480 L300 340 L400 430 L480 360 L600 480 Z" fill="#E8E2D8" opacity="0.6" />
+  <text x="400" y="520" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" fill="#8D7B68" letter-spacing="1">TRIPMATE</text>
+</svg>
