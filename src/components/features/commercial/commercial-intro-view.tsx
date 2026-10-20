@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CompanyMembershipInfo } from "@/lib/data/commercial-types";
@@ -112,7 +112,7 @@ export function CommercialIntroView({ membership }: CommercialIntroViewProps) {
               {/* Screen 17: Hero Banner Card */}
               <div className="relative w-full rounded-xl overflow-hidden shadow-sm bg-surface-dark">
                 <div className="w-full aspect-[4/3] relative">
-                  <Image
+                  <CatalogImage
                     src={HERO_IMAGE_URL}
                     alt="Diverse corporate business team walking through airport terminal"
                     fill

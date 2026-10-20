@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import type { ConfirmedTripDetails } from "@/lib/data/booking";
 import { getHotelImageUrl } from "@/lib/data/images";
@@ -111,7 +111,7 @@ export function BookingConfirmationView({ details }: BookingConfirmationViewProp
           <section className="bg-card-surface rounded-xl overflow-hidden border border-border-hairline shadow-sm">
             {/* Banner Image */}
             <div className="relative h-44 w-full bg-surface-container">
-              <Image
+              <CatalogImage
                 src={getHotelImageUrl(hotel?.hotel_id ?? "shahpura-haveli")}
                 alt={destinationName}
                 fill

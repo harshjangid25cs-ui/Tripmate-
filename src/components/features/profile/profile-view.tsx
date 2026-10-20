@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -272,7 +272,7 @@ export function ProfileView({
           <div className="relative shrink-0">
             {profile.avatarUrl ? (
               <div className="w-16 h-16 rounded-full overflow-hidden bg-surface-dark border-2 border-border-hairline">
-                <Image
+                <CatalogImage
                   src={profile.avatarUrl}
                   alt={profile.fullName}
                   width={64}
@@ -376,7 +376,7 @@ export function ProfileView({
       {profile.lastCompletedJourney ? (
         <div className="w-full bg-card-surface border border-border-hairline rounded-2xl overflow-hidden shadow-sm p-4 flex items-center gap-3">
           <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-surface-container relative">
-            <Image
+            <CatalogImage
               src={profile.lastCompletedJourney.coverImage}
               alt={profile.lastCompletedJourney.title}
               fill

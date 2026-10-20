@@ -90,7 +90,7 @@ function safeRevalidatePath(originalPath: string, type?: "page" | "layout") {
   }
 }
 
-export async function invalidateCatalogCache() {
+function invalidateCatalogCache() {
   safeRevalidateTag("catalog");
   safeRevalidatePath("/home");
   safeRevalidatePath("/destinations/[slug]", "page");
@@ -879,7 +879,7 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
       categories: input.categories && input.categories.length > 0 ? input.categories : ["heritage"],
       summary: input.summary ?? "",
       description: input.description ?? "",
-      image_url: input.imageUrl ?? "/images/placeholder.jpg",
+      image_url: input.imageUrl ?? "",
       is_featured: input.isFeatured ?? false,
       is_active: input.isActive ?? true,
     };
@@ -903,7 +903,7 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
       categories: input.categories && input.categories.length > 0 ? input.categories : ["heritage"],
       summary: input.summary ?? "",
       description: input.description ?? "",
-      image_path: input.imageUrl ?? "/images/placeholder.jpg",
+      image_path: input.imageUrl ?? "",
       is_featured: input.isFeatured ?? false,
       is_active: input.isActive ?? true,
       pricing_scope: input.pricingScope ?? "local_city_only",
@@ -928,7 +928,7 @@ export async function adminUpsertCircuitAction(payload: unknown): Promise<{
           categories: input.categories && input.categories.length > 0 ? input.categories : ["heritage"],
           summary: input.summary ?? "",
           description: input.description ?? "",
-          image_path: input.imageUrl ?? "/images/placeholder.jpg",
+          image_path: input.imageUrl ?? "",
           is_featured: input.isFeatured ?? false,
           is_active: input.isActive ?? true,
           pricing_scope: input.pricingScope ?? "local_city_only",
@@ -1280,7 +1280,7 @@ export async function adminUpsertVehicleAction(payload: unknown): Promise<{
       driver_type: input.driverType === "self_drive" ? "self_drive" : "chauffeur",
       price_per_day: input.pricePerDay,
       price: input.pricePerDay,
-      image_url: input.imageUrl ?? "/images/placeholder.jpg",
+      image_url: input.imageUrl ?? "",
       is_active: input.isActive ?? true,
     };
 
@@ -1309,7 +1309,7 @@ export async function adminUpsertVehicleAction(payload: unknown): Promise<{
       fuel_policy: input.fuelPolicy ?? null,
       driver_type: input.driverType === "self_drive" ? "self_drive" : "chauffeur",
       price: input.pricePerDay,
-      image_path: input.imageUrl ?? "/images/placeholder.jpg",
+      image_path: input.imageUrl ?? "",
       is_active: input.isActive ?? true,
       updated_at: new Date().toISOString(),
     };
@@ -1671,7 +1671,7 @@ export async function adminUpsertHotelAction(payload: unknown): Promise<{
       distance_text: input.distanceText ?? "Near Transit",
       badge: input.badge ?? null,
       amenities: input.amenities ?? ["Free Wi-Fi", "Swimming Pool"],
-      image_url: input.imageUrl ?? "/images/placeholder.jpg",
+      image_url: input.imageUrl ?? "",
       is_active: input.isActive ?? true,
     };
 
@@ -1698,7 +1698,7 @@ export async function adminUpsertHotelAction(payload: unknown): Promise<{
       distance_text: input.distanceText ?? null,
       badge: input.badge ?? null,
       price_per_night: input.pricePerNight,
-      image_paths: [input.imageUrl ?? "/images/placeholder.jpg"],
+      image_paths: [input.imageUrl ?? ""],
       amenities: input.amenities ?? ["Free Wi-Fi", "Swimming Pool"],
       is_active: input.isActive ?? true,
       updated_at: new Date().toISOString(),
@@ -1883,7 +1883,7 @@ export async function adminUpsertStopAction(payload: unknown): Promise<{
       distance_text: input.distanceText ?? "",
       turnaround_text: input.turnaroundText ?? "",
       amenities: input.amenities ?? ["Clean Restrooms", "Artisan Chai"],
-      image_url: input.imageUrl ?? "/images/placeholder.jpg",
+      image_url: input.imageUrl ?? "",
       is_active: input.isActive ?? true,
     };
 
@@ -1909,7 +1909,7 @@ export async function adminUpsertStopAction(payload: unknown): Promise<{
       distance_text: input.distanceText ?? null,
       turnaround_text: input.turnaroundText ?? null,
       amenities: input.amenities ?? ["Clean Restrooms", "Artisan Chai"],
-      image_path: input.imageUrl ?? "/images/placeholder.jpg",
+      image_path: input.imageUrl ?? "",
       is_active: input.isActive ?? true,
       updated_at: new Date().toISOString(),
     };
@@ -2094,7 +2094,7 @@ export async function adminUpsertDestinationAction(payload: unknown): Promise<{
       rating: input.rating ?? 4.8,
       badge: input.badge ?? null,
       categories: input.categories && input.categories.length > 0 ? input.categories : ["heritage"],
-      hero_image_path: input.heroImagePath ?? "/images/placeholder.jpg",
+      hero_image_path: input.heroImagePath ?? "",
       is_bookable: input.isBookable ?? true,
       is_active: input.isActive ?? true,
       is_featured: input.isFeatured ?? false,
@@ -2122,7 +2122,7 @@ export async function adminUpsertDestinationAction(payload: unknown): Promise<{
       rating: input.rating ?? 4.8,
       badge: input.badge ?? null,
       categories: input.categories && input.categories.length > 0 ? input.categories : ["heritage"],
-      hero_image_path: input.heroImagePath ?? "/images/placeholder.jpg",
+      hero_image_path: input.heroImagePath ?? "",
       is_bookable: input.isBookable ?? true,
       is_active: input.isActive ?? true,
       is_featured: input.isFeatured ?? false,
@@ -2652,6 +2652,7 @@ export async function adminUploadCatalogImageAction(formData: FormData): Promise
       .from("catalog-images")
       .upload(filePath, buffer, {
         contentType: file.type,
+        cacheControl: "31536000",
         upsert: true,
       });
 

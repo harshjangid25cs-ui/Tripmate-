@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import type { NotificationItem, UserProfileData } from "@/lib/data/profile-types";
 
@@ -312,7 +312,7 @@ export function ProfileSecondaryModals({
                     className="p-3 rounded-xl border border-border-hairline bg-surface flex items-center gap-3"
                   >
                     <div className="w-14 h-14 rounded-lg overflow-hidden shrink-0 relative bg-surface-container">
-                      <Image
+                      <CatalogImage
                         src={d.coverImage}
                         alt={d.name}
                         fill

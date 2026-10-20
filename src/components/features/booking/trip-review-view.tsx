@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
@@ -332,7 +332,7 @@ export function TripReviewView({ tripData, highlights }: TripReviewViewProps) {
                         <span className="w-2.5 h-2.5 rounded-full bg-urgency-amber" />
                       </div>
                       <div className="relative h-36 w-full bg-surface-container">
-                        <Image
+                        <CatalogImage
                           src={getStopImageUrl(primaryStop.name, primaryStop.image_path)}
                           alt={primaryStop.name}
                           fill
@@ -375,7 +375,7 @@ export function TripReviewView({ tripData, highlights }: TripReviewViewProps) {
                       <span className="w-2.5 h-2.5 rounded-full bg-primary-container" />
                     </div>
                     <div className="relative h-36 w-full bg-surface-container">
-                      <Image
+                      <CatalogImage
                         src={getHotelImageUrl(hotelName, hotel?.hotel?.image_paths?.[0])}
                         alt={hotelName}
                         fill
@@ -463,7 +463,7 @@ export function TripReviewView({ tripData, highlights }: TripReviewViewProps) {
                         <span className="w-2.5 h-2.5 rounded-full bg-primary-container" />
                       </div>
                       <div className="relative h-32 w-full bg-surface-container">
-                        <Image
+                        <CatalogImage
                           src={getHighlightImageUrl(hl.sortOrder)}
                           alt={hl.title}
                           fill

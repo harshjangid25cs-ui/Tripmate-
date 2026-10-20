@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getRecommendedBusText, type CommercialDraftData } from "@/lib/data/commercial-types";
@@ -164,7 +164,7 @@ export function CommercialSetupView({ draft }: CommercialSetupViewProps) {
         <div className="flex flex-col gap-space-md">
           {/* Banner Photo Strip */}
           <div className="relative w-full h-28 rounded-xl overflow-hidden shadow-sm bg-surface-container">
-            <Image
+            <CatalogImage
               src={BANNER_IMAGE_URL}
               alt="Panoramic corporate coach bus parked at glass headquarters"
               fill

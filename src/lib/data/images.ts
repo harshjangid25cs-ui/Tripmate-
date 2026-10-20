@@ -70,14 +70,81 @@ const FALLBACK_STOPS: Record<string, string> = {
 };
 
 /**
+ * Optimizes external CDN URLs (Unsplash, Google User Content, Supabase Storage)
+ * to deliver lightweight AVIF/WebP at the exact slot size directly from the CDN edge
+ * without routing through Vercel's /_next/image proxy.
+ * Completely eliminates broken /images/placeholder.jpg references.
+ */
+export function optimizeExternalImageUrl(
+  url?: string | null,
+  width = 800,
+  quality = 75
+): string {
+  if (!url) return "";
+  const trimmed = url.trim();
+  if (
+    !trimmed ||
+    trimmed === "/images/placeholder.jpg" ||
+    trimmed.endsWith("/placeholder.jpg")
+  ) {
+    return "";
+  }
+
+  // Handle data URIs or relative paths
+  if (trimmed.startsWith("data:") || trimmed.startsWith("/")) {
+    return trimmed;
+  }
+
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+
+    // 1. Unsplash: optimize search params for dynamic WebP/AVIF format, crop, width, quality
+    if (host === "images.unsplash.com" || host.endsWith(".unsplash.com")) {
+      parsed.searchParams.set("auto", "format");
+      parsed.searchParams.set("fit", "crop");
+      parsed.searchParams.set("w", String(width));
+      parsed.searchParams.set("q", String(quality));
+      return parsed.toString();
+    }
+
+    // 2. Google User Content (lh3.googleusercontent.com)
+    if (host.includes("googleusercontent.com")) {
+      // If a size parameter exists (=w[0-9]+ or =s[0-9]+), cleanly format with width
+      if (/=w\d+/i.test(trimmed)) {
+        return trimmed.replace(/=w\d+[^&?#]*/i, `=w${width}`);
+      }
+      return trimmed;
+    }
+
+    // 3. Supabase Storage public catalog images: keep direct CDN URL untouched
+    // (Supabase free tier does not support /storage/v1/render/image/ transformations)
+    if (trimmed.includes("catalog-images") || trimmed.includes("/storage/v1/object/public/")) {
+      return trimmed;
+    }
+
+    return trimmed;
+  } catch {
+    return trimmed;
+  }
+}
+
+/**
  * Resolves a stored catalog image path or URL.
  * If the string starts with http://, https://, data:, or /, returns it untouched.
  * Never prepends catalog-images/ to already valid external or absolute URLs.
+ * Rejects any broken placeholder.jpg references.
  */
 export function resolveCatalogImageUrl(imagePath?: string | null): string | null {
   if (!imagePath) return null;
   const trimmed = imagePath.trim();
-  if (!trimmed) return null;
+  if (
+    !trimmed ||
+    trimmed === "/images/placeholder.jpg" ||
+    trimmed.endsWith("/placeholder.jpg")
+  ) {
+    return null;
+  }
   if (
     trimmed.startsWith("http://") ||
     trimmed.startsWith("https://") ||

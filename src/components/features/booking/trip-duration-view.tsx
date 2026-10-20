@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ValidatedDraftTrip } from "@/lib/data/booking-guards";
@@ -329,7 +329,7 @@ export function TripDurationView({ tripData }: TripDurationViewProps) {
           {/* Hero Visual Destination Snippet with Scarcity Badge */}
           <div className="px-margin-mobile pb-space-lg">
             <div className="relative w-full h-36 rounded-xl overflow-hidden bg-surface-container shadow-sm">
-              <Image
+              <CatalogImage
                 src={heroImage}
                 alt={`${destination?.name ?? "Jaipur"} heritage landmark`}
                 fill

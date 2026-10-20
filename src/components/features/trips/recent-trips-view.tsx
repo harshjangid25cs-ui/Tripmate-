@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import type { UserTripSummary } from "@/lib/data/trips-list";
@@ -289,7 +289,7 @@ export function RecentTripsView({ initialTrips }: RecentTripsViewProps) {
                   >
                     {/* Card Cover Image with Status Overlay */}
                     <div className="relative h-44 w-full bg-surface-container">
-                      <Image
+                      <CatalogImage
                         src={getHotelImageUrl(t.destinationSlug)}
                         alt={t.title}
                         fill

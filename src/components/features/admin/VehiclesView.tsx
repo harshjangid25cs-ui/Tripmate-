@@ -115,7 +115,7 @@ export function VehiclesView() {
           fuelPolicy: formData.fuel_policy || "Driver Provided · Fuel Included in Base",
           driverType: formData.driver_type?.toLowerCase().includes("self") ? "self_drive" : "chauffeur",
           pricePerDay: Number(formData.price_per_day) || 3000,
-          imageUrl: formData.image_url || "/images/placeholder.jpg",
+          imageUrl: formData.image_url || "",
           isActive: formData.is_active ?? true,
           reason,
         });
@@ -149,7 +149,7 @@ export function VehiclesView() {
               fuel_policy: formData.fuel_policy || "Driver Provided · Fuel Included in Base",
               driver_type: formData.driver_type || "Professional Chauffeur",
               price_per_day: Number(formData.price_per_day) || 3000,
-              image_url: formData.image_url || "/images/placeholder.jpg",
+              image_url: formData.image_url || "",
               is_active: true,
             },
             reason

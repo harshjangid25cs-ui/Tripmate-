@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
+import { CatalogImage } from "@/components/ui/CatalogImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -327,7 +327,7 @@ export function CommercialBusSeatingView({
                     </div>
 
                     <div className="w-20 h-14 rounded-lg bg-surface-container-high overflow-hidden shrink-0 relative border border-border-hairline">
-                      <Image
+                      <CatalogImage
                         src={busImage}
                         alt={bus.name}
                         fill

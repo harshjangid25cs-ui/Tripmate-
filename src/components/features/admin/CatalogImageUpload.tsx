@@ -3,7 +3,7 @@
 import React, { useState, useRef } from "react";
 import { Upload, Link as LinkIcon, CheckCircle2, AlertCircle, Loader2, Image as ImageIcon } from "lucide-react";
 import { adminUploadCatalogImageAction } from "@/lib/actions/admin-ops";
-import { resolveCatalogImageUrl } from "@/lib/data/images";
+import { resolveCatalogImageUrl, optimizeExternalImageUrl } from "@/lib/data/images";
 
 interface CatalogImageUploadProps {
   value?: string;
@@ -12,24 +12,80 @@ interface CatalogImageUploadProps {
   helperText?: string;
 }
 
+/**
+ * Client-side WebP compression and dimension downscaling:
+ * - Resizes image down to maxWidth = 1280px (maintaining aspect ratio)
+ * - Converts to WebP format at 0.82 quality
+ * - Reduces multi-MB phone/camera uploads to < 150KB for fast Supabase free-tier storage & edge serving
+ */
+async function compressImageToWebp(file: File, maxWidth = 1280, quality = 0.82): Promise<File> {
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onerror = () => resolve(file);
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onerror = () => resolve(file);
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              resolve(file);
+              return;
+            }
+            const cleanBaseName = file.name.replace(/\.[^/.]+$/, "");
+            const webpFile = new File([blob], `${cleanBaseName}.webp`, {
+              type: "image/webp",
+              lastModified: Date.now(),
+            });
+            resolve(webpFile);
+          },
+          "image/webp",
+          quality
+        );
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export function CatalogImageUpload({
   value = "",
   onChange,
   label = "Catalog Image",
-  helperText = "Upload high-res JPG, PNG, or WebP (max 5MB) or enter URL.",
+  helperText = "Upload high-res JPG, PNG, or WebP (max 15MB) or enter URL.",
 }: CatalogImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [mode, setMode] = useState<"upload" | "url">("upload");
+  const [isDragging, setIsDragging] = useState(false);
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError("Image file size must be less than 5MB.");
+  const processAndUploadFile = async (rawFile: File) => {
+    if (rawFile.size > 15 * 1024 * 1024) {
+      setUploadError("Image file size must be less than 15MB.");
       return;
     }
 
@@ -37,13 +93,16 @@ export function CatalogImageUpload({
     setUploadError(null);
 
     try {
+      const compressedFile = await compressImageToWebp(rawFile, 1280, 0.82);
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressedFile);
 
       const res = await adminUploadCatalogImageAction(formData);
 
       if (res.ok && res.url) {
         onChange(res.url);
+        setImageError(false);
       } else {
         setUploadError(res.error || "Failed to upload image. Please try again or paste a direct URL.");
       }
@@ -56,6 +115,41 @@ export function CatalogImageUpload({
       }
     }
   };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processAndUploadFile(file);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processAndUploadFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLLabelElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleUrlInput = (inputUrl: string) => {
+    const trimmed = inputUrl.trim();
+    const optimized = optimizeExternalImageUrl(trimmed);
+    setImageError(false);
+    onChange(optimized || trimmed);
+  };
+
+  const displayUrl = optimizeExternalImageUrl(resolveCatalogImageUrl(value) || value);
 
   return (
     <div className="space-y-2">
@@ -99,19 +193,24 @@ export function CatalogImageUpload({
           />
           <label
             htmlFor={`catalog-file-${label.toLowerCase().replace(/\s+/g, "-")}`}
-            className={`flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-border-hairline rounded-xl p-3 text-xs font-semibold text-text-primary hover:border-primary-container hover:bg-surface-container-low/40 cursor-pointer transition-all ${
-              isUploading ? "opacity-50 pointer-events-none" : ""
-            }`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`flex-1 flex items-center justify-center gap-2 border-2 border-dashed rounded-xl p-3 text-xs font-semibold text-text-primary cursor-pointer transition-all ${
+              isDragging
+                ? "border-primary bg-primary/5"
+                : "border-border-hairline hover:border-primary-container hover:bg-surface-container-low/40"
+            } ${isUploading ? "opacity-50 pointer-events-none" : ""}`}
           >
             {isUploading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin text-text-secondary" />
-                <span>Uploading to Supabase Storage...</span>
+                <span>Compressing to WebP &amp; Uploading...</span>
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4 text-text-secondary" />
-                <span>Choose Image file (PNG/JPG/WEBP &lt; 5MB)</span>
+                <span>Choose or drop image file (auto-compressed to WebP &le; 1280px)</span>
               </>
             )}
           </label>
@@ -122,18 +221,15 @@ export function CatalogImageUpload({
           <input
             type="url"
             value={value}
-            onChange={(e) => {
-              setImageError(false);
-              onChange(e.target.value);
-            }}
+            onChange={(e) => handleUrlInput(e.target.value)}
             onPaste={(e) => {
               const pastedText = e.clipboardData.getData("text");
               if (pastedText) {
-                setImageError(false);
-                onChange(pastedText.trim());
+                e.preventDefault();
+                handleUrlInput(pastedText);
               }
             }}
-            placeholder="https://example.com/image.jpg"
+            placeholder="https://images.unsplash.com/photo-..."
             className="w-full rounded-xl border border-border-hairline bg-surface pl-8 pr-3 py-2 text-xs text-text-primary focus:bg-card-surface focus:outline-hidden"
           />
         </div>
@@ -142,12 +238,12 @@ export function CatalogImageUpload({
       {/* Image Preview & Current Value */}
       {value ? (
         <div className="flex items-center gap-3 p-2 bg-surface rounded-xl border border-border-hairline">
-          <div className="w-12 h-12 rounded-lg bg-surface-dark/10 overflow-hidden shrink-0 border border-border-hairline flex items-center justify-center relative">
-            {!imageError ? (
+          <div className="w-12 h-12 rounded-lg bg-[#EBE9E4] overflow-hidden shrink-0 border border-border-hairline flex items-center justify-center relative">
+            {!imageError && displayUrl ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
-                key={value}
-                src={resolveCatalogImageUrl(value) || value}
+                key={displayUrl}
+                src={displayUrl}
                 alt="Preview"
                 width={48}
                 height={48}

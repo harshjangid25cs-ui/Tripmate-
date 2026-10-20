@@ -216,7 +216,10 @@ export function mapDatabaseCircuitToAdminTrip(c: DbRecord): AdminTrip {
     categories: Array.isArray(c.categories) ? (c.categories as string[]) : ["heritage"],
     summary: String(c.summary || c.tagline || ""),
     description: String(c.description || ""),
-    image_url: String(c.image_path || c.image_url || c.hero_image_path || "/images/placeholder.jpg"),
+    image_url: (() => {
+      const raw = String(c.image_path || c.image_url || c.hero_image_path || "");
+      return raw === "/images/placeholder.jpg" ? "" : raw;
+    })(),
     is_featured: Boolean(c.is_featured),
     is_active: Boolean(c.is_active ?? true),
     allow_car: c.allow_car !== undefined ? Boolean(c.allow_car) : true,
@@ -239,6 +242,7 @@ export function mapDatabaseCircuitToAdminTrip(c: DbRecord): AdminTrip {
 export function mapDatabaseVehicleToAdminVehicle(v: DbRecord): AdminVehicle {
   const destination = asRecord(v.destinations);
   const destName = String(destination.name || v.destination_name || v.city || "Jaipur");
+  const rawVehicleImg = String(v.image_path || v.image_url || "");
   return {
     id: String(v.id || ""),
     destination_id: v.destination_id ? String(v.destination_id) : null,
@@ -253,7 +257,7 @@ export function mapDatabaseVehicleToAdminVehicle(v: DbRecord): AdminVehicle {
     fuel_policy: String(v.fuel_policy || "Driver Provided · Fuel Included"),
     driver_type: String(v.driver_type || "Professional Chauffeur"),
     price_per_day: Number(v.price_per_day || v.price) || 3000,
-    image_url: String(v.image_path || v.image_url || "/images/placeholder.jpg"),
+    image_url: rawVehicleImg === "/images/placeholder.jpg" ? "" : rawVehicleImg,
     is_active: Boolean(v.is_active ?? true),
   };
 }
@@ -278,11 +282,14 @@ export function mapDatabaseDriverToAdminDriver(d: DbRecord): AdminDriver {
 export function mapDatabaseHotelToAdminHotel(h: DbRecord): AdminHotel {
   const destination = asRecord(h.destinations);
   const destName = String(destination.name || h.destination_name || "Jaipur");
-  let img = "/images/placeholder.jpg";
+  let img = "";
   if (Array.isArray(h.image_paths) && h.image_paths[0]) {
     img = String(h.image_paths[0]);
   } else if (h.image_url) {
     img = String(h.image_url);
+  }
+  if (img === "/images/placeholder.jpg") {
+    img = "";
   }
 
   return {
