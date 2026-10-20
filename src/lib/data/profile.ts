@@ -47,7 +47,7 @@ export async function getUserProfileData(): Promise<UserProfileData> {
     // 1. Fetch user profile row
     const { data: profileRow } = await supabase
       .from("profiles")
-      .select("id, full_name, email, phone, avatar_url")
+      .select("id, full_name, email, phone, avatar_url, saved_id_type, saved_id_storage_path, saved_id_file_size_bytes, saved_id_verified, saved_id_updated_at, saved_companions")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -215,6 +215,12 @@ export async function getUserProfileData(): Promise<UserProfileData> {
       lastCompletedJourney,
       companyMembership,
       savedDestinations,
+      savedIdType: (profileRow?.saved_id_type as string) || null,
+      savedIdStoragePath: (profileRow?.saved_id_storage_path as string) || null,
+      savedIdFileSizeBytes: typeof profileRow?.saved_id_file_size_bytes === "number" ? profileRow.saved_id_file_size_bytes : null,
+      savedIdVerified: Boolean(profileRow?.saved_id_verified),
+      savedIdUpdatedAt: (profileRow?.saved_id_updated_at as string) || null,
+      savedCompanions: Array.isArray(profileRow?.saved_companions) ? (profileRow.saved_companions as UserProfileData["savedCompanions"]) : [],
     };
   } catch (error) {
     console.error("Error fetching user profile data:", error);

@@ -46,6 +46,7 @@ export function ProfileView({
   const [isPreferencesModalOpen, setIsPreferencesModalOpen] =
     React.useState(false);
   const [isHelpModalOpen, setIsHelpModalOpen] = React.useState(false);
+  const [isIdVaultModalOpen, setIsIdVaultModalOpen] = React.useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = React.useState(false);
   const [legalModal, setLegalModal] = React.useState<
     "terms" | "privacy" | null
@@ -546,7 +547,38 @@ export function ProfileView({
             </span>
           </button>
 
-          {/* 5. Help & Support */}
+          {/* 5. Reusable ID Vault & Companions */}
+          <button
+            type="button"
+            onClick={() => setIsIdVaultModalOpen(true)}
+            className="w-full text-left flex items-center gap-3.5 p-4 hover:bg-surface-container-low transition-colors group cursor-pointer border-t border-border-hairline/30"
+          >
+            <div className="w-10 h-10 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-primary-container">
+              <span className="material-symbols-outlined text-[22px]">
+                badge
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="font-title-md text-sm font-semibold text-text-primary group-hover:text-primary-container transition-colors">
+                  Reusable ID Vault &amp; Companions
+                </p>
+                <span className="px-1.5 py-0.2 rounded bg-[#1F1F1E] text-[#FBF9F5] font-label-badge text-[10px] font-bold">
+                  AUTO-APPLY
+                </span>
+              </div>
+              <p className="font-body-sm text-xs text-text-secondary truncate mt-0.5">
+                {profile.savedIdStoragePath
+                  ? `✓ ID on file (${profile.savedIdType?.toUpperCase() || "GOV ID"}) • ${profile.savedCompanions?.length || 0} Saved Companions`
+                  : `Upload Once, Auto-Apply Everywhere • ${profile.savedCompanions?.length || 0} Companions`}
+              </p>
+            </div>
+            <span className="material-symbols-outlined text-text-secondary text-[20px]">
+              chevron_right
+            </span>
+          </button>
+
+          {/* 6. Help & Support */}
           <button
             type="button"
             onClick={() => setIsHelpModalOpen(true)}
@@ -683,6 +715,134 @@ export function ProfileView({
           setLegalModal={setLegalModal}
           showToast={showToast}
         />
+      )}
+
+      {/* Reusable ID Vault & Companions Modal */}
+      {isIdVaultModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-lg bg-[#FFFFFF] rounded-2xl shadow-xl border border-border-hairline overflow-hidden flex flex-col max-h-[90vh]">
+            {/* Header */}
+            <div className="p-4 bg-[#1F1F1E] text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="material-symbols-outlined text-[#FF5E1E] text-[22px]">
+                  verified_user
+                </span>
+                <div>
+                  <h3 className="font-headline-sm text-base font-bold text-[#FBF9F5]">
+                    Reusable ID Vault &amp; Companions
+                  </h3>
+                  <p className="text-[11px] text-[#EBE9E4]/80">
+                    Upload Once, Auto-Apply Everywhere
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsIdVaultModalOpen(false)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-white transition-colors"
+                aria-label="Close"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 overflow-y-auto flex flex-col gap-4 bg-[#FBF9F5]">
+              {/* Lead KYC Vault Card */}
+              <div className="bg-[#FFFFFF] rounded-xl p-4 border border-border-hairline shadow-sm flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-text-primary uppercase tracking-wider">
+                    Primary Traveller KYC Vault
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full bg-[#1F1F1E] text-[#FBF9F5] text-[10px] font-bold">
+                    STRICTLY &lt;= 300 KB
+                  </span>
+                </div>
+
+                {profile.savedIdStoragePath ? (
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-[#EBE9E4]/50 border border-border-hairline/60">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-[#FF5E1E] text-[24px]">
+                        description
+                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-semibold text-text-primary">
+                          {profile.savedIdType ? profile.savedIdType.toUpperCase() : "GOVERNMENT ID"}
+                        </span>
+                        <span className="text-[11px] text-text-secondary">
+                          Encrypted Copy • {profile.savedIdFileSizeBytes ? `${Math.round(profile.savedIdFileSizeBytes / 1024)} KB` : "Auto-Compressed"}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[11px] text-success-green font-semibold">
+                      <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                      Active on file
+                    </span>
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-[#EBE9E4]/30 border border-dashed border-border-hairline text-center text-xs text-text-secondary">
+                    No KYC document uploaded yet. When you complete your next booking, your document will be compressed to &lt;= 300 KB and securely saved here for 1-click reuse.
+                  </div>
+                )}
+              </div>
+
+              {/* Saved Companions Card */}
+              <div className="bg-[#FFFFFF] rounded-xl p-4 border border-border-hairline shadow-sm flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-text-primary uppercase tracking-wider">
+                    Saved Companions &amp; Co-Travellers
+                  </span>
+                  <span className="text-xs text-text-secondary font-medium">
+                    {profile.savedCompanions?.length || 0} Saved
+                  </span>
+                </div>
+
+                {profile.savedCompanions && profile.savedCompanions.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {profile.savedCompanions.map((c, i) => (
+                      <div
+                        key={i}
+                        className="p-3 rounded-lg bg-[#EBE9E4]/40 border border-border-hairline/50 flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="material-symbols-outlined text-text-secondary text-[20px]">
+                            person
+                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-semibold text-text-primary">
+                              {c.full_name}
+                            </span>
+                            <span className="text-[10px] text-text-secondary uppercase">
+                              {c.id_type || "Government ID"} {c.id_storage_path ? "• ID on file" : ""}
+                            </span>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded bg-[#1F1F1E] text-[#FBF9F5] text-[10px] font-bold">
+                          Quick-Fill Ready
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-3 rounded-lg bg-[#EBE9E4]/30 border border-dashed border-border-hairline text-center text-xs text-text-secondary">
+                    No companions saved yet. Add co-travellers during checkout to automatically save family and friends for instant 1-click quick-fill.
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 bg-[#FFFFFF] border-t border-border-hairline flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsIdVaultModalOpen(false)}
+                className="px-4 py-2 rounded-xl bg-[#1F1F1E] text-[#FBF9F5] text-xs font-semibold hover:bg-black transition-colors"
+              >
+                Close Vault
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

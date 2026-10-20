@@ -90,8 +90,13 @@ function safeRevalidatePath(originalPath: string, type?: "page" | "layout") {
   }
 }
 
-function invalidateCatalogCache() {
+export async function invalidateCatalogCache(): Promise<void> {
   safeRevalidateTag("catalog");
+  safeRevalidateTag("catalog:destinations");
+  safeRevalidateTag("catalog:circuits");
+  safeRevalidateTag("catalog:hotels");
+  safeRevalidateTag("catalog:vehicles");
+  safeRevalidateTag("catalog:stops");
   safeRevalidatePath("/home");
   safeRevalidatePath("/destinations/[slug]", "page");
   safeRevalidatePath("/admin");

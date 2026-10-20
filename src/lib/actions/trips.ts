@@ -490,8 +490,10 @@ export interface PassengerPayload {
   isLead: boolean;
   fullName: string;
   phone?: string | null;
-  idDocType?: "aadhaar" | "passport" | "driving_licence" | "voter_id" | null;
+  idDocType?: "aadhaar" | "passport" | "driving_licence" | "driving_license" | "voter_id" | null;
   idDocPath?: string | null;
+  idFileSizeBytes?: number | null;
+  isReusedFromProfile?: boolean;
 }
 
 export async function saveTripPassengers({
@@ -563,11 +565,37 @@ export async function saveTripPassengers({
       }
     }
 
-    // Update lead phone in profiles
+    // Update lead phone and reusable ID vault in profiles
     const cleanPhone = lead.phone.replace(/\D/g, "").slice(-10);
+    const profileUpdate: Database["public"]["Tables"]["profiles"]["Update"] = {
+      phone: `+91 ${cleanPhone}`,
+    };
+
+    if (lead.idDocPath) {
+      profileUpdate.saved_id_type = lead.idDocType ?? null;
+      profileUpdate.saved_id_storage_path = lead.idDocPath;
+      if (typeof lead.idFileSizeBytes === "number") {
+        profileUpdate.saved_id_file_size_bytes = lead.idFileSizeBytes;
+      }
+      profileUpdate.saved_id_updated_at = new Date().toISOString();
+    }
+
+    // Persist co-travellers to saved_companions if provided
+    const companions = passengers
+      .slice(1)
+      .filter((p) => p.fullName && p.fullName.trim().length >= 3);
+    if (companions.length > 0) {
+      profileUpdate.saved_companions = companions.map((c) => ({
+        full_name: c.fullName.trim(),
+        id_type: c.idDocType ?? null,
+        id_storage_path: c.idDocPath ?? null,
+        id_verified: false,
+      }));
+    }
+
     await supabase
       .from("profiles")
-      .update({ phone: `+91 ${cleanPhone}` })
+      .update(profileUpdate)
       .eq("id", user.id);
 
     // Prepare passenger records payload
@@ -578,6 +606,8 @@ export async function saveTripPassengers({
       phone: p.phone ? p.phone.trim() : null,
       id_doc_type: p.idDocType ?? null,
       id_doc_path: p.idDocPath ?? null,
+      id_file_size_bytes: p.idFileSizeBytes ?? null,
+      is_reused_from_profile: Boolean(p.isReusedFromProfile),
     }));
 
     // 1. Attempt atomic PostgreSQL RPC function
@@ -626,7 +656,7 @@ export async function uploadIdDocument({
   fileName?: string;
   fileBytesBase64: string;
   mimeType: string;
-}): Promise<{ ok: boolean; path?: string; error?: string }> {
+}): Promise<{ ok: boolean; path?: string; fileSizeBytes?: number; error?: string }> {
   try {
     const supabase = await createClient();
     const {
@@ -656,9 +686,12 @@ export async function uploadIdDocument({
 
     const filePath = `${user.id}/${tripId}/passenger_${passengerIndex}_${Date.now()}.${ext}`;
 
+    const maxAllowed = 300 * 1024;
+    const finalBuffer = buffer.length > maxAllowed ? buffer.subarray(0, maxAllowed) : buffer;
+
     const { error: uploadError } = await supabase.storage
       .from("id-documents")
-      .upload(filePath, buffer, {
+      .upload(filePath, finalBuffer, {
         contentType: mimeType,
         upsert: true,
       });
@@ -667,7 +700,7 @@ export async function uploadIdDocument({
       return { ok: false, error: uploadError.message };
     }
 
-    return { ok: true, path: filePath };
+    return { ok: true, path: filePath, fileSizeBytes: finalBuffer.length };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unexpected error";
     return { ok: false, error: message };

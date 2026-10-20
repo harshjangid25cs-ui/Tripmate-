@@ -1,6 +1,11 @@
 import { unstable_noStore as noStore } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
+import {
+  createCachedCatalogReader,
+  CATALOG_TAGS,
+  PUBLIC_CATALOG_TTL_SECONDS,
+} from "@/lib/cache/catalog-cache";
 
 type DestinationRow = Database["public"]["Tables"]["destinations"]["Row"];
 type HighlightRow = Database["public"]["Tables"]["destination_highlights"]["Row"];
@@ -80,10 +85,9 @@ function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 15000): Promise<T> 
   ]);
 }
 
-export async function getDestinations(category?: string): Promise<Destination[]> {
-  noStore();
+async function fetchDestinations(category?: string): Promise<Destination[]> {
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     let query = supabase
       .from("destinations")
       .select(
@@ -134,12 +138,24 @@ export async function getDestinations(category?: string): Promise<Destination[]>
   }
 }
 
-export async function getDestinationBySlug(
+const cachedGetDestinations = createCachedCatalogReader(
+  fetchDestinations,
+  ["catalog-destinations"],
+  {
+    revalidate: PUBLIC_CATALOG_TTL_SECONDS,
+    tags: [CATALOG_TAGS.ALL, CATALOG_TAGS.DESTINATIONS],
+  }
+);
+
+export async function getDestinations(category?: string): Promise<Destination[]> {
+  return cachedGetDestinations(category);
+}
+
+async function fetchDestinationBySlug(
   slug: string
 ): Promise<{ destination: Destination | null; highlights: DestinationHighlight[] }> {
-  noStore();
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     const { data: rawD, error } = await withTimeout(
       supabase
         .from("destinations")
@@ -216,6 +232,21 @@ export async function getDestinationBySlug(
   }
 }
 
+const cachedGetDestinationBySlug = createCachedCatalogReader(
+  fetchDestinationBySlug,
+  ["catalog-destination-by-slug"],
+  {
+    revalidate: PUBLIC_CATALOG_TTL_SECONDS,
+    tags: [CATALOG_TAGS.ALL, CATALOG_TAGS.DESTINATIONS],
+  }
+);
+
+export async function getDestinationBySlug(
+  slug: string
+): Promise<{ destination: Destination | null; highlights: DestinationHighlight[] }> {
+  return cachedGetDestinationBySlug(slug);
+}
+
 export async function searchCircuits(params: {
   query?: string;
   category?: string;
@@ -224,7 +255,7 @@ export async function searchCircuits(params: {
   noStore();
   const { query, category, sort } = params;
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     let dbQuery = supabase
       .from("circuits")
       .select(
@@ -285,7 +316,7 @@ export async function searchCircuits(params: {
 export async function getFeaturedCircuits(): Promise<Circuit[]> {
   noStore();
   try {
-    const supabase = createClient();
+    const supabase = createPublicClient();
     const { data, error } = await withTimeout(
       supabase
         .from("circuits")

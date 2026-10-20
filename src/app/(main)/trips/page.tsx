@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const fetchCache = "force-no-store";
 
 import { getUserTrips } from "@/lib/data/trips-list";
 import { RecentTripsView } from "@/components/features/trips/recent-trips-view";

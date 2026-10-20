@@ -48,10 +48,12 @@ export const passengerPayloadSchema = z.object({
   fullName: z.string().trim().min(3, "Full legal name must be at least 3 characters."),
   phone: z.string().nullable().optional(),
   idDocType: z
-    .enum(["aadhaar", "passport", "driving_licence", "voter_id"])
+    .enum(["aadhaar", "passport", "driving_licence", "driving_license", "voter_id"])
     .nullable()
     .optional(),
   idDocPath: z.string().nullable().optional(),
+  idFileSizeBytes: z.number().int().nullable().optional(),
+  isReusedFromProfile: z.boolean().optional(),
 });
 
 export const saveTripPassengersSchema = z.object({

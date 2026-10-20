@@ -39,6 +39,19 @@ export interface UserProfileData {
     tagline: string;
     rating: number;
   }>;
+  savedIdType?: string | null;
+  savedIdStoragePath?: string | null;
+  savedIdFileSizeBytes?: number | null;
+  savedIdVerified?: boolean;
+  savedIdUpdatedAt?: string | null;
+  savedCompanions?: Array<{
+    full_name: string;
+    age?: number | null;
+    gender?: string | null;
+    id_type?: string | null;
+    id_storage_path?: string | null;
+    id_verified?: boolean;
+  }>;
 }
 
 export interface NotificationItem {
@@ -185,6 +198,12 @@ export const EMPTY_PROFILE: UserProfileData = {
   lastCompletedJourney: null,
   companyMembership: null,
   savedDestinations: [],
+  savedIdType: null,
+  savedIdStoragePath: null,
+  savedIdFileSizeBytes: null,
+  savedIdVerified: false,
+  savedIdUpdatedAt: null,
+  savedCompanions: [],
 };
 
 export const FALLBACK_PROFILE: UserProfileData = EMPTY_PROFILE;

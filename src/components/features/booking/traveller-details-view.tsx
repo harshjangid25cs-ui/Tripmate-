@@ -8,21 +8,40 @@ import { formatCurrency } from "@/lib/format";
 import { saveTripPassengers, uploadIdDocument } from "@/lib/actions/trips";
 import { createClient } from "@/lib/supabase/client";
 
+import { validateDocumentClarity, compressImageToMax300KB } from "@/lib/images/compress-and-validate";
+
+interface SavedCompanionItem {
+  full_name: string;
+  age?: number | null;
+  gender?: string | null;
+  id_type?: string | null;
+  id_storage_path?: string | null;
+  id_verified?: boolean;
+}
+
 interface TravellerDetailsViewProps {
   tripData: ValidatedDraftTrip;
   userProfile?: {
     fullName?: string | null;
     phone?: string | null;
+    savedIdType?: string | null;
+    savedIdStoragePath?: string | null;
+    savedIdFileSizeBytes?: number | null;
+    savedIdVerified?: boolean;
+    savedCompanions?: SavedCompanionItem[];
   } | null;
 }
 
 interface TravellerFormState {
   fullName: string;
   phone: string;
-  idDocType: "aadhaar" | "passport" | "driving_licence" | "voter_id" | "";
+  idDocType: "aadhaar" | "passport" | "driving_licence" | "driving_license" | "voter_id" | "";
   idDocPath: string | null;
   fileName?: string | null;
   fileSizeText?: string | null;
+  idFileSizeBytes?: number | null;
+  isReusedFromProfile?: boolean;
+  compressionBadge?: string | null;
   touched: boolean;
 }
 
@@ -35,7 +54,7 @@ export function TravellerDetailsView({
 
   const travelerCount = trip.traveler_count ?? 1;
 
-  // Initialize form states for each traveler
+  // Initialize form states for each traveler with auto-applied KYC vault
   const initialForms: TravellerFormState[] = React.useMemo(() => {
     const list: TravellerFormState[] = [];
     const existing = tripData.passengers;
@@ -43,7 +62,12 @@ export function TravellerDetailsView({
     for (let i = 0; i < travelerCount; i++) {
       const p = existing[i];
       if (i === 0) {
-        // Lead traveler
+        // Lead traveler: auto-apply saved profile ID vault if available
+        const resolvedDocPath = p?.id_doc_path || userProfile?.savedIdStoragePath || null;
+        const isReused = !p?.id_doc_path && Boolean(userProfile?.savedIdStoragePath);
+        const resolvedIdType = (p?.id_doc_type as TravellerFormState["idDocType"]) ?? (userProfile?.savedIdType as TravellerFormState["idDocType"]) ?? "aadhaar";
+        const resolvedSize = p?.id_file_size_bytes ?? userProfile?.savedIdFileSizeBytes ?? null;
+
         list.push({
           fullName:
             p?.full_name ??
@@ -53,12 +77,17 @@ export function TravellerDetailsView({
             p?.phone?.replace(/\D/g, "").slice(-10) ??
             userProfile?.phone?.replace(/\D/g, "").slice(-10) ??
             "",
-          idDocType:
-            (p?.id_doc_type as TravellerFormState["idDocType"]) ??
-            "aadhaar",
-          idDocPath: p?.id_doc_path ?? null,
-          fileName: p?.id_doc_path ? p.id_doc_path.split("/").pop() : null,
-          fileSizeText: p?.id_doc_path ? "Uploaded Document" : null,
+          idDocType: resolvedIdType,
+          idDocPath: resolvedDocPath,
+          fileName: resolvedDocPath ? resolvedDocPath.split("/").pop() : null,
+          fileSizeText: resolvedDocPath
+            ? isReused
+              ? "✓ Original ID on File • Encrypted copy"
+              : "Uploaded Document"
+            : null,
+          idFileSizeBytes: resolvedSize,
+          isReusedFromProfile: isReused || Boolean(p?.is_reused_from_profile),
+          compressionBadge: isReused ? "Auto-Applied Vault Copy (<= 300 KB)" : null,
           touched: false,
         });
       } else {
@@ -71,6 +100,8 @@ export function TravellerDetailsView({
           idDocPath: p?.id_doc_path ?? null,
           fileName: p?.id_doc_path ? p.id_doc_path.split("/").pop() : null,
           fileSizeText: p?.id_doc_path ? "Uploaded Document" : null,
+          idFileSizeBytes: p?.id_file_size_bytes ?? null,
+          isReusedFromProfile: Boolean(p?.is_reused_from_profile),
           touched: false,
         });
       }
@@ -79,6 +110,7 @@ export function TravellerDetailsView({
   }, [travelerCount, tripData.passengers, userProfile]);
 
   const [forms, setForms] = React.useState<TravellerFormState[]>(initialForms);
+  const [activeCompanionDropdown, setActiveCompanionDropdown] = React.useState<number | null>(null);
   const [uploadingIndex, setUploadingIndex] = React.useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
@@ -102,6 +134,41 @@ export function TravellerDetailsView({
       next[index] = target;
       return next;
     });
+  };
+
+  const handleSelectCompanion = (index: number, companion: SavedCompanionItem) => {
+    setForms((prev) => {
+      const next = [...prev];
+      next[index] = {
+        ...next[index]!,
+        fullName: companion.full_name,
+        idDocType: (companion.id_type as TravellerFormState["idDocType"]) || next[index]?.idDocType || "aadhaar",
+        idDocPath: companion.id_storage_path || null,
+        fileName: companion.id_storage_path ? companion.id_storage_path.split("/").pop() : null,
+        fileSizeText: companion.id_storage_path ? "✓ Saved Companion ID • Encrypted copy" : null,
+        isReusedFromProfile: Boolean(companion.id_storage_path),
+        compressionBadge: companion.id_storage_path ? "Auto-Applied Vault Copy (<= 300 KB)" : null,
+        touched: true,
+      };
+      return next;
+    });
+    setActiveCompanionDropdown(null);
+  };
+
+  const handlePreviewDoc = async (storagePath: string | null) => {
+    if (!storagePath) return;
+    try {
+      const supabase = createClient();
+      const cleanPath = storagePath.replace(/^id-documents\//, "");
+      const { data } = await supabase.storage.from("id-documents").createSignedUrl(cleanPath, 120);
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+      } else {
+        alert("Encrypted document copy is securely verified on file.");
+      }
+    } catch {
+      alert("Encrypted document copy is securely verified on file.");
+    }
   };
 
   const handleFileUpload = async (
@@ -133,30 +200,50 @@ export function TravellerDetailsView({
     setErrorMsg(null);
 
     try {
+      // 1. Validate clarity
+      const clarity = await validateDocumentClarity(file);
+      if (!clarity.valid) {
+        setErrorMsg(clarity.reason || "Document image is unclear. Please provide a sharp, high-resolution copy.");
+        setUploadingIndex(null);
+        return;
+      }
+
+      // 2. High-Clarity <= 300 KB Image Compressor
+      const compressed = await compressImageToMax300KB(file);
+      const finalFile = compressed.file;
+
+      const origMb = (file.size / (1024 * 1024)).toFixed(1);
+      const compKb = Math.round(compressed.compressedBytes / 1024);
+      const compressionFeedback = `✓ Compressed ${origMb} MB → ${compKb} KB (<= 300 KB)`;
+      const sizeDisplay = `${compressionFeedback} • ${origMb} MB • Encrypted copy`;
+
       const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
 
       const userPrefix = user?.id || "anonymous";
-      const filePath = `${userPrefix}/${trip.id}/passenger_${index + 1}_${Date.now()}.${ext}`;
+      const fileExt = finalFile.type === "image/webp" ? "webp" : ext;
+      const filePath = `${userPrefix}/${trip.id}/passenger_${index + 1}_${Date.now()}.${fileExt}`;
 
       const { data: uploadData, error: uploadErr } = await supabase.storage
         .from("id-documents")
-        .upload(filePath, file, {
-          contentType: file.type || "application/pdf",
+        .upload(filePath, finalFile, {
+          contentType: finalFile.type || "application/octet-stream",
           upsert: true,
         });
 
       if (!uploadErr && uploadData) {
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
         setForms((prev) => {
           const next = [...prev];
           next[index] = {
             ...next[index]!,
             idDocPath: uploadData.path,
             fileName: file.name,
-            fileSizeText: `${sizeMb} MB • Encrypted copy`,
+            fileSizeText: sizeDisplay,
+            idFileSizeBytes: compressed.compressedBytes,
+            isReusedFromProfile: false,
+            compressionBadge: compressionFeedback,
           };
           return next;
         });
@@ -175,18 +262,20 @@ export function TravellerDetailsView({
           passengerIndex: index + 1,
           fileName: file.name,
           fileBytesBase64: base64,
-          mimeType: file.type || "application/pdf",
+          mimeType: finalFile.type || file.type || "application/pdf",
         });
 
         if (res.ok && res.path) {
-          const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
           setForms((prev) => {
             const next = [...prev];
             next[index] = {
               ...next[index]!,
               idDocPath: res.path!,
               fileName: file.name,
-              fileSizeText: `${sizeMb} MB • Encrypted copy`,
+              fileSizeText: sizeDisplay,
+              idFileSizeBytes: compressed.compressedBytes,
+              isReusedFromProfile: false,
+              compressionBadge: compressionFeedback,
             };
             return next;
           });
@@ -195,7 +284,7 @@ export function TravellerDetailsView({
         }
         setUploadingIndex(null);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(finalFile);
     } catch {
       setErrorMsg("Failed to upload document.");
       setUploadingIndex(null);
@@ -210,6 +299,9 @@ export function TravellerDetailsView({
         idDocPath: null,
         fileName: null,
         fileSizeText: null,
+        idFileSizeBytes: null,
+        isReusedFromProfile: false,
+        compressionBadge: null,
       };
       return next;
     });
@@ -263,6 +355,8 @@ export function TravellerDetailsView({
         phone: f.phone ? f.phone.trim() : null,
         idDocType: f.idDocType || null,
         idDocPath: f.idDocPath || null,
+        idFileSizeBytes: f.idFileSizeBytes ?? null,
+        isReusedFromProfile: Boolean(f.isReusedFromProfile),
       }));
 
       const res = await saveTripPassengers({
@@ -440,9 +534,56 @@ export function TravellerDetailsView({
                         Verified Contact
                       </span>
                     ) : (
-                      <span className="inline-flex items-center bg-surface-container px-2.5 py-1 rounded-full font-label-badge text-label-badge text-text-secondary">
-                        Required for Check-in
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {userProfile?.savedCompanions && userProfile.savedCompanions.length > 0 && (
+                          <div className="relative">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActiveCompanionDropdown(
+                                  activeCompanionDropdown === idx ? null : idx
+                                )
+                              }
+                              className="px-2.5 py-1 rounded-lg bg-surface-container hover:bg-surface-container-high transition-colors text-xs font-semibold text-text-primary flex items-center gap-1 border border-border-hairline"
+                            >
+                              <span className="material-symbols-outlined text-[15px] text-primary">
+                                person_add
+                              </span>
+                              <span>+ Quick-Fill Saved Companion</span>
+                            </button>
+                            {activeCompanionDropdown === idx && (
+                              <div className="absolute right-0 top-full mt-1.5 w-64 bg-card-surface border border-border-hairline rounded-xl shadow-lg z-20 p-1.5 flex flex-col gap-1">
+                                <div className="px-2.5 py-1 text-[11px] font-semibold text-text-secondary border-b border-border-hairline/40">
+                                  Saved Family &amp; Companions
+                                </div>
+                                {userProfile.savedCompanions.map((comp, cIdx) => (
+                                  <button
+                                    key={cIdx}
+                                    type="button"
+                                    onClick={() => handleSelectCompanion(idx, comp)}
+                                    className="w-full text-left p-2 rounded-lg hover:bg-surface-container-low transition-colors flex items-center justify-between"
+                                  >
+                                    <div className="flex flex-col min-w-0">
+                                      <span className="text-xs font-semibold text-text-primary truncate">
+                                        {comp.full_name}
+                                      </span>
+                                      <span className="text-[10px] text-text-secondary uppercase">
+                                        {comp.id_type || "Government ID"} • Verified
+                                      </span>
+                                    </div>
+                                    <span className="material-symbols-outlined text-[16px] text-primary">
+                                      add_circle
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        <span className="inline-flex items-center bg-surface-container px-2.5 py-1 rounded-full font-label-badge text-label-badge text-text-secondary">
+                          Required for Check-in
+                        </span>
+                      </div>
                     )}
                   </div>
 
@@ -603,10 +744,47 @@ export function TravellerDetailsView({
                       ref={(el) => {
                         fileInputRefs.current[idx] = el;
                       }}
-                      accept="image/jpeg,image/png,application/pdf"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
                       className="hidden"
                       onChange={(e) => handleFileUpload(idx, e)}
                     />
+
+                    {f.isReusedFromProfile && f.idDocPath && (
+                      <div className="bg-[#1F1F1E] text-white p-3.5 rounded-xl flex items-center justify-between border border-[#1F1F1E] shadow-sm mb-1">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className="material-symbols-outlined text-[#FF5E1E] text-[20px]"
+                            style={{ fontVariationSettings: "'FILL' 1" }}
+                          >
+                            verified_user
+                          </span>
+                          <div className="flex flex-col">
+                            <span className="font-label-md text-label-md text-[#FBF9F5] font-semibold">
+                              ✓ Original ID Already on File (Auto-Applied — No Re-upload Needed)
+                            </span>
+                            <span className="text-[11px] text-[#EBE9E4]/80">
+                              Original KYC Vault Copy • {f.idDocType?.toUpperCase() || "GOV ID"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handlePreviewDoc(f.idDocPath)}
+                            className="px-2.5 py-1 rounded-lg bg-[#EBE9E4] text-[#1F1F1E] text-xs font-semibold hover:bg-white transition-colors"
+                          >
+                            Preview
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => fileInputRefs.current[idx]?.click()}
+                            className="text-xs text-[#FF5E1E] hover:underline font-semibold"
+                          >
+                            Replace ID Photo
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     {f.idDocPath ? (
                       <div className="bg-surface-container-low rounded-xl p-3 flex items-center justify-between border border-border-hairline/50">

@@ -101,8 +101,10 @@ function applyNoCacheHeaders(response: NextResponse, pathname: string): NextResp
   if (isNoCacheRoute) {
     response.headers.set(
       "Cache-Control",
-      "private, no-cache, no-store, max-age=0, must-revalidate"
+      "private, no-store, no-cache, must-revalidate, max-age=0"
     );
+    response.headers.set("CDN-Cache-Control", "no-store");
+    response.headers.set("Surrogate-Control", "no-store");
     response.headers.set("Pragma", "no-cache");
     response.headers.set("Expires", "0");
   }

@@ -19,6 +19,15 @@ export type DestinationCategory =
   | "heritage"
   | "weekend_getaways";
 
+export interface SavedCompanion {
+  full_name: string;
+  age?: number | null;
+  gender?: string | null;
+  id_type?: "aadhaar" | "passport" | "driving_license" | "driving_licence" | "voter_id" | string | null;
+  id_storage_path?: string | null;
+  id_verified?: boolean;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -29,6 +38,12 @@ export interface Database {
           email: string | null;
           phone: string | null;
           avatar_url: string | null;
+          saved_id_type: "aadhaar" | "passport" | "driving_license" | "driving_licence" | "voter_id" | null;
+          saved_id_storage_path: string | null;
+          saved_id_file_size_bytes: number | null;
+          saved_id_verified: boolean;
+          saved_id_updated_at: string | null;
+          saved_companions: SavedCompanion[] | Json;
           created_at: string;
           updated_at: string;
         };
@@ -38,6 +53,12 @@ export interface Database {
           email?: string | null;
           phone?: string | null;
           avatar_url?: string | null;
+          saved_id_type?: "aadhaar" | "passport" | "driving_license" | "driving_licence" | "voter_id" | null;
+          saved_id_storage_path?: string | null;
+          saved_id_file_size_bytes?: number | null;
+          saved_id_verified?: boolean;
+          saved_id_updated_at?: string | null;
+          saved_companions?: SavedCompanion[] | Json;
           created_at?: string;
           updated_at?: string;
         };
@@ -47,6 +68,12 @@ export interface Database {
           email?: string | null;
           phone?: string | null;
           avatar_url?: string | null;
+          saved_id_type?: "aadhaar" | "passport" | "driving_license" | "driving_licence" | "voter_id" | null;
+          saved_id_storage_path?: string | null;
+          saved_id_file_size_bytes?: number | null;
+          saved_id_verified?: boolean;
+          saved_id_updated_at?: string | null;
+          saved_companions?: SavedCompanion[] | Json;
           updated_at?: string;
         };
         Relationships: [];
@@ -762,8 +789,10 @@ export interface Database {
           phone: string | null;
           designation: string | null;
           employee_ref: string | null;
-          id_doc_type: "aadhaar" | "passport" | "driving_licence" | "voter_id" | null;
+          id_doc_type: "aadhaar" | "passport" | "driving_licence" | "driving_license" | "voter_id" | null;
           id_doc_path: string | null;
+          id_file_size_bytes?: number | null;
+          is_reused_from_profile?: boolean;
           seat_label: string | null;
           ticket_code: string | null;
           created_at: string;
@@ -776,8 +805,10 @@ export interface Database {
           phone?: string | null;
           designation?: string | null;
           employee_ref?: string | null;
-          id_doc_type?: "aadhaar" | "passport" | "driving_licence" | "voter_id" | null;
+          id_doc_type?: "aadhaar" | "passport" | "driving_licence" | "driving_license" | "voter_id" | null;
           id_doc_path?: string | null;
+          id_file_size_bytes?: number | null;
+          is_reused_from_profile?: boolean;
           seat_label?: string | null;
           ticket_code?: string | null;
           created_at?: string;
@@ -788,8 +819,10 @@ export interface Database {
           phone?: string | null;
           designation?: string | null;
           employee_ref?: string | null;
-          id_doc_type?: "aadhaar" | "passport" | "driving_licence" | "voter_id" | null;
+          id_doc_type?: "aadhaar" | "passport" | "driving_licence" | "driving_license" | "voter_id" | null;
           id_doc_path?: string | null;
+          id_file_size_bytes?: number | null;
+          is_reused_from_profile?: boolean;
           seat_label?: string | null;
           ticket_code?: string | null;
         };
