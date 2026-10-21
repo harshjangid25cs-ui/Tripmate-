@@ -31,6 +31,8 @@ yarn-error.log*
 whatsapp-otp-auth/**/.env*
 
 # whatsapp worker local session and sqlite databases
+whatsapp-otp-auth/**/data/
+whatsapp_session.json
 .auth_info/
 wa_meta.json
 *.sqlite

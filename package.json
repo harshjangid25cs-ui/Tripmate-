@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "db:types": "supabase gen types typescript --local > src/types/database.ts",
     "check:gradients": "node scripts/check-gradients.js",
-    "worker": "node whatsapp-otp-auth/worker/src/server.js"
+    "worker": "node whatsapp-otp-auth/worker/src/server.js",
+    "dev:all": "node scripts/dev-all.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

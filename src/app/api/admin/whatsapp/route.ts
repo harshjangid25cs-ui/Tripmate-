@@ -7,7 +7,7 @@ export const revalidate = 0;
 function getWorkerConfig() {
   return {
     url: process.env.WA_WORKER_URL || 'http://127.0.0.1:4100',
-    secret: process.env.WA_WORKER_SECRET || '',
+    secret: process.env.WA_WORKER_SECRET || process.env.WORKER_SECRET || '',
   };
 }
 
@@ -26,7 +26,7 @@ export async function GET() {
       headers: {
         authorization: `Bearer ${secret}`,
       },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(4000),
       cache: 'no-store',
     });
 
@@ -50,7 +50,10 @@ export async function GET() {
       workerOnline: false,
       workerUrl: url,
       status: 'OFFLINE',
-      error: `Worker offline or unreachable at ${url}: ${(err as Error).message}`,
+      error: `Worker offline or unreachable at ${url}. Start it with 'npm run worker' or 'npm run dev:all'.`,
+      phone: null,
+      qrDataUrl: null,
+      pairingCode: null,
     });
   }
 }
@@ -74,7 +77,8 @@ export async function POST(req: NextRequest) {
           'content-type': 'application/json',
           authorization: `Bearer ${secret}`,
         },
-        signal: AbortSignal.timeout(10000),
+        body: JSON.stringify({ forceNew: Boolean(body.forceNew) }),
+        signal: AbortSignal.timeout(20000),
         cache: 'no-store',
       });
       const data = await res.json().catch(() => ({}));
@@ -94,7 +98,7 @@ export async function POST(req: NextRequest) {
           authorization: `Bearer ${secret}`,
         },
         body: JSON.stringify({ phone }),
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(20000),
         cache: 'no-store',
       });
       const data = await res.json().catch(() => ({}));
@@ -129,7 +133,7 @@ export async function POST(req: NextRequest) {
           authorization: `Bearer ${secret}`,
         },
         body: JSON.stringify({ to, text }),
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(12000),
         cache: 'no-store',
       });
       const data = await res.json().catch(() => ({}));
@@ -138,6 +142,20 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: `Unknown action: ${action}` }, { status: 400 });
   } catch (err) {
-    return NextResponse.json({ error: (err as Error).message }, { status: 502 });
+    const isConnRefused =
+      (err as Error).message?.includes('fetch failed') ||
+      (err as Error).message?.includes('ECONNREFUSED');
+
+    return NextResponse.json(
+      {
+        ok: false,
+        workerOnline: false,
+        status: 'OFFLINE',
+        error: isConnRefused
+          ? `The WhatsApp worker service is offline at ${url}. Start the worker with 'npm run worker' or 'npm run dev:all'.`
+          : (err as Error).message,
+      },
+      { status: 503 }
+    );
   }
 }

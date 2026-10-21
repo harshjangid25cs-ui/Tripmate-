@@ -14,6 +14,8 @@ import {
   Radio,
   Copy,
   Check,
+  Terminal,
+  ExternalLink,
 } from "lucide-react";
 import { useAdmin } from "@/lib/admin/admin-context";
 
@@ -38,10 +40,13 @@ export function WhatsAppView() {
   const [inputPhone, setInputPhone] = useState("");
   const [generatedPairingCode, setGeneratedPairingCode] = useState<string | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedCmd, setCopiedCmd] = useState(false);
 
   // Test send state
   const [testPhone, setTestPhone] = useState("");
-  const [testMessage, setTestMessage] = useState("Hello from TripMate! Your WhatsApp OTP sender is linked and operational. 🚀");
+  const [testMessage, setTestMessage] = useState(
+    "Hello from TripMate! Your WhatsApp OTP sender is linked and operational. 🚀"
+  );
   const [isSendingTest, setIsSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
@@ -68,23 +73,43 @@ export function WhatsAppView() {
 
   useEffect(() => {
     fetchStatus();
-    // Auto-poll status: every 3s if connecting/pending, else 10s
-    const intervalTime = data?.status === "QR_READY" || data?.status === "PAIRING_CODE_READY" || data?.status === "CONNECTING" ? 3000 : 10000;
+    // Auto-poll status: 3s if connecting/pairing/qr, else 10s
+    const isTransitional =
+      data?.status === "QR_READY" ||
+      data?.status === "PAIRING_CODE_READY" ||
+      data?.status === "CONNECTING";
+    const intervalTime = isTransitional ? 2500 : 10000;
     const timer = setInterval(() => fetchStatus(true), intervalTime);
     return () => clearInterval(timer);
   }, [fetchStatus, data?.status]);
 
-  const handleLinkQr = async () => {
+  const handleLinkQr = async (forceNew = false) => {
+    if (data && !data.workerOnline) {
+      toast("WhatsApp background worker is offline. Start it first using `npm run worker`.", "error");
+      return;
+    }
+
     setIsActionLoading(true);
     try {
       const res = await fetch("/api/admin/whatsapp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "link_qr" }),
+        body: JSON.stringify({ action: "link_qr", forceNew }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to generate QR code");
-      toast("QR Code generated. Scan with WhatsApp on your phone.", "info");
+
+      // Instantly apply state if QR is returned in response
+      if (json.qrDataUrl) {
+        setData((prev) => ({
+          ...(prev || { workerUrl: "http://127.0.0.1:4100" }),
+          workerOnline: true,
+          status: "QR_READY",
+          qrDataUrl: json.qrDataUrl,
+        }));
+      }
+
+      toast("WhatsApp QR Code ready! Scan with your phone.", "success");
       await fetchStatus(true);
     } catch (err) {
       toast((err as Error).message, "error");
@@ -95,6 +120,11 @@ export function WhatsAppView() {
 
   const handleLinkPairing = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (data && !data.workerOnline) {
+      toast("WhatsApp background worker is offline. Start it first using `npm run worker`.", "error");
+      return;
+    }
+
     const clean = inputPhone.replace(/\D/g, "").slice(-10);
     if (clean.length !== 10) {
       toast("Please enter a valid 10-digit Indian WhatsApp phone number.", "error");
@@ -111,7 +141,15 @@ export function WhatsAppView() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to generate pairing code");
+
       setGeneratedPairingCode(json.code);
+      setData((prev) => ({
+        ...(prev || { workerUrl: "http://127.0.0.1:4100" }),
+        workerOnline: true,
+        status: "PAIRING_CODE_READY",
+        pairingCode: json.code,
+      }));
+
       toast(`Pairing code generated: ${json.code}`, "success");
       await fetchStatus(true);
     } catch (err) {
@@ -122,7 +160,11 @@ export function WhatsAppView() {
   };
 
   const handleLogout = async () => {
-    if (!confirm("Are you sure you want to disconnect this WhatsApp number? Message delivery will stop until a new number is linked.")) {
+    if (
+      !confirm(
+        "Are you sure you want to disconnect this WhatsApp number? Message delivery will pause until a new number is linked."
+      )
+    ) {
       return;
     }
 
@@ -136,7 +178,7 @@ export function WhatsAppView() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Failed to disconnect WhatsApp number");
       setGeneratedPairingCode(null);
-      toast("WhatsApp number unlinked. You can now link a new number.", "success");
+      toast("WhatsApp number unlinked successfully. You can now link a new phone number.", "success");
       await fetchStatus(true);
     } catch (err) {
       toast((err as Error).message, "error");
@@ -150,6 +192,13 @@ export function WhatsAppView() {
     setCopiedCode(true);
     toast("Pairing code copied to clipboard!", "success");
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const handleCopyCommand = (cmd: string) => {
+    navigator.clipboard.writeText(cmd);
+    setCopiedCmd(true);
+    toast("Command copied to clipboard!", "success");
+    setTimeout(() => setCopiedCmd(false), 2000);
   };
 
   const handleTestSend = async (e: React.FormEvent) => {
@@ -189,6 +238,7 @@ export function WhatsAppView() {
   };
 
   const isConnected = data?.status === "CONNECTED";
+  const isWorkerOffline = data ? !data.workerOnline : false;
 
   return (
     <div className="space-y-6 animate-in fade-in pb-12">
@@ -213,13 +263,65 @@ export function WhatsAppView() {
             type="button"
             onClick={() => fetchStatus(false)}
             disabled={isLoading || isActionLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-surface-container-high text-xs font-semibold text-text-primary transition-all disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-surface-container-high text-xs font-semibold text-text-primary transition-all disabled:opacity-50 cursor-pointer shadow-xs"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Refresh Status</span>
           </button>
         </div>
       </div>
+
+      {/* Worker Offline Alert Banner */}
+      {isWorkerOffline && (
+        <div className="rounded-2xl border border-amber-300 bg-amber-50/70 p-5 shadow-xs space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div className="space-y-1 flex-1">
+              <h3 className="text-sm font-bold text-amber-950">
+                WhatsApp Background Worker is Offline
+              </h3>
+              <p className="text-xs text-amber-900/90 leading-relaxed">
+                The device linking service and OTP sender require the Node.js worker running on{" "}
+                <code className="px-1.5 py-0.5 rounded bg-white text-amber-950 font-mono text-[11px] border border-amber-200">
+                  http://127.0.0.1:4100
+                </code>
+                . Start it in a terminal to enable pairing or QR scanning.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t border-amber-200/80">
+            <div className="flex items-center gap-2">
+              <Terminal className="w-4 h-4 text-amber-800 shrink-0" />
+              <span className="text-xs font-medium text-amber-950">Run either command:</span>
+              <div className="flex items-center gap-2">
+                <code className="px-2.5 py-1 rounded-lg bg-amber-900 text-white font-mono text-xs font-bold shadow-xs flex items-center gap-1.5">
+                  npm run worker
+                </code>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCommand("npm run worker")}
+                  className="p-1 rounded-md hover:bg-amber-200 text-amber-900 transition-colors"
+                  title="Copy command"
+                >
+                  {copiedCmd ? <Check className="w-3.5 h-3.5 text-emerald-700" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => fetchStatus(false)}
+              className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 active:bg-amber-800 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin" : ""}`} />
+              <span>Check Connection</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Status Hero Card */}
       <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
@@ -249,7 +351,7 @@ export function WhatsAppView() {
                   {isConnected
                     ? `Linked Sender: +91 ${data.phone || ""}`
                     : data?.workerOnline
-                    ? `Worker Status: ${data?.status || "PENDING"}`
+                    ? `Worker Ready: ${data?.status || "STANDBY"}`
                     : "WhatsApp Worker Offline"}
                 </span>
 
@@ -271,7 +373,7 @@ export function WhatsAppView() {
                         : "bg-red-600"
                     }`}
                   />
-                  {data?.status || "UNKNOWN"}
+                  {data?.status || "OFFLINE"}
                 </span>
               </div>
 
@@ -282,11 +384,15 @@ export function WhatsAppView() {
                   </span>
                 ) : data?.workerOnline ? (
                   <span>
-                    Worker is running at <code className="px-1.5 py-0.5 rounded bg-surface text-text-primary text-[11px]">{data.workerUrl}</code>. Complete linking below to activate phone delivery.
+                    Worker is running at{" "}
+                    <code className="px-1.5 py-0.5 rounded bg-surface text-text-primary text-[11px] font-mono">
+                      {data.workerUrl}
+                    </code>
+                    . Choose a linking method below to connect your WhatsApp Business account.
                   </span>
                 ) : (
                   <span className="text-red-600 font-medium">
-                    The background worker service is offline. Start the worker in <code>whatsapp-otp-auth/worker</code> to connect.
+                    The background worker service is offline. Start the worker using <code>npm run worker</code>.
                   </span>
                 )}
               </p>
@@ -307,7 +413,7 @@ export function WhatsAppView() {
         </div>
       </div>
 
-      {/* Linking Interface: Rendered when not connected OR when user wants to link */}
+      {/* Linking Interface: Rendered when not connected */}
       {!isConnected && (
         <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs space-y-6">
           <div className="border-b border-border-hairline pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -325,7 +431,7 @@ export function WhatsAppView() {
               <button
                 type="button"
                 onClick={() => setLinkTab("pairing")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   linkTab === "pairing"
                     ? "bg-surface text-text-primary shadow-xs font-bold"
                     : "text-text-secondary hover:text-text-primary"
@@ -339,9 +445,11 @@ export function WhatsAppView() {
                 type="button"
                 onClick={() => {
                   setLinkTab("qr");
-                  if (!data?.qrDataUrl) handleLinkQr();
+                  if (data?.workerOnline && !data?.qrDataUrl) {
+                    handleLinkQr(false);
+                  }
                 }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   linkTab === "qr"
                     ? "bg-surface text-text-primary shadow-xs font-bold"
                     : "text-text-secondary hover:text-text-primary"
@@ -373,26 +481,32 @@ export function WhatsAppView() {
                       onChange={(e) => setInputPhone(e.target.value)}
                       placeholder="98765 43210"
                       maxLength={10}
-                      disabled={isActionLoading}
-                      className="w-full h-11 pl-20 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary text-sm font-medium border border-border-hairline focus:border-emerald-500 focus:outline-none transition-colors"
+                      disabled={isActionLoading || isWorkerOffline}
+                      className="w-full h-11 pl-20 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary text-sm font-medium border border-border-hairline focus:border-emerald-500 focus:outline-none transition-colors disabled:opacity-60"
                       required
                     />
                   </div>
                   <p className="text-[11px] text-text-secondary">
-                    Enter the WhatsApp Business phone number you want to send verification messages from.
+                    Enter the 10-digit Indian WhatsApp Business number you want to send verification messages from.
                   </p>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={isActionLoading || inputPhone.replace(/\D/g, "").length !== 10}
+                  disabled={
+                    isActionLoading ||
+                    isWorkerOffline ||
+                    inputPhone.replace(/\D/g, "").length !== 10
+                  }
                   className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xs transition-all disabled:opacity-50 cursor-pointer"
                 >
                   {isActionLoading ? (
                     <span className="flex items-center gap-2">
                       <span className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                      <span>Requesting Pairing Code...</span>
+                      <span>Requesting 8-Digit Pairing Code...</span>
                     </span>
+                  ) : isWorkerOffline ? (
+                    <span>Worker Offline — Start Worker to Link</span>
                   ) : (
                     <>
                       <Smartphone className="w-4 h-4" />
@@ -420,13 +534,13 @@ export function WhatsAppView() {
                       <button
                         type="button"
                         onClick={() => handleCopyCode(generatedPairingCode)}
-                        className="p-2.5 rounded-lg bg-emerald-200 hover:bg-emerald-300 text-emerald-950 transition-colors"
+                        className="p-2.5 rounded-lg bg-emerald-200 hover:bg-emerald-300 text-emerald-950 transition-colors cursor-pointer"
                         title="Copy code"
                       >
                         {copiedCode ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                       </button>
                     </div>
-                    <p className="text-[11px] text-emerald-700">Code expires in 60 seconds.</p>
+                    <p className="text-[11px] text-emerald-700">Code is valid for ~60 seconds.</p>
                   </div>
                 ) : (
                   <div className="p-4 rounded-xl bg-surface border border-dashed border-border-hairline text-center text-xs text-text-secondary">
@@ -435,8 +549,9 @@ export function WhatsAppView() {
                 )}
 
                 <ol className="text-xs text-text-primary space-y-2 list-decimal list-inside leading-relaxed font-medium">
-                  <li>Open <strong>WhatsApp</strong> on the phone you want to use.</li>
-                  <li>Tap <strong>Settings (or ⋮) &gt; Linked Devices &gt; Link a Device</strong>.</li>
+                  <li>Open <strong>WhatsApp</strong> on your phone.</li>
+                  <li>Tap <strong>Settings</strong> (iOS) or <strong>⋮ More options</strong> (Android) &gt; <strong>Linked Devices</strong>.</li>
+                  <li>Tap <strong>Link a Device</strong>.</li>
                   <li>Tap <strong>&quot;Link with phone number instead&quot;</strong> at the bottom.</li>
                   <li>Enter the 8-character pairing code shown above.</li>
                 </ol>
@@ -446,44 +561,77 @@ export function WhatsAppView() {
 
           {/* Tab 2: QR Code */}
           {linkTab === "qr" && (
-            <div className="flex flex-col items-center justify-center p-6 space-y-4 text-center">
-              {data?.qrDataUrl ? (
-                <div className="p-4 bg-white rounded-2xl border border-border-hairline shadow-md">
-                  <Image
-                    src={data.qrDataUrl}
-                    alt="WhatsApp QR Code"
-                    width={220}
-                    height={220}
-                    unoptimized
-                    className="rounded-lg"
-                  />
+            <div className="flex flex-col items-center justify-center p-6 space-y-5 text-center">
+              {isWorkerOffline ? (
+                <div className="w-64 h-64 rounded-2xl bg-amber-50/50 border border-dashed border-amber-300 flex flex-col items-center justify-center gap-3 p-6 text-center">
+                  <AlertCircle className="w-10 h-10 text-amber-600" />
+                  <p className="text-xs text-amber-900 font-semibold">
+                    Worker service is offline
+                  </p>
+                  <p className="text-[11px] text-amber-800">
+                    Start the background worker with <code className="font-mono bg-white px-1.5 py-0.5 rounded border border-amber-200">npm run worker</code> to generate the WhatsApp Web QR code.
+                  </p>
+                </div>
+              ) : isActionLoading ? (
+                <div className="w-64 h-64 rounded-2xl bg-surface-container-low border border-border-hairline flex flex-col items-center justify-center gap-3 p-6 text-center">
+                  <div className="w-8 h-8 rounded-full border-3 border-emerald-600 border-t-transparent animate-spin" />
+                  <p className="text-xs text-text-primary font-bold">
+                    Connecting to WhatsApp Web...
+                  </p>
+                  <p className="text-[11px] text-text-secondary">
+                    Generating fresh QR handshake code.
+                  </p>
+                </div>
+              ) : data?.qrDataUrl ? (
+                <div className="space-y-3">
+                  <div className="p-4 bg-white rounded-2xl border-2 border-emerald-500/20 shadow-md inline-block">
+                    <Image
+                      src={data.qrDataUrl}
+                      alt="WhatsApp QR Code"
+                      width={240}
+                      height={240}
+                      unoptimized
+                      priority
+                      className="rounded-lg"
+                    />
+                  </div>
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-emerald-700 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    <span>Live QR Code Active</span>
+                  </div>
                 </div>
               ) : (
-                <div className="w-56 h-56 rounded-2xl bg-surface-container-low border border-dashed border-border-hairline flex flex-col items-center justify-center gap-3 p-4">
-                  <QrCode className="w-12 h-12 text-text-secondary animate-pulse" />
-                  <p className="text-xs text-text-secondary font-medium">
-                    {isActionLoading ? "Generating fresh QR code..." : "No QR code ready."}
+                <div className="w-64 h-64 rounded-2xl bg-surface-container-low border border-dashed border-border-hairline flex flex-col items-center justify-center gap-3 p-6 text-center">
+                  <QrCode className="w-12 h-12 text-text-secondary" />
+                  <p className="text-xs text-text-primary font-bold">
+                    Ready to generate QR Code
+                  </p>
+                  <p className="text-[11px] text-text-secondary">
+                    Click the button below to initialize WhatsApp Web handshake.
                   </p>
                 </div>
               )}
 
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-text-primary">
-                  Scan this QR code with WhatsApp &gt; Linked Devices
+              <div className="max-w-md space-y-1.5 text-center">
+                <p className="text-xs font-bold text-text-primary">
+                  Scan this QR code with WhatsApp on your phone:
                 </p>
-                <p className="text-[11px] text-text-secondary">
-                  QR codes expire automatically after 20 seconds.
+                <p className="text-[11px] text-text-secondary leading-relaxed">
+                  Open WhatsApp &gt; <strong>Settings</strong> (or ⋮) &gt; <strong>Linked Devices</strong> &gt; <strong>Link a Device</strong> and point your camera here.
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleLinkQr}
-                disabled={isActionLoading}
-                className="px-4 py-2 rounded-xl border border-border-hairline bg-surface hover:bg-surface-container-high text-xs font-bold text-text-primary transition-all disabled:opacity-50"
-              >
-                {isActionLoading ? "Refreshing QR..." : "Refresh QR Code"}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleLinkQr(true)}
+                  disabled={isActionLoading || isWorkerOffline}
+                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold shadow-xs transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isActionLoading ? "animate-spin" : ""}`} />
+                  <span>{data?.qrDataUrl ? "Refresh QR Code" : "Generate QR Code"}</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -492,7 +640,7 @@ export function WhatsAppView() {
       {/* Live Message Dispatch Test Card */}
       <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs space-y-4 max-w-2xl">
         <div className="flex items-center gap-2 text-text-primary">
-          <Send className="w-4 h-4 text-primary-container" />
+          <Send className="w-4 h-4 text-emerald-600" />
           <h2 className="text-sm font-bold uppercase tracking-wider">
             Live Delivery Smoke Test
           </h2>
@@ -518,8 +666,8 @@ export function WhatsAppView() {
                 onChange={(e) => setTestPhone(e.target.value)}
                 placeholder="98765 43210"
                 maxLength={10}
-                disabled={isSendingTest}
-                className="w-full h-10 pl-20 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary text-xs font-medium border border-border-hairline focus:border-primary-container focus:outline-none"
+                disabled={isSendingTest || !isConnected}
+                className="w-full h-10 pl-20 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary text-xs font-medium border border-border-hairline focus:border-emerald-500 focus:outline-none transition-colors disabled:opacity-60"
                 required
               />
             </div>
@@ -534,16 +682,20 @@ export function WhatsAppView() {
               value={testMessage}
               onChange={(e) => setTestMessage(e.target.value)}
               rows={2}
-              disabled={isSendingTest}
-              className="w-full p-3 rounded-xl bg-surface-container-low text-text-primary text-xs font-medium border border-border-hairline focus:border-primary-container focus:outline-none resize-none"
+              disabled={isSendingTest || !isConnected}
+              className="w-full p-3 rounded-xl bg-surface-container-low text-text-primary text-xs font-medium border border-border-hairline focus:border-emerald-500 focus:outline-none resize-none disabled:opacity-60"
               required
             />
           </div>
 
           <button
             type="submit"
-            disabled={isSendingTest || testPhone.replace(/\D/g, "").length !== 10}
-            className="px-4 py-2 rounded-xl bg-primary-container hover:bg-primary text-on-primary text-xs font-bold flex items-center gap-2 shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+            disabled={
+              isSendingTest ||
+              !isConnected ||
+              testPhone.replace(/\D/g, "").length !== 10
+            }
+            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-all disabled:opacity-50 cursor-pointer"
           >
             {isSendingTest ? (
               <span className="flex items-center gap-1.5">
