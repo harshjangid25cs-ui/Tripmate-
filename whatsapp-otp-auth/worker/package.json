@@ -3,7 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "scripts": { "start": "node src/server.js" },
-  "engines": { "node": ">=20" },
-  "dependencies": { "berryprotocol": "0.1.10", "qrcode": "^1.5.4" }
+  "scripts": {
+    "start": "node src/server.js",
+    "start:render": "node src/render-boot.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "berryprotocol": "0.1.10",
+    "qrcode": "^1.5.4"
+  }
 }

@@ -13,6 +13,7 @@
     "db:types": "supabase gen types typescript --local > src/types/database.ts",
     "check:gradients": "node scripts/check-gradients.js",
     "worker": "node whatsapp-otp-auth/worker/src/server.js",
+    "worker:render": "node whatsapp-otp-auth/worker/src/render-boot.js",
     "dev:all": "node scripts/dev-all.js"
   },
   "dependencies": {
