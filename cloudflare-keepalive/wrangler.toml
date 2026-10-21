@@ -9,5 +9,4 @@ compatibility_date = "2024-01-01"
 crons = ["*/8 * * * *"]
 
 [vars]
-# Configure this with your deployed Render service URL:
-RENDER_HEALTH_URL = "https://your-tripmate-worker.onrender.com/health"
+RENDER_HEALTH_URL = "https://tripmate-4lie.onrender.com/health"
