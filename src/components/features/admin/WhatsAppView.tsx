@@ -15,7 +15,6 @@ import {
   Copy,
   Check,
   Terminal,
-  ExternalLink,
 } from "lucide-react";
 import { useAdmin } from "@/lib/admin/admin-context";
 

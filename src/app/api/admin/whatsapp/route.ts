@@ -45,7 +45,7 @@ export async function GET() {
       workerUrl: url,
       ...state,
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json({
       workerOnline: false,
       workerUrl: url,
