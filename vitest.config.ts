@@ -24,11 +24,12 @@ if (fs.existsSync(envPath)) {
 export default defineConfig({
   test: {
     environment: "node",
-    exclude: ["node_modules", "e2e/**"],
+    exclude: ["**/node_modules/**", "e2e/**", "whatsapp-otp-auth/**", ".next/**"],
   },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "server-only": path.resolve(__dirname, "./src/lib/empty.js"),
     },
   },
 });

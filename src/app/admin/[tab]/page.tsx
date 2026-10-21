@@ -23,6 +23,7 @@ import {
   AuditView,
   SettingsView,
   AdminUsersView,
+  WhatsAppView,
 } from "@/components/features/admin/AdminDynamicViews";
 
 export default function DynamicAdminTabPage() {
@@ -75,6 +76,8 @@ export default function DynamicAdminTabPage() {
         return <SettingsView />;
       case "admins":
         return <AdminUsersView />;
+      case "whatsapp":
+        return <WhatsAppView />;
       default:
         return <DashboardView onNavigate={handleSelectTab} />;
     }

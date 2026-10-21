@@ -4,10 +4,12 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { WhatsAppLogin } from "@/components/features/auth/WhatsAppLogin";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [authMethod, setAuthMethod] = React.useState<"whatsapp" | "email">("whatsapp");
   const [authMode, setAuthMode] = React.useState<"login" | "signup">("login");
 
   const [fullName, setFullName] = React.useState("");
@@ -154,7 +156,11 @@ function LoginForm() {
                 M
               </div>
               <h1 className="font-headline-sm text-base text-text-primary font-bold tracking-tight">
-                {authMode === "login" ? "Login" : "Sign Up"}
+                {authMethod === "whatsapp"
+                  ? "WhatsApp Login"
+                  : authMode === "login"
+                  ? "Login"
+                  : "Sign Up"}
               </h1>
             </div>
           </div>
@@ -172,39 +178,84 @@ function LoginForm() {
       {/* Main Content Area */}
       <main className="flex-1 w-full pt-20 pb-8 px-4 flex flex-col justify-center items-center">
         <div className="flex flex-col w-full max-w-md mx-auto">
-          {/* Segmented Mode Switcher */}
-          <div className="flex items-center justify-center p-1 bg-surface-container rounded-xl mb-6 shadow-sm">
+          {/* Method Switcher: WhatsApp OTP vs Email */}
+          <div className="flex items-center justify-center p-1 bg-surface-container rounded-xl mb-4 shadow-sm">
             <button
               type="button"
               onClick={() => {
-                setAuthMode("login");
+                setAuthMethod("whatsapp");
                 setErrorMsg(null);
                 setInfoMsg(null);
               }}
-              className={`flex-1 py-2 text-center font-label-md text-xs rounded-lg transition-all duration-200 font-semibold ${
-                authMode === "login"
+              className={`flex-1 py-2 text-center font-label-md text-xs rounded-lg transition-all duration-200 font-semibold flex items-center justify-center gap-1.5 ${
+                authMethod === "whatsapp"
                   ? "bg-card-surface text-text-primary shadow-sm"
                   : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Log In
+              <svg className="w-3.5 h-3.5 fill-[#25D366]" viewBox="0 0 24 24">
+                <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.825z" />
+              </svg>
+              <span>WhatsApp OTP</span>
+              <span className="ml-1 px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold">
+                FAST
+              </span>
             </button>
             <button
               type="button"
               onClick={() => {
-                setAuthMode("signup");
+                setAuthMethod("email");
                 setErrorMsg(null);
                 setInfoMsg(null);
               }}
-              className={`flex-1 py-2 text-center font-label-md text-xs rounded-lg transition-all duration-200 font-semibold ${
-                authMode === "signup"
+              className={`flex-1 py-2 text-center font-label-md text-xs rounded-lg transition-all duration-200 font-semibold flex items-center justify-center gap-1.5 ${
+                authMethod === "email"
                   ? "bg-card-surface text-text-primary shadow-sm"
                   : "text-text-secondary hover:text-text-primary"
               }`}
             >
-              Sign Up
+              <span className="material-symbols-outlined text-[16px]">
+                mail
+              </span>
+              <span>Email &amp; Password</span>
             </button>
           </div>
+
+          {/* If in Email mode: Segmented Mode Switcher (Log In / Sign Up) */}
+          {authMethod === "email" && (
+            <div className="flex items-center justify-center p-1 bg-surface-container rounded-xl mb-4 shadow-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("login");
+                  setErrorMsg(null);
+                  setInfoMsg(null);
+                }}
+                className={`flex-1 py-1.5 text-center font-label-md text-xs rounded-lg transition-all duration-200 font-semibold ${
+                  authMode === "login"
+                    ? "bg-card-surface text-text-primary shadow-sm"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Log In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode("signup");
+                  setErrorMsg(null);
+                  setInfoMsg(null);
+                }}
+                className={`flex-1 py-1.5 text-center font-label-md text-xs rounded-lg transition-all duration-200 font-semibold ${
+                  authMode === "signup"
+                    ? "bg-card-surface text-text-primary shadow-sm"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
 
           {/* Main Card Surface */}
           <div className="bg-card-surface border border-border-hairline rounded-2xl p-6 md:p-7 shadow-sm flex flex-col items-center">
@@ -228,19 +279,23 @@ function LoginForm() {
             {/* Header Copy */}
             <div className="text-center mb-6">
               <h2 className="font-headline-md text-xl text-text-primary font-bold tracking-tight">
-                {authMode === "login"
+                {authMethod === "whatsapp"
+                  ? "Instant WhatsApp Login"
+                  : authMode === "login"
                   ? "Welcome to Tripmate"
                   : "Create Tripmate Account"}
               </h2>
               <p className="font-body-md text-xs text-text-secondary mt-1">
-                {authMode === "login"
+                {authMethod === "whatsapp"
+                  ? "Log in seamlessly with your WhatsApp phone number"
+                  : authMode === "login"
                   ? "Plan hotels, rides & rest stops in one go"
                   : "Unlock group trip sync & shared road books"}
               </p>
             </div>
 
-            {/* Error / Info alerts */}
-            {errorMsg && (
+            {/* Error / Info alerts for email flow */}
+            {authMethod === "email" && errorMsg && (
               <div
                 role="alert"
                 aria-live="assertive"
@@ -253,7 +308,7 @@ function LoginForm() {
               </div>
             )}
 
-            {infoMsg && (
+            {authMethod === "email" && infoMsg && (
               <div
                 role="status"
                 aria-live="polite"
@@ -266,110 +321,118 @@ function LoginForm() {
               </div>
             )}
 
-            {/* Input Form */}
-            <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-              {/* Dynamic Full Name field for Sign Up */}
-              {authMode === "signup" && (
+            {/* Form Selection */}
+            {authMethod === "whatsapp" ? (
+              <WhatsAppLogin
+                onSuccess={() => {
+                  window.location.assign("/home");
+                }}
+              />
+            ) : (
+              <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+                {/* Dynamic Full Name field for Sign Up */}
+                {authMode === "signup" && (
+                  <div className="flex flex-col gap-1.5 text-left">
+                    <label
+                      htmlFor="full-name"
+                      className="font-label-md text-xs text-text-primary font-semibold"
+                    >
+                      Full Name
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="material-symbols-outlined absolute left-3.5 text-[20px] text-text-secondary pointer-events-none">
+                        badge
+                      </span>
+                      <input
+                        id="full-name"
+                        type="text"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="e.g. Arjun Kapoor"
+                        required
+                        disabled={isLoading}
+                        className="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary font-body-md text-sm border border-transparent focus:border-primary-container focus:bg-surface-container-lowest focus:outline-none transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Email Address */}
                 <div className="flex flex-col gap-1.5 text-left">
                   <label
-                    htmlFor="full-name"
+                    htmlFor="email"
                     className="font-label-md text-xs text-text-primary font-semibold"
                   >
-                    Full Name
+                    Email address
                   </label>
                   <div className="relative flex items-center">
                     <span className="material-symbols-outlined absolute left-3.5 text-[20px] text-text-secondary pointer-events-none">
-                      badge
+                      alternate_email
                     </span>
                     <input
-                      id="full-name"
-                      type="text"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Arjun Kapoor"
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
                       required
                       disabled={isLoading}
                       className="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary font-body-md text-sm border border-transparent focus:border-primary-container focus:bg-surface-container-lowest focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
-              )}
 
-              {/* Email Address */}
-              <div className="flex flex-col gap-1.5 text-left">
-                <label
-                  htmlFor="email"
-                  className="font-label-md text-xs text-text-primary font-semibold"
-                >
-                  Email address
-                </label>
-                <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-3.5 text-[20px] text-text-secondary pointer-events-none">
-                    alternate_email
-                  </span>
-                  <input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                    disabled={isLoading}
-                    className="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary font-body-md text-sm border border-transparent focus:border-primary-container focus:bg-surface-container-lowest focus:outline-none transition-colors"
-                  />
+                {/* Password */}
+                <div className="flex flex-col gap-1.5 text-left">
+                  <label
+                    htmlFor="password"
+                    className="font-label-md text-xs text-text-primary font-semibold"
+                  >
+                    Password
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="material-symbols-outlined absolute left-3.5 text-[20px] text-text-secondary pointer-events-none">
+                      lock
+                    </span>
+                    <input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder={
+                        authMode === "signup"
+                          ? "Create a password (min 6 characters)"
+                          : "••••••••"
+                      }
+                      required
+                      minLength={6}
+                      disabled={isLoading}
+                      className="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary font-body-md text-sm border border-transparent focus:border-primary-container focus:bg-surface-container-lowest focus:outline-none transition-colors"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              {/* Password */}
-              <div className="flex flex-col gap-1.5 text-left">
-                <label
-                  htmlFor="password"
-                  className="font-label-md text-xs text-text-primary font-semibold"
+                {/* Primary Action Button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full h-12 mt-1 rounded-xl bg-primary-container hover:bg-primary active:bg-surface-tint text-on-primary font-label-lg text-xs uppercase tracking-wider font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99] disabled:opacity-50"
                 >
-                  Password
-                </label>
-                <div className="relative flex items-center">
-                  <span className="material-symbols-outlined absolute left-3.5 text-[20px] text-text-secondary pointer-events-none">
-                    lock
+                  <span>
+                    {isLoading
+                      ? "Processing..."
+                      : authMode === "login"
+                      ? "Continue"
+                      : "Join Tripmate"}
                   </span>
-                  <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={
-                      authMode === "signup"
-                        ? "Create a password (min 6 characters)"
-                        : "••••••••"
-                    }
-                    required
-                    minLength={6}
-                    disabled={isLoading}
-                    className="w-full h-12 pl-11 pr-4 rounded-xl bg-surface-container-low text-text-primary placeholder:text-text-secondary font-body-md text-sm border border-transparent focus:border-primary-container focus:bg-surface-container-lowest focus:outline-none transition-colors"
-                  />
-                </div>
-              </div>
-
-              {/* Primary Action Button */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full h-12 mt-1 rounded-xl bg-primary-container hover:bg-primary active:bg-surface-tint text-on-primary font-label-lg text-xs uppercase tracking-wider font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99] disabled:opacity-50"
-              >
-                <span>
-                  {isLoading
-                    ? "Processing..."
-                    : authMode === "login"
-                    ? "Continue"
-                    : "Join Tripmate"}
-                </span>
-                {!isLoading && (
-                  <span className="material-symbols-outlined text-[18px]">
-                    arrow_forward
-                  </span>
-                )}
-              </button>
-            </form>
+                  {!isLoading && (
+                    <span className="material-symbols-outlined text-[18px]">
+                      arrow_forward
+                    </span>
+                  )}
+                </button>
+              </form>
+            )}
 
             {/* Divider */}
             <div className="w-full flex items-center my-5">
@@ -380,7 +443,7 @@ function LoginForm() {
               <div className="flex-1 h-px bg-border-hairline" />
             </div>
 
-            {/* Social Authentication: Google (Per D10 WhatsApp & Apple removed) */}
+            {/* Social Authentication: Google */}
             <div className="w-full flex flex-col gap-2.5">
               <button
                 type="button"
@@ -417,22 +480,39 @@ function LoginForm() {
               </button>
             </div>
 
-            {/* Mode Toggle Text */}
+            {/* Mode Toggle / Switch helper */}
             <div className="mt-5 text-center">
-              <p className="font-body-md text-xs text-text-secondary">
-                {authMode === "login" ? "New here?" : "Already have an account?"}{" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode(authMode === "login" ? "signup" : "login");
-                    setErrorMsg(null);
-                    setInfoMsg(null);
-                  }}
-                  className="font-label-lg text-xs text-primary-container font-bold hover:underline ml-1"
-                >
-                  {authMode === "login" ? "Sign up" : "Log in"}
-                </button>
-              </p>
+              {authMethod === "whatsapp" ? (
+                <p className="font-body-md text-xs text-text-secondary">
+                  Prefer email and password?{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMethod("email");
+                      setErrorMsg(null);
+                      setInfoMsg(null);
+                    }}
+                    className="font-label-lg text-xs text-primary-container font-bold hover:underline ml-1"
+                  >
+                    Switch to Email
+                  </button>
+                </p>
+              ) : (
+                <p className="font-body-md text-xs text-text-secondary">
+                  {authMode === "login" ? "New here?" : "Already have an account?"}{" "}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode(authMode === "login" ? "signup" : "login");
+                      setErrorMsg(null);
+                      setInfoMsg(null);
+                    }}
+                    className="font-label-lg text-xs text-primary-container font-bold hover:underline ml-1"
+                  >
+                    {authMode === "login" ? "Sign up" : "Log in"}
+                  </button>
+                </p>
+              )}
             </div>
           </div>
 

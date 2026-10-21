@@ -1,113 +1,113 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock database rows matching DATABASE.md schema
-const mockDestinationsData = [
-  {
-    id: "11111111-1111-1111-1111-111111111111",
-    slug: "jaipur",
-    name: "Jaipur",
-    region: "Rajasthan",
-    tagline: "The Pink City",
-    description: "Historic desert capital famed for pink-sandstone palaces.",
-    hero_image_path: null,
-    starting_price: 12499,
-    rating: 4.85,
-    review_count: 1420,
-    recommended_days: "3–4 Days",
-    best_season: "Oct–Mar",
-    badge: "Trending this week",
-    categories: ["popular", "heritage"],
-    origin_label: "Delhi NCR",
-    drive_hours: 6.5,
-    drive_km: 270,
-    is_featured: true,
-    is_bookable: true,
-    is_active: true,
-  },
-  {
-    id: "22222222-2222-2222-2222-222222222222",
-    slug: "udaipur",
-    name: "Udaipur",
-    region: "Rajasthan",
-    tagline: "City of Lakes",
-    description: "Romantic lake city nestled in the Aravalli hills.",
-    hero_image_path: null,
-    starting_price: 14800,
-    rating: 4.9,
-    review_count: 980,
-    recommended_days: "3–4 Days",
-    best_season: "Sep–Mar",
-    badge: "High demand today",
-    categories: ["heritage", "weekend_getaways"],
-    origin_label: "Delhi NCR",
-    drive_hours: 11.5,
-    drive_km: 660,
-    is_featured: false,
-    is_bookable: false,
-    is_active: true,
-  },
-];
+const { mockSupabaseClient } = vi.hoisted(() => {
+  const mockDestinationsData = [
+    {
+      id: "11111111-1111-1111-1111-111111111111",
+      slug: "jaipur",
+      name: "Jaipur",
+      region: "Rajasthan",
+      tagline: "The Pink City",
+      description: "Historic desert capital famed for pink-sandstone palaces.",
+      hero_image_path: null,
+      starting_price: 12499,
+      rating: 4.85,
+      review_count: 1420,
+      recommended_days: "3–4 Days",
+      best_season: "Oct–Mar",
+      badge: "Trending this week",
+      categories: ["popular", "heritage"],
+      origin_label: "Delhi NCR",
+      drive_hours: 6.5,
+      drive_km: 270,
+      is_featured: true,
+      is_bookable: true,
+      is_active: true,
+    },
+    {
+      id: "22222222-2222-2222-2222-222222222222",
+      slug: "udaipur",
+      name: "Udaipur",
+      region: "Rajasthan",
+      tagline: "City of Lakes",
+      description: "Romantic lake city nestled in the Aravalli hills.",
+      hero_image_path: null,
+      starting_price: 14800,
+      rating: 4.9,
+      review_count: 980,
+      recommended_days: "3–4 Days",
+      best_season: "Sep–Mar",
+      badge: "High demand today",
+      categories: ["heritage", "weekend_getaways"],
+      origin_label: "Delhi NCR",
+      drive_hours: 11.5,
+      drive_km: 660,
+      is_featured: false,
+      is_bookable: false,
+      is_active: true,
+    },
+  ];
 
-const mockHighlightsData = [
-  {
-    id: "aaaa1111-1111-1111-1111-111111111111",
-    destination_id: "11111111-1111-1111-1111-111111111111",
-    title: "Hawa Mahal & Old City Walk",
-    category: "Heritage",
-    duration_text: "2.5 hrs",
-    badge: "Must Visit",
-    sort_order: 1,
-  },
-  {
-    id: "aaaa2222-2222-2222-2222-222222222222",
-    destination_id: "11111111-1111-1111-1111-111111111111",
-    title: "Amber Palace & Elephant Route",
-    category: "Iconic Fort",
-    duration_text: "4.0 hrs",
-    badge: "Iconic",
-    sort_order: 2,
-  },
-];
+  const mockHighlightsData = [
+    {
+      id: "aaaa1111-1111-1111-1111-111111111111",
+      destination_id: "11111111-1111-1111-1111-111111111111",
+      title: "Hawa Mahal & Old City Walk",
+      category: "Heritage",
+      duration_text: "2.5 hrs",
+      badge: "Must Visit",
+      sort_order: 1,
+    },
+    {
+      id: "aaaa2222-2222-2222-2222-222222222222",
+      destination_id: "11111111-1111-1111-1111-111111111111",
+      title: "Amber Palace & Elephant Route",
+      category: "Iconic Fort",
+      duration_text: "4.0 hrs",
+      badge: "Iconic",
+      sort_order: 2,
+    },
+  ];
 
-const mockCircuitsData = [
-  {
-    id: "c1111111-1111-1111-1111-111111111111",
-    destination_id: "11111111-1111-1111-1111-111111111111",
-    title: "Jaipur Heritage & Forts Circuit",
-    days: 4,
-    nights: 3,
-    summary: "Heritage Havelis & Cab",
-    description: "Amber Palace sunrise, City Palace museum pass.",
-    base_price_per_person: 12499,
-    rating: 4.9,
-    badge: "Trending this week",
-    categories: ["heritage", "popular"],
-    is_featured: true,
-    image_path: null,
-    is_active: true,
-    destinations: { name: "Jaipur", slug: "jaipur" },
-  },
-  {
-    id: "c2222222-2222-2222-2222-222222222222",
-    destination_id: "11111111-1111-1111-1111-111111111111",
-    title: "Amer & Nahargarh Valley Escape",
-    days: 3,
-    nights: 2,
-    summary: "Chauffeur SUV & Fort Villa",
-    description: "Nahargarh sunset drinks, stepwell tour.",
-    base_price_per_person: 9800,
-    rating: 4.8,
-    badge: "High demand for winter",
-    categories: ["heritage"],
-    is_featured: false,
-    image_path: null,
-    is_active: true,
-    destinations: { name: "Jaipur", slug: "jaipur" },
-  },
-];
+  const mockCircuitsData = [
+    {
+      id: "c1111111-1111-1111-1111-111111111111",
+      destination_id: "11111111-1111-1111-1111-111111111111",
+      title: "Jaipur Heritage & Forts Circuit",
+      days: 4,
+      nights: 3,
+      summary: "Heritage Havelis & Cab",
+      description: "Amber Palace sunrise, City Palace museum pass.",
+      base_price_per_person: 12499,
+      rating: 4.9,
+      badge: "Trending this week",
+      categories: ["heritage", "popular"],
+      is_featured: true,
+      image_path: null,
+      is_active: true,
+      destinations: { name: "Jaipur", slug: "jaipur" },
+    },
+    {
+      id: "c2222222-2222-2222-2222-222222222222",
+      destination_id: "11111111-1111-1111-1111-111111111111",
+      title: "Amer & Nahargarh Valley Escape",
+      days: 3,
+      nights: 2,
+      summary: "Chauffeur SUV & Fort Villa",
+      description: "Nahargarh sunset drinks, stepwell tour.",
+      base_price_per_person: 9800,
+      rating: 4.8,
+      badge: "High demand for winter",
+      categories: ["heritage"],
+      is_featured: false,
+      image_path: null,
+      is_active: true,
+      destinations: { name: "Jaipur", slug: "jaipur" },
+    },
+  ];
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: () => ({
+  const mockSupabaseClient = () => ({
     from: (table: string) => {
       if (table === "destinations") {
         return {
@@ -167,7 +167,14 @@ vi.mock("@/lib/supabase/server", () => ({
         }),
       };
     },
-  }),
+  });
+
+  return { mockDestinationsData, mockHighlightsData, mockCircuitsData, mockSupabaseClient };
+});
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: mockSupabaseClient,
+  createPublicClient: mockSupabaseClient,
 }));
 
 import {

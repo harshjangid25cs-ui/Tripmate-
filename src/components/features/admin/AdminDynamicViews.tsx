@@ -99,3 +99,9 @@ export const AdminUsersView = dynamic(
   () => import("./AdminUsersView").then((m) => m.AdminUsersView),
   { loading }
 );
+
+export const WhatsAppView = dynamic(
+  () => import("./WhatsAppView").then((m) => m.WhatsAppView),
+  { loading }
+);
+

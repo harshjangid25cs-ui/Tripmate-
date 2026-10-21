@@ -24,6 +24,7 @@ import {
   Sliders,
   ShieldCheck,
   Lock,
+  MessageSquare,
 } from "lucide-react";
 
 interface NavItem {
@@ -190,6 +191,12 @@ export function AdminSidebar({
           label: "Admin Accounts",
           icon: ShieldCheck,
           capability: "manage_admins",
+        },
+        {
+          id: "whatsapp",
+          label: "WhatsApp Sender",
+          icon: MessageSquare,
+          capability: "app_settings",
         },
       ],
     },

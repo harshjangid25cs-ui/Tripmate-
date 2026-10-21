@@ -1,5 +1,5 @@
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.js
 
@@ -27,6 +27,18 @@ yarn-error.log*
 # local env files (CONVENTIONS.md: "Never commit .env*")
 .env*.local
 .env
+.env.*
+whatsapp-otp-auth/**/.env*
+
+# whatsapp worker local session and sqlite databases
+.auth_info/
+wa_meta.json
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.db-wal
+*.db-shm
 
 # typescript
 *.tsbuildinfo

@@ -55,6 +55,10 @@ export async function updateSession(request: NextRequest) {
     request.cookies.get("tripmate_admin_session")?.value
   );
 
+  const hasWaSessionCookie = Boolean(
+    request.cookies.get("wa_session")?.value
+  );
+
   const isAdminUser =
     isAuthorizedAdmin({
       user,
@@ -62,7 +66,7 @@ export async function updateSession(request: NextRequest) {
 
   const redirectPath = getAuthRedirectPath({
     pathname: request.nextUrl.pathname,
-    hasUser: Boolean(user),
+    hasUser: Boolean(user) || hasWaSessionCookie,
     hasCompletedOnboarding,
     isAdminUser,
   });
