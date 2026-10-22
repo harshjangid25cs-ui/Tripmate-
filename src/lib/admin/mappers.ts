@@ -17,6 +17,7 @@ import type {
   EmailLogEntry,
   AuditLogEntry,
   AdminRole,
+  BankMessageInboxRecord,
 } from "./types";
 
 export type DbRecord = Record<string, unknown>;
@@ -500,6 +501,30 @@ export function mapDatabasePricingToAdminPricing(p: DbRecord): PricingConfig {
     merchant_payee_name: p.merchant_payee_name ? String(p.merchant_payee_name) : "TripMate Travels",
     active_payment_gateway: (p.active_payment_gateway as PricingConfig["active_payment_gateway"]) || "auto",
     upi_auto_confirm: p.upi_auto_confirm !== undefined && p.upi_auto_confirm !== null ? Boolean(p.upi_auto_confirm) : true,
+    bank_webhook_secret: p.bank_webhook_secret ? String(p.bank_webhook_secret) : "tm_internal_bank_secret_2026",
+    bank_auto_confirm: p.bank_auto_confirm !== undefined && p.bank_auto_confirm !== null ? Boolean(p.bank_auto_confirm) : true,
+  };
+}
+
+/**
+ * Maps a Supabase `bank_messages_inbox` row to `BankMessageInboxRecord`.
+ */
+export function mapDatabaseBankMessageToAdminBankMessage(b: DbRecord): BankMessageInboxRecord {
+  return {
+    id: String(b.id || ""),
+    channel: (b.channel as BankMessageInboxRecord["channel"]) || "sms",
+    sender: String(b.sender || ""),
+    subject: b.subject ? String(b.subject) : null,
+    raw_body: String(b.raw_body || ""),
+    amount: Number(b.amount) || 0,
+    utr_number: String(b.utr_number || ""),
+    payer_vpa: b.payer_vpa ? String(b.payer_vpa) : null,
+    extracted_trip_ref: b.extracted_trip_ref ? String(b.extracted_trip_ref) : null,
+    verification_state: (b.verification_state as BankMessageInboxRecord["verification_state"]) || "unmatched",
+    matched_trip_id: b.matched_trip_id ? String(b.matched_trip_id) : null,
+    confirmed_by: b.confirmed_by ? String(b.confirmed_by) : null,
+    confirmed_at: b.confirmed_at ? String(b.confirmed_at) : null,
+    created_at: String(b.created_at || ""),
   };
 }
 

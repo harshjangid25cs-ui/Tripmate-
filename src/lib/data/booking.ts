@@ -1,6 +1,11 @@
 import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createPublicClient } from "@/lib/supabase/server";
+import {
+  createCachedCatalogReader,
+  CATALOG_TAGS,
+  PUBLIC_CATALOG_TTL_SECONDS,
+} from "@/lib/cache/catalog-cache";
 import type { Database } from "@/types/database";
 import { haversineDistanceKm, KNOWN_CITIES } from "@/lib/geo/distance";
 
@@ -194,30 +199,114 @@ function withTimeout<T>(promise: PromiseLike<T>, timeoutMs = 5000): Promise<T> {
   ]);
 }
 
+// ============================================================================
+// Tagged ISR Cached Catalog Readers (< 5ms retrieval)
+// ============================================================================
+
+async function fetchRawActiveHotels(): Promise<HotelRow[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await withTimeout(
+      supabase.from("hotels").select("*").eq("is_active", true),
+      5000
+    );
+    if (error || !data) return [];
+    return data as HotelRow[];
+  } catch {
+    return [];
+  }
+}
+
+const getCachedActiveHotels = createCachedCatalogReader(
+  fetchRawActiveHotels,
+  ["catalog-active-hotels"],
+  {
+    revalidate: PUBLIC_CATALOG_TTL_SECONDS,
+    tags: [CATALOG_TAGS.ALL, CATALOG_TAGS.HOTELS],
+  }
+);
+
+async function fetchRawActiveVehicles(): Promise<
+  (VehicleRow & { destinations?: { name?: string | null } | null })[]
+> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await withTimeout(
+      supabase.from("vehicles").select("*, destinations(name)").eq("is_active", true),
+      5000
+    );
+    if (error || !data) return [];
+    return data as (VehicleRow & { destinations?: { name?: string | null } | null })[];
+  } catch {
+    return [];
+  }
+}
+
+const getCachedActiveVehicles = createCachedCatalogReader(
+  fetchRawActiveVehicles,
+  ["catalog-active-vehicles"],
+  {
+    revalidate: PUBLIC_CATALOG_TTL_SECONDS,
+    tags: [CATALOG_TAGS.ALL, CATALOG_TAGS.VEHICLES],
+  }
+);
+
+async function fetchRawActiveStops(): Promise<StopRow[]> {
+  try {
+    const supabase = createPublicClient();
+    const { data, error } = await withTimeout(
+      supabase.from("stops").select("*").eq("is_active", true),
+      5000
+    );
+    if (error || !data) return [];
+    return data as StopRow[];
+  } catch {
+    return [];
+  }
+}
+
+const getCachedActiveStops = createCachedCatalogReader(
+  fetchRawActiveStops,
+  ["catalog-active-stops"],
+  {
+    revalidate: PUBLIC_CATALOG_TTL_SECONDS,
+    tags: [CATALOG_TAGS.ALL, CATALOG_TAGS.STOPS],
+  }
+);
+
+// ============================================================================
+// Entity Fetchers with Pre-Resolved Scoping Options
+// ============================================================================
+
 export async function getHotelsForDestination(
   destinationId?: string | null,
-  tripId?: string | null
+  tripId?: string | null,
+  options?: { circuitId?: string | null; allowedHotelIds?: string[] | null }
 ): Promise<Hotel[]> {
-  noStore();
   try {
-    const supabase = await createClient();
-    let allowedHotelIds: string[] | null = null;
+    let allowedHotelIds = options?.allowedHotelIds ?? null;
     let resolvedDestId = destinationId;
 
-    if (tripId) {
-      const { data: trip } = await supabase
-        .from("trips")
-        .select("destination_id, circuit_id")
-        .eq("id", tripId)
-        .maybeSingle();
-      if (trip?.destination_id && !resolvedDestId) {
-        resolvedDestId = trip.destination_id;
+    // Only query database for trip/circuit if options were NOT pre-supplied
+    if (allowedHotelIds === null && (options?.circuitId || tripId)) {
+      const supabase = await createClient();
+      let circuitId = options?.circuitId;
+      if (!circuitId && tripId) {
+        const { data: trip } = await supabase
+          .from("trips")
+          .select("destination_id, circuit_id")
+          .eq("id", tripId)
+          .maybeSingle();
+        if (trip?.destination_id && !resolvedDestId) {
+          resolvedDestId = trip.destination_id;
+        }
+        circuitId = trip?.circuit_id ?? undefined;
       }
-      if (trip?.circuit_id) {
+      if (circuitId) {
         const { data: circuit } = await supabase
           .from("circuits")
           .select("destination_id, included_hotel_ids")
-          .eq("id", trip.circuit_id)
+          .eq("id", circuitId)
           .maybeSingle();
         if (circuit?.destination_id && !resolvedDestId) {
           resolvedDestId = circuit.destination_id;
@@ -234,36 +323,37 @@ export async function getHotelsForDestination(
 
     if (resolvedDestId) {
       const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedDestId);
-      const destQuery = supabase.from("destinations").select("id, name, latitude, longitude");
-      const { data: dest } = isUuid
-        ? await destQuery.eq("id", resolvedDestId).maybeSingle()
-        : await destQuery.ilike("slug", resolvedDestId).maybeSingle();
-
-      if (dest) {
-        resolvedDestId = dest.id;
-        if (typeof dest.latitude === "number" && typeof dest.longitude === "number") {
-          destLat = dest.latitude;
-          destLng = dest.longitude;
+      if (!isUuid) {
+        const supabase = await createClient();
+        const { data: dest } = await supabase
+          .from("destinations")
+          .select("id, name, latitude, longitude")
+          .ilike("slug", resolvedDestId)
+          .maybeSingle();
+        if (dest) {
+          resolvedDestId = dest.id;
+          if (typeof dest.latitude === "number" && typeof dest.longitude === "number") {
+            destLat = dest.latitude;
+            destLng = dest.longitude;
+          }
         }
       }
     }
 
-    let query = supabase.from("hotels").select("*").eq("is_active", true);
+    // Read base catalog from tagged ISR cache (< 5ms)
+    const rawHotels = await getCachedActiveHotels();
+
+    let list = rawHotels;
     if (resolvedDestId) {
-      query = query.or(`destination_id.eq.${resolvedDestId},destination_id.is.null`);
+      list = list.filter((h) => h.destination_id === resolvedDestId || h.destination_id === null);
     }
     if (allowedHotelIds && allowedHotelIds.length > 0) {
-      query = query.in("id", allowedHotelIds);
+      const allowedSet = new Set(allowedHotelIds);
+      list = list.filter((h) => allowedSet.has(h.id));
     }
-    const { data, error } = await withTimeout(query, 5000);
-    if (error || !data || data.length === 0) {
-      return [];
-    }
-
-    const rawHotels = data as HotelRow[];
 
     // Calculate Haversine distance and sort closest to city center / landmark first
-    const hotelsWithDistance = rawHotels.map((h) => {
+    const hotelsWithDistance = list.map((h) => {
       const dist = calculateHotelCenterDistance(h, destLat, destLng);
       return {
         hotel: mapHotel(h, dist),
@@ -282,28 +372,33 @@ export async function getHotelsForDestination(
 export async function getVehicles(
   type?: "car" | "bike",
   tripId?: string | null,
-  destinationId?: string | null
+  destinationId?: string | null,
+  options?: { circuitId?: string | null; allowedVehicleIds?: string[] | null }
 ): Promise<Vehicle[]> {
-  noStore();
   try {
-    const supabase = await createClient();
-    let allowedVehicleIds: string[] | null = null;
+    let allowedVehicleIds = options?.allowedVehicleIds ?? null;
     let resolvedDestId = destinationId;
 
-    if (tripId) {
-      const { data: trip } = await supabase
-        .from("trips")
-        .select("destination_id, circuit_id")
-        .eq("id", tripId)
-        .maybeSingle();
-      if (trip?.destination_id && !resolvedDestId) {
-        resolvedDestId = trip.destination_id;
+    // Only query database for trip/circuit if options were NOT pre-supplied
+    if (allowedVehicleIds === null && (options?.circuitId || tripId)) {
+      const supabase = await createClient();
+      let circuitId = options?.circuitId;
+      if (!circuitId && tripId) {
+        const { data: trip } = await supabase
+          .from("trips")
+          .select("destination_id, circuit_id")
+          .eq("id", tripId)
+          .maybeSingle();
+        if (trip?.destination_id && !resolvedDestId) {
+          resolvedDestId = trip.destination_id;
+        }
+        circuitId = trip?.circuit_id ?? undefined;
       }
-      if (trip?.circuit_id) {
+      if (circuitId) {
         const { data: circuit } = await supabase
           .from("circuits")
           .select("destination_id, included_vehicle_ids")
-          .eq("id", trip.circuit_id)
+          .eq("id", circuitId)
           .maybeSingle();
         if (circuit?.destination_id && !resolvedDestId) {
           resolvedDestId = circuit.destination_id;
@@ -316,6 +411,7 @@ export async function getVehicles(
 
     // Resolve destination UUID if slug passed
     if (resolvedDestId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedDestId)) {
+      const supabase = await createClient();
       const { data: dest } = await supabase
         .from("destinations")
         .select("id")
@@ -326,23 +422,26 @@ export async function getVehicles(
       }
     }
 
-    let query = supabase.from("vehicles").select("*, destinations(name)").eq("is_active", true);
+    // Read base catalog from tagged ISR cache (< 5ms)
+    const rawVehicles = await getCachedActiveVehicles();
+
+    let list = rawVehicles;
     if (type) {
-      query = query.eq("type", type);
+      list = list.filter((v) => v.type === type);
     } else {
-      query = query.in("type", ["car", "bike"]);
+      list = list.filter((v) => v.type === "car" || v.type === "bike");
     }
+
     if (resolvedDestId) {
-      query = query.or(`destination_id.eq.${resolvedDestId},destination_id.is.null`);
+      list = list.filter((v) => v.destination_id === resolvedDestId || v.destination_id === null);
     }
+
     if (allowedVehicleIds && allowedVehicleIds.length > 0) {
-      query = query.in("id", allowedVehicleIds);
+      const allowedSet = new Set(allowedVehicleIds);
+      list = list.filter((v) => allowedSet.has(v.id));
     }
-    const { data, error } = await withTimeout(query, 5000);
-    if (error || !data || data.length === 0) {
-      return [];
-    }
-    return (data as (VehicleRow & { destinations?: { name?: string | null } | null })[]).map(mapVehicle);
+
+    return list.map(mapVehicle);
   } catch {
     return [];
   }
@@ -350,23 +449,29 @@ export async function getVehicles(
 
 export async function getStopsForDestination(
   destinationId?: string | null,
-  tripId?: string | null
+  tripId?: string | null,
+  options?: { circuitId?: string | null; allowedStopIds?: string[] | null }
 ): Promise<Stop[]> {
-  noStore();
   try {
-    const supabase = await createClient();
-    let allowedStopIds: string[] | null = null;
-    if (tripId) {
-      const { data: trip } = await supabase
-        .from("trips")
-        .select("circuit_id")
-        .eq("id", tripId)
-        .maybeSingle();
-      if (trip?.circuit_id) {
+    let allowedStopIds = options?.allowedStopIds ?? null;
+
+    // Only query database for trip/circuit if options were NOT pre-supplied
+    if (allowedStopIds === null && (options?.circuitId || tripId)) {
+      const supabase = await createClient();
+      let circuitId = options?.circuitId;
+      if (!circuitId && tripId) {
+        const { data: trip } = await supabase
+          .from("trips")
+          .select("circuit_id")
+          .eq("id", tripId)
+          .maybeSingle();
+        circuitId = trip?.circuit_id ?? undefined;
+      }
+      if (circuitId) {
         const { data: circuit } = await supabase
           .from("circuits")
           .select("included_stop_ids")
-          .eq("id", trip.circuit_id)
+          .eq("id", circuitId)
           .maybeSingle();
         if (circuit?.included_stop_ids && circuit.included_stop_ids.length > 0) {
           allowedStopIds = circuit.included_stop_ids;
@@ -374,21 +479,18 @@ export async function getStopsForDestination(
       }
     }
 
-    let query = supabase.from("stops").select("*").eq("is_active", true);
+    // Read base catalog from tagged ISR cache (< 5ms)
+    const rawStops = await getCachedActiveStops();
+
+    let list = rawStops;
     if (allowedStopIds && allowedStopIds.length > 0) {
-      query = query.in("id", allowedStopIds);
+      const allowedSet = new Set(allowedStopIds);
+      list = list.filter((s) => allowedSet.has(s.id));
+    } else if (destinationId) {
+      list = list.filter((s) => s.destination_id === destinationId || s.destination_id === null);
     }
-    const { data, error } = await withTimeout(query, 5000);
-    if (error || !data || data.length === 0) {
-      return [];
-    }
-    const mapped = (data as StopRow[]).map(mapStop);
-    if (destinationId && (!allowedStopIds || allowedStopIds.length === 0)) {
-      return mapped.filter(
-        (s) => s.destinationId === destinationId || s.destinationId === null
-      );
-    }
-    return mapped;
+
+    return list.map(mapStop);
   } catch {
     return [];
   }

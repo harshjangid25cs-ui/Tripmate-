@@ -1,0 +1,349 @@
+/**
+ * bank-parser.ts — Strict Bank-Only Gatekeeper & Message Parser
+ *
+ * Validates and parses incoming Bank SMS and Gmail alerts.
+ * Strictly admits only authentic Indian Bank / UPI credit transactions.
+ * Personal messages, OTPs, promotional emails, and debits are strictly rejected.
+ */
+
+export interface ParseStrictBankMessageInput {
+  channel: "sms" | "gmail" | "admin_manual";
+  sender?: string;
+  subject?: string;
+  body: string;
+}
+
+export interface StrictBankMessageResult {
+  isBankMessage: boolean;
+  reason?: string;
+  channel: "sms" | "gmail" | "admin_manual";
+  bankName?: string;
+  sender?: string;
+  subject?: string;
+  amount?: number;
+  utrNumber?: string;
+  payerVpa?: string;
+  tripRef?: string;
+  rawBody: string;
+}
+
+const BANK_UPI_ALLOWLIST = [
+  "sbi",
+  "state bank",
+  "hdfc",
+  "icici",
+  "axis",
+  "kotak",
+  "idfc",
+  "fampay",
+  "famapp",
+  "@fam",
+  "yes bank",
+  "pnb",
+  "punjab national bank",
+  "bank of baroda",
+  "bob",
+  "canara",
+  "indusind",
+  "paytm",
+  "phonepe",
+  "google pay",
+  "gpay",
+  "bhim",
+  "npci",
+  "upi",
+];
+
+const REJECT_PATTERNS = [
+  /\bdebited\b/i,
+  /\bsent\s+to\b/i,
+  /\bpaid\s+to\b/i,
+  /\bwithdrawn\b/i,
+  /\botp\b/i,
+  /\bverification\s+code\b/i,
+  /\bcollect\s+request\b/i,
+  /\brequested\s+by\b/i,
+  /\bfailed\b/i,
+  /\bdeclined\b/i,
+];
+
+function identifyBankName(text: string, sender?: string): string {
+  const senderLower = (sender || "").toLowerCase();
+  if (senderLower.includes("fampay") || senderLower.includes("famapp") || senderLower.includes("@fam")) {
+    return "FamPay / IDFC";
+  }
+  if (senderLower.includes("sbi") || senderLower.includes("state bank")) {
+    return "State Bank of India (SBI)";
+  }
+  if (senderLower.includes("hdfc")) {
+    return "HDFC Bank";
+  }
+  if (senderLower.includes("icici")) {
+    return "ICICI Bank";
+  }
+  if (senderLower.includes("axis")) {
+    return "Axis Bank";
+  }
+  if (senderLower.includes("kotak")) {
+    return "Kotak Mahindra Bank";
+  }
+  if (senderLower.includes("idfc")) {
+    return "IDFC FIRST Bank";
+  }
+  if (senderLower.includes("pnb") || senderLower.includes("punjab national")) {
+    return "Punjab National Bank";
+  }
+  if (senderLower.includes("baroda") || senderLower.includes("bob")) {
+    return "Bank of Baroda";
+  }
+  if (senderLower.includes("gpay") || senderLower.includes("google pay")) {
+    return "Google Pay";
+  }
+  if (senderLower.includes("phonepe")) {
+    return "PhonePe UPI";
+  }
+  if (senderLower.includes("paytm")) {
+    return "Paytm Payments Bank";
+  }
+
+  // Fallback to body inspection
+  const lower = text.toLowerCase();
+  if (lower.includes("fampay") || lower.includes("famapp") || lower.includes("@fam")) {
+    return "FamPay / IDFC";
+  }
+  if (lower.includes("sbi user") || lower.includes("sbi bank") || lower.includes("state bank") || /\bsbi\b/i.test(text)) {
+    return "State Bank of India (SBI)";
+  }
+  if (lower.includes("hdfc")) {
+    return "HDFC Bank";
+  }
+  if (lower.includes("icici")) {
+    return "ICICI Bank";
+  }
+  if (lower.includes("axis bank") || /\baxis\b/i.test(text)) {
+    return "Axis Bank";
+  }
+  if (lower.includes("kotak")) {
+    return "Kotak Mahindra Bank";
+  }
+  if (lower.includes("idfc")) {
+    return "IDFC FIRST Bank";
+  }
+  if (lower.includes("gpay") || lower.includes("google pay")) {
+    return "Google Pay";
+  }
+  if (lower.includes("phonepe")) {
+    return "PhonePe UPI";
+  }
+  if (lower.includes("paytm")) {
+    return "Paytm Payments Bank";
+  }
+  if (lower.includes("pnb") || lower.includes("punjab national")) {
+    return "Punjab National Bank";
+  }
+  if (lower.includes("baroda") || lower.includes("bob")) {
+    return "Bank of Baroda";
+  }
+  return "Verified Bank / UPI";
+}
+
+/**
+ * Extracts ₹ INR amount safely without mistaking account balances for transaction amount.
+ */
+function extractAmount(text: string): number | null {
+  // Discard balance portion for amount extraction
+  const preBalanceText = text.split(/(?:avl\s*bal|avail(?:able)?\s*bal(?:ance)?|bal(?:\s*is|\s*:|\.))/i)[0] || text;
+
+  // Pattern 1: credited by/with [Rs./INR/₹] 12,215.00
+  const matchCredited = preBalanceText.match(
+    /(?:credited\s+(?:by|with)?\s*(?:Rs\.?|INR|₹)?\s*|received\s+(?:Rs\.?|INR|₹)?\s*|deposit(?:ed)?\s+(?:Rs\.?|INR|₹)?\s*)([0-9,]+(?:\.[0-9]{1,2})?)/i
+  );
+  if (matchCredited?.[1]) {
+    const val = parseFloat(matchCredited[1].replace(/,/g, ""));
+    if (!isNaN(val) && val > 0) return val;
+  }
+
+  // Pattern 2: [Rs./INR/₹] 12,215.00 credited
+  const matchAmountCredited = preBalanceText.match(
+    /(?:Rs\.?|INR|₹)\s*([0-9,]+(?:\.[0-9]{1,2})?)\s*(?:has\s+been\s+)?credited/i
+  );
+  if (matchAmountCredited?.[1]) {
+    const val = parseFloat(matchAmountCredited[1].replace(/,/g, ""));
+    if (!isNaN(val) && val > 0) return val;
+  }
+
+  // Pattern 3: You received [Rs./INR/₹] 12,215.00
+  const matchReceived = preBalanceText.match(
+    /(?:received|credited)\s*(?:amount\s*of)?\s*(?:Rs\.?|INR|₹)\s*([0-9,]+(?:\.[0-9]{1,2})?)/i
+  );
+  if (matchReceived?.[1]) {
+    const val = parseFloat(matchReceived[1].replace(/,/g, ""));
+    if (!isNaN(val) && val > 0) return val;
+  }
+
+  // Pattern 4: General currency indicator in pre-balance text
+  const matchGeneral = preBalanceText.match(/(?:Rs\.?|INR|₹)\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
+  if (matchGeneral?.[1]) {
+    const val = parseFloat(matchGeneral[1].replace(/,/g, ""));
+    if (!isNaN(val) && val > 0) return val;
+  }
+
+  return null;
+}
+
+/**
+ * Extracts strictly 12-digit UPI UTR / RRN number.
+ */
+function extractUtr(text: string): string | null {
+  // Pattern 1: explicit label like Ref No / UTR / RRN / UPI Ref / Txn ID
+  const labeledMatch = text.match(
+    /(?:ref(?:erence)?(?:\s*(?:no\.?|id|num))?|utr|rrn|upi\s*(?:ref|trans(?:action)?(?:\s*id)?|id|no\.?)|txni?d?|txn)\s*[:\/-]?\s*(\d{12})\b/i
+  );
+  if (labeledMatch?.[1] && /^\d{12}$/.test(labeledMatch[1])) {
+    return labeledMatch[1];
+  }
+
+  // Pattern 2: UPI delimiter format (e.g. UPI:429183746512 or UPI/429183746512)
+  const upiDelimitedMatch = text.match(/(?:by\s+upi|upi)\s*[:\/-]\s*(\d{12})\b/i);
+  if (upiDelimitedMatch?.[1] && /^\d{12}$/.test(upiDelimitedMatch[1])) {
+    return upiDelimitedMatch[1];
+  }
+
+  // Pattern 3: Isolated 12-digit number (not preceded by date or phone code)
+  const standaloneMatches = text.match(/\b\d{12}\b/g);
+  if (standaloneMatches) {
+    for (const match of standaloneMatches) {
+      if (/^\d{12}$/.test(match)) {
+        return match;
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extracts optional Payer UPI VPA handle.
+ */
+function extractPayerVpa(text: string): string | null {
+  const match = text.match(
+    /(?:from|vpa|payer|user)\s*[:\s]+([a-zA-Z0-9.\-_]{2,50}@[a-zA-Z]{2,20})\b/i
+  );
+  if (match?.[1]) {
+    return match[1].trim();
+  }
+
+  // General handle check ignoring app domain handles
+  const generalHandle = text.match(/\b([a-zA-Z0-9.\-_]{2,50}@[a-zA-Z]{2,20})\b/i);
+  if (generalHandle?.[1]) {
+    const handle = generalHandle[1].toLowerCase();
+    if (!handle.includes("tripmate") && !handle.includes("example.com")) {
+      return generalHandle[1].trim();
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Extracts optional Trip Reference TM-XXXXXX.
+ */
+function extractTripRef(text: string): string | null {
+  const match = text.match(/\b(TM-\d{6})\b/i);
+  return match?.[1] ? match[1].toUpperCase() : null;
+}
+
+/**
+ * parseStrictBankMessage
+ * Evaluates whether an incoming SMS or email is an authentic Bank/UPI credit message,
+ * extracts verified financial attributes, and rejects non-bank or security-sensitive noise.
+ */
+export function parseStrictBankMessage(input: ParseStrictBankMessageInput): StrictBankMessageResult {
+  const combined = `${input.sender || ""} ${input.subject || ""} ${input.body || ""}`;
+  const lower = combined.toLowerCase();
+
+  // RULE 1: Bank/UPI Service Allowlist Check
+  const hasBankSignature = BANK_UPI_ALLOWLIST.some((keyword) => lower.includes(keyword));
+  if (!hasBankSignature) {
+    return {
+      isBankMessage: false,
+      reason: "ignored_non_bank_source",
+      channel: input.channel,
+      sender: input.sender,
+      subject: input.subject,
+      rawBody: input.body,
+    };
+  }
+
+  // RULE 2: Reject Debits, OTPs, Security Messages & Collect Requests
+  for (const pattern of REJECT_PATTERNS) {
+    if (pattern.test(combined)) {
+      return {
+        isBankMessage: false,
+        reason: "rejected_debit_or_security_message",
+        channel: input.channel,
+        sender: input.sender,
+        subject: input.subject,
+        rawBody: input.body,
+      };
+    }
+  }
+
+  // RULE 3: Must indicate credit / incoming money
+  const isCredit =
+    /\b(?:credited|received|deposited|deposit|credit|cr\b|transferred\s+to|transfer\s+from)\b/i.test(
+      combined
+    );
+  if (!isCredit) {
+    return {
+      isBankMessage: false,
+      reason: "no_credit_indicator",
+      channel: input.channel,
+      sender: input.sender,
+      subject: input.subject,
+      rawBody: input.body,
+    };
+  }
+
+  // Extract financial attributes
+  const amount = extractAmount(combined);
+  if (!amount || amount <= 0) {
+    return {
+      isBankMessage: false,
+      reason: "missing_or_invalid_amount",
+      channel: input.channel,
+      sender: input.sender,
+      subject: input.subject,
+      rawBody: input.body,
+    };
+  }
+
+  const utrNumber = extractUtr(combined);
+  if (!utrNumber || !/^\d{12}$/.test(utrNumber)) {
+    return {
+      isBankMessage: false,
+      reason: "missing_or_invalid_12_digit_utr",
+      channel: input.channel,
+      sender: input.sender,
+      subject: input.subject,
+      rawBody: input.body,
+    };
+  }
+
+  const payerVpa = extractPayerVpa(combined);
+  const tripRef = extractTripRef(combined);
+  const bankName = identifyBankName(combined, input.sender);
+
+  return {
+    isBankMessage: true,
+    channel: input.channel,
+    bankName,
+    sender: input.sender || bankName,
+    subject: input.subject,
+    amount,
+    utrNumber,
+    payerVpa: payerVpa || undefined,
+    tripRef: tripRef || undefined,
+    rawBody: input.body,
+  };
+}

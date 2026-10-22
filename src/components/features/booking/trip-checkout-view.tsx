@@ -8,7 +8,7 @@ import { processTripPayment, applyCustomerCouponAction } from "@/lib/actions/tri
 import { createRazorpayOrderAction, verifyRazorpayPaymentAction } from "@/lib/actions/razorpay";
 import { formatCurrency } from "@/lib/format";
 import { buildUpiPaymentUri, generateUpiQrDataUrl, isValidUtr } from "@/lib/payments/upi-qr";
-import { submitDirectUpiPaymentAction } from "@/lib/actions/admin-ops";
+import { submitDirectUpiPaymentAction, markTripCheckoutActiveAction } from "@/lib/actions/admin-ops";
 import { createClient } from "@/lib/supabase/client";
 
 declare global {
@@ -220,6 +220,74 @@ export function TripCheckoutView({ tripData, trip: propTrip, paymentConfig, pric
       }
     };
   }, []);
+
+  // Live Auto-Verification & Active Checkout Ping (Task 5)
+  const [autoVerified, setAutoVerified] = React.useState(false);
+
+  React.useEffect(() => {
+    void markTripCheckoutActiveAction(trip.id);
+  }, [trip.id]);
+
+  React.useEffect(() => {
+    let active = true;
+    let supabaseClient: ReturnType<typeof createClient> | null = null;
+    try {
+      supabaseClient = createClient();
+    } catch {
+      return;
+    }
+
+    const tripChannel = supabaseClient
+      .channel(`live-checkout-trip-${trip.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "trips",
+          filter: `id=eq.${trip.id}`,
+        },
+        (payload) => {
+          if (!active) return;
+          const newTrip = payload.new as { status?: string };
+          if (newTrip?.status === "confirmed") {
+            setAutoVerified(true);
+            setTimeout(() => {
+              router.refresh();
+              router.push(`/book/${trip.id}/confirmed`);
+            }, 700);
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "payments",
+          filter: `trip_id=eq.${trip.id}`,
+        },
+        (payload) => {
+          if (!active) return;
+          const newPayment = payload.new as { status?: string; verification_status?: string };
+          if (newPayment?.status === "succeeded" || newPayment?.verification_status === "verified") {
+            setAutoVerified(true);
+            setTimeout(() => {
+              router.refresh();
+              router.push(`/book/${trip.id}/confirmed`);
+            }, 700);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      if (supabaseClient) {
+        supabaseClient.removeChannel(tripChannel);
+      }
+    };
+  }, [trip.id, router]);
 
   // UPI sub-mode: Direct UPI QR (default) vs Instant UPI VPA
   const [upiSubMode, setUpiSubMode] = React.useState<"direct_qr" | "instant">("direct_qr");
@@ -936,6 +1004,22 @@ export function TripCheckoutView({ tripData, trip: propTrip, paymentConfig, pric
                           <span className="material-symbols-outlined text-[16px]">open_in_new</span>
                           <span>Open UPI App (GPay / PhonePe / Paytm)</span>
                         </a>
+
+                        {/* Live Bank SMS / Gmail Auto-Detection Banner */}
+                        {autoVerified ? (
+                          <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center gap-2 text-emerald-800 text-xs font-bold animate-in fade-in">
+                            <span className="material-symbols-outlined text-[18px] text-emerald-700">check_circle</span>
+                            <span>✓ Bank Payment Verified! Redirecting to your voucher...</span>
+                          </div>
+                        ) : (
+                          <div className="p-2.5 bg-surface rounded-xl border border-border-hairline flex items-center justify-between gap-2 text-[11px]">
+                            <div className="flex items-center gap-1.5 text-text-secondary">
+                              <span className="h-2 w-2 rounded-full bg-emerald-700 animate-pulse" />
+                              <span className="font-semibold">Auto-verification active:</span>
+                              <span>Paying via UPI auto-confirms via Bank SMS &amp; FamPay alerts.</span>
+                            </div>
+                          </div>
+                        )}
 
                         {/* 12-Digit UTR Input */}
                         <div className="space-y-1">

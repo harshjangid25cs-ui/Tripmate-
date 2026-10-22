@@ -239,18 +239,18 @@ export async function selectTripHotel({
       return { ok: false, error: "Authentication required." };
     }
 
-    // Verify trip draft
-    const { data: trip } = await supabase
-      .from("trips")
-      .select("*, hotel:trip_hotels(*)")
-      .eq("id", tripId)
-      .single();
+    // Parallelize trip verification, hotel price query, and existing hotel row cleanup
+    const [tripRes, hotelRes] = await Promise.all([
+      supabase.from("trips").select("*, hotel:trip_hotels(*)").eq("id", tripId).single(),
+      supabase.from("hotels").select("price_per_night").eq("id", hotelId).single(),
+      supabase.from("trip_hotels").delete().eq("trip_id", tripId),
+    ]);
 
-    if (!trip || (trip as TripRow).user_id !== user.id || (trip as TripRow).status !== "draft") {
+    const tripRow = tripRes.data as TripRow | null;
+    if (!tripRow || tripRow.user_id !== user.id || tripRow.status !== "draft") {
       return { ok: false, error: "Draft not found or access denied." };
     }
 
-    const tripRow = trip as TripRow;
     if (!tripRow.start_date || !tripRow.end_date) {
       return { ok: false, error: "Please select trip dates first." };
     }
@@ -261,17 +261,7 @@ export async function selectTripHotel({
         ? 1
         : Math.ceil(tripRow.traveler_count / 2));
 
-    // Get hotel price
-    const { data: hotelData } = await supabase
-      .from("hotels")
-      .select("price_per_night")
-      .eq("id", hotelId)
-      .single();
-
-    const pricePerNight = hotelData ? Number(hotelData.price_per_night) : 4200;
-
-    // Delete existing hotel row if any
-    await supabase.from("trip_hotels").delete().eq("trip_id", tripId);
+    const pricePerNight = hotelRes.data ? Number(hotelRes.data.price_per_night) : 4200;
 
     // Insert new hotel row. (Triggers compute subtotal and update trip totals)
     const { error: insertError } = await supabase.from("trip_hotels").insert({
@@ -298,7 +288,8 @@ export async function selectTripHotel({
       return { ok: false, error: insertError.message };
     }
 
-    revalidatePath(`/book/${tripId}`, "layout");
+    revalidatePath(`/book/${tripId}/hotel`);
+    revalidatePath(`/book/${tripId}/review`);
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unexpected error";
@@ -333,35 +324,29 @@ export async function selectTripVehicle({
       return { ok: false, error: "Authentication required." };
     }
 
-    const { data: trip } = await supabase
-      .from("trips")
-      .select("*")
-      .eq("id", tripId)
-      .single();
+    // Parallelize trip ownership verification, vehicle price fetch, and existing vehicle cleanup
+    const [tripRes, vehicleRes] = await Promise.all([
+      supabase.from("trips").select("*").eq("id", tripId).single(),
+      vehicleId
+        ? supabase.from("vehicles").select("price").eq("id", vehicleId).single()
+        : Promise.resolve({ data: null, error: null }),
+      supabase.from("trip_vehicles").delete().eq("trip_id", tripId),
+    ]);
 
-    if (!trip || (trip as TripRow).user_id !== user.id || (trip as TripRow).status !== "draft") {
+    const trip = tripRes.data as TripRow | null;
+    if (!trip || trip.user_id !== user.id || trip.status !== "draft") {
       return { ok: false, error: "Draft not found or access denied." };
     }
 
-    // Delete existing vehicle row
-    await supabase.from("trip_vehicles").delete().eq("trip_id", tripId);
-
     // If no vehicle selected (skipped), revalidate and return success
     if (!vehicleId) {
-      revalidatePath(`/book/${tripId}`, "layout");
+      revalidatePath(`/book/${tripId}/vehicle`);
+      revalidatePath(`/book/${tripId}/review`);
       return { ok: true };
     }
 
-    const tripRow = trip as TripRow;
-    const totalDays = tripRow.total_days ?? 4;
-
-    const { data: vehicleData } = await supabase
-      .from("vehicles")
-      .select("price")
-      .eq("id", vehicleId)
-      .single();
-
-    const unitPrice = vehicleData ? Number(vehicleData.price) : 1899;
+    const totalDays = trip.total_days ?? 4;
+    const unitPrice = vehicleRes.data ? Number(vehicleRes.data.price) : 1899;
 
     const { error: insertError } = await supabase.from("trip_vehicles").insert({
       trip_id: tripId,
@@ -376,7 +361,8 @@ export async function selectTripVehicle({
       return { ok: false, error: insertError.message };
     }
 
-    revalidatePath(`/book/${tripId}`, "layout");
+    revalidatePath(`/book/${tripId}/vehicle`);
+    revalidatePath(`/book/${tripId}/review`);
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unexpected error";
@@ -419,27 +405,28 @@ export async function toggleTripStop({
       return { ok: false, error: "Authentication required." };
     }
 
-    const { data: trip } = await supabase
-      .from("trips")
-      .select("*")
-      .eq("id", tripId)
-      .single();
+    // Parallelize trip ownership verification, stop existence check, and stop catalog details
+    const [tripRes, existingStopRes, stopDataRes] = await Promise.all([
+      supabase.from("trips").select("*").eq("id", tripId).single(),
+      supabase
+        .from("trip_stops")
+        .select("id")
+        .eq("trip_id", tripId)
+        .eq("stop_id", stopId)
+        .maybeSingle(),
+      supabase
+        .from("stops")
+        .select("price, pricing_unit")
+        .eq("id", stopId)
+        .single(),
+    ]);
 
-    if (!trip || (trip as TripRow).user_id !== user.id || (trip as TripRow).status !== "draft") {
+    const tripRow = tripRes.data as TripRow | null;
+    if (!tripRow || tripRow.user_id !== user.id || tripRow.status !== "draft") {
       return { ok: false, error: "Draft not found or access denied." };
     }
 
-    const tripRow = trip as TripRow;
-
-    // Check if stop exists
-    const { data: existingStop } = await supabase
-      .from("trip_stops")
-      .select("id")
-      .eq("trip_id", tripId)
-      .eq("stop_id", stopId)
-      .maybeSingle();
-
-    if (existingStop) {
+    if (existingStopRes.data) {
       const { error: deleteError } = await supabase
         .from("trip_stops")
         .delete()
@@ -449,16 +436,12 @@ export async function toggleTripStop({
       if (deleteError) {
         return { ok: false, error: deleteError.message };
       }
-      revalidatePath(`/book/${tripId}`, "layout");
+      revalidatePath(`/book/${tripId}/stops`);
+      revalidatePath(`/book/${tripId}/review`);
       return { ok: true, added: false };
     } else {
       // Add stop
-      const { data: stopData } = await supabase
-        .from("stops")
-        .select("price, pricing_unit")
-        .eq("id", stopId)
-        .single();
-
+      const stopData = stopDataRes.data;
       const unitPrice = Number(stopData?.price || 0);
       const subtotal =
         stopData?.pricing_unit === "per_person"
@@ -477,7 +460,8 @@ export async function toggleTripStop({
       if (insertError) {
         return { ok: false, error: insertError.message };
       }
-      revalidatePath(`/book/${tripId}`, "layout");
+      revalidatePath(`/book/${tripId}/stops`);
+      revalidatePath(`/book/${tripId}/review`);
       return { ok: true, added: true };
     }
   } catch (err: unknown) {
@@ -1056,7 +1040,8 @@ export async function updateTripTransitAction({
       .update({ quantity: 1 })
       .eq("trip_id", tripId);
 
-    revalidatePath(`/book/${tripId}`, "layout");
+    revalidatePath(`/book/${tripId}/vehicle`);
+    revalidatePath(`/book/${tripId}/review`);
     return { ok: true };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unexpected error updating transit mode.";

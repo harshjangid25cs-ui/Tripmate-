@@ -23,8 +23,10 @@ import {
   mapDatabasePricingToAdminPricing,
   mapDatabaseEmailToAdminEmail,
   mapDatabaseAuditToAdminAudit,
+  mapDatabaseBankMessageToAdminBankMessage,
   type DbRecord,
 } from "@/lib/admin/mappers";
+import { parseStrictBankMessage } from "@/lib/payments/bank-parser";
 import type { Database, Json } from "@/types/database";
 import {
   adminUpdateBookingStatusSchema,
@@ -170,8 +172,8 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       const hotels = (raw.hotels || []).map(mapDatabaseHotelToAdminHotel);
       const stops = (raw.stops || []).map(mapDatabaseStopToAdminStop);
 
-      // In parallel, fetch live companies, profiles (users), payments, coupons, pricing, email logs, audit logs, direct circuits, highlights, policies, and history
-      const [compRes, profRes, payRes, coupRes, priceRes, emailRes, auditRes, directCircRes, highRes, polRes, histRes] = await Promise.all([
+      // In parallel, fetch live companies, profiles (users), payments, coupons, pricing, email logs, audit logs, direct circuits, highlights, policies, history, and bank messages inbox
+      const [compRes, profRes, payRes, coupRes, priceRes, emailRes, auditRes, directCircRes, highRes, polRes, histRes, bankRes] = await Promise.all([
         supabase.from("companies").select("*, company_members(*)").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
         supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
@@ -183,6 +185,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         supabase.from("destination_highlights").select("*").order("sort_order", { ascending: true }),
         supabase.from("policies").select("*").order("created_at", { ascending: false }),
         supabase.from("trip_status_history").select("*").order("created_at", { ascending: false }).limit(200),
+        supabase.from("bank_messages_inbox").select("*").order("created_at", { ascending: false }).limit(100),
       ]);
 
       // If direct circuits query succeeded, prefer it so fresh edits in public.circuits are 100% reflected on reload
@@ -196,6 +199,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       const pricing = priceRes.data ? mapDatabasePricingToAdminPricing(priceRes.data as unknown as DbRecord) : undefined;
       const emailLogs = (emailRes.data || []).map((e) => mapDatabaseEmailToAdminEmail(e as unknown as DbRecord));
       const auditLogs = (auditRes.data || []).map((a) => mapDatabaseAuditToAdminAudit(a as unknown as DbRecord));
+      const bankMessagesInbox = (bankRes.data || []).map((b) => mapDatabaseBankMessageToAdminBankMessage(b as unknown as DbRecord));
       const highlights = (highRes.data || []).map((h) => ({
         id: String(h.id),
         destination_id: String(h.destination_id),
@@ -261,6 +265,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
           highlights,
           policies,
           tripStatusHistory,
+          bankMessagesInbox,
           metrics: {
             totalRevenue: raw.metrics?.totalRevenue ?? 0,
             pendingApprovalsCount: raw.metrics?.pendingApprovalsCount ?? 0,
@@ -358,7 +363,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
     const hotels = (hotelsData || []).map(mapDatabaseHotelToAdminHotel);
     const stops = (stopsData || []).map(mapDatabaseStopToAdminStop);
 
-    const [coupRes, priceRes, emailRes, auditRes, highRes, polRes, histRes, payRes] = await Promise.all([
+    const [coupRes, priceRes, emailRes, auditRes, highRes, polRes, histRes, payRes, bankRes] = await Promise.all([
       supabase.from("coupons").select("*").order("created_at", { ascending: false }),
       supabase.from("pricing_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
       supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
@@ -367,6 +372,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       supabase.from("policies").select("*").order("created_at", { ascending: false }),
       supabase.from("trip_status_history").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
+      supabase.from("bank_messages_inbox").select("*").order("created_at", { ascending: false }).limit(100),
     ]);
 
     const coupons = (coupRes.data || []).map((c) => mapDatabaseCouponToAdminCoupon(c as unknown as DbRecord));
@@ -374,6 +380,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
     const pricing = priceRes.data ? mapDatabasePricingToAdminPricing(priceRes.data as unknown as DbRecord) : undefined;
     const emailLogs = (emailRes.data || []).map((e) => mapDatabaseEmailToAdminEmail(e as unknown as DbRecord));
     const auditLogs = (auditRes.data || []).map((a) => mapDatabaseAuditToAdminAudit(a as unknown as DbRecord));
+    const bankMessagesInbox = (bankRes.data || []).map((b) => mapDatabaseBankMessageToAdminBankMessage(b as unknown as DbRecord));
     const highlights = (highRes.data || []).map((h) => ({
       id: String(h.id),
       destination_id: String(h.destination_id),
@@ -447,6 +454,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         highlights,
         policies,
         tripStatusHistory,
+        bankMessagesInbox,
         metrics: {
           totalRevenue,
           pendingApprovalsCount,
@@ -3219,4 +3227,199 @@ export async function adminVerifyUpiPaymentAction(rawInput: unknown): Promise<{
     return { ok: false, error: message };
   }
 }
+
+// ============================================================================
+// MUTATION 25: adminIngestManualBankMessageAction
+// ============================================================================
+
+export async function adminIngestManualBankMessageAction(input: {
+  channel: "sms" | "gmail";
+  sender?: string;
+  subject?: string;
+  rawBody: string;
+}): Promise<{
+  ok: boolean;
+  message?: string;
+  record?: Record<string, unknown>;
+  error?: string;
+}> {
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  if (!input.rawBody || !input.rawBody.trim()) {
+    return { ok: false, error: "Please enter or paste the message content." };
+  }
+
+  // Strictly enforce Bank/UPI Gatekeeper rules
+  const parseResult = parseStrictBankMessage({
+    channel: input.channel,
+    sender: input.sender,
+    subject: input.subject,
+    body: input.rawBody.trim(),
+  });
+
+  if (!parseResult.isBankMessage) {
+    return {
+      ok: false,
+      error: `Rejected: Message does not match any recognized Bank/UPI credit alert pattern (${parseResult.reason || "non-bank source"}). Personal SMS, OTPs, debits, or non-bank text cannot be processed.`,
+    };
+  }
+
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await (
+      supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{
+        data: Record<string, unknown> | null;
+        error: { message: string } | null;
+      }>
+    )("ingest_bank_payment_message", {
+      p_channel: input.channel,
+      p_sender: parseResult.sender || (input.channel === "sms" ? "Bank SMS" : "Bank Gmail"),
+      p_subject: parseResult.subject || null,
+      p_raw_body: parseResult.rawBody,
+      p_amount: parseResult.amount!,
+      p_utr_number: parseResult.utrNumber!,
+      p_payer_vpa: parseResult.payerVpa || null,
+      p_extracted_trip_ref: parseResult.tripRef || null,
+    });
+
+    if (rpcErr) {
+      return { ok: false, error: rpcErr.message || "Failed to ingest bank message into ledger." };
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/admin?tab=payments");
+
+    return {
+      ok: true,
+      message: `Successfully verified & recorded ${parseResult.bankName || "Bank"} credit of ₹${parseResult.amount?.toLocaleString("en-IN")} (UTR: ${parseResult.utrNumber})`,
+      record: rpcRes || undefined,
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Error ingesting bank payment message.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// MUTATION 26: adminConfirmBankInboxPaymentAction
+// ============================================================================
+
+export async function adminConfirmBankInboxPaymentAction(input: {
+  inboxId: string;
+  tripId: string;
+}): Promise<{
+  ok: boolean;
+  message?: string;
+  result?: Record<string, unknown>;
+  error?: string;
+}> {
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  if (!input.inboxId || !input.tripId) {
+    return { ok: false, error: "Inbox ID and Trip ID are required." };
+  }
+
+  const supabase = createAdminClient();
+
+  try {
+    const { data: rpcRes, error: rpcErr } = await (
+      supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{
+        data: Record<string, unknown> | null;
+        error: { message: string } | null;
+      }>
+    )("admin_confirm_bank_inbox_payment", {
+      p_inbox_id: input.inboxId,
+      p_trip_id: input.tripId,
+    });
+
+    if (rpcErr) {
+      return { ok: false, error: rpcErr.message || "Failed to confirm bank inbox payment." };
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/admin?tab=payments");
+    revalidatePath(`/trips/${input.tripId}`);
+    revalidatePath(`/book/${input.tripId}`, "layout");
+
+    return {
+      ok: true,
+      message: "Payment confirmed successfully. Booking voucher and invoice issued.",
+      result: rpcRes || undefined,
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to confirm payment.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// MUTATION 27: adminToggleBankAutoConfirmAction
+// ============================================================================
+
+export async function adminToggleBankAutoConfirmAction(input: {
+  bankAutoConfirm: boolean;
+}): Promise<{
+  ok: boolean;
+  error?: string;
+}> {
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const supabase = createAdminClient();
+
+  try {
+    const { error } = await supabase
+      .from("pricing_config")
+      .update({
+        bank_auto_confirm: input.bankAutoConfirm,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/admin?tab=payments");
+
+    return { ok: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update auto-confirm settings.";
+    return { ok: false, error: message };
+  }
+}
+
+// ============================================================================
+// MUTATION 28: markTripCheckoutActiveAction
+// ============================================================================
+
+export async function markTripCheckoutActiveAction(
+  tripId: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const supabase = createAdminClient();
+    await supabase
+      .from("trips")
+      .update({
+        checkout_active_at: new Date().toISOString(),
+      })
+      .eq("id", tripId);
+
+    return { ok: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update checkout state.";
+    return { ok: false, error: message };
+  }
+}
+
 

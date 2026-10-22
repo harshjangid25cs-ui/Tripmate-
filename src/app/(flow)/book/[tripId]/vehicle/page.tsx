@@ -13,7 +13,14 @@ interface PageProps {
 
 export default async function VehicleSelectionPage({ params }: PageProps) {
   const tripData = await getValidatedDraftTrip(params.tripId, "vehicle");
-  const vehicles = await getVehicles(undefined, tripData.trip.id, tripData.trip.destination_id);
+  const circuit = tripData.circuit;
+  const allowedVehicleIds = circuit?.included_vehicle_ids ?? null;
+  const vehicles = await getVehicles(
+    undefined,
+    tripData.trip.id,
+    tripData.trip.destination_id,
+    { circuitId: tripData.trip.circuit_id, allowedVehicleIds }
+  );
 
   return <VehicleSelectionView tripData={tripData} vehicles={vehicles} />;
 }

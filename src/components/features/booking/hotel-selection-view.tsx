@@ -10,7 +10,6 @@ import { getHotelImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { toggleSavedItem } from "@/lib/data/saved-items";
 import { selectTripHotel } from "@/lib/actions/trips";
-import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface HotelSelectionViewProps {
   tripData: ValidatedDraftTrip;
@@ -23,16 +22,22 @@ export function HotelSelectionView({ tripData, hotels }: HotelSelectionViewProps
   const router = useRouter();
   const { trip, hotel: selectedTripHotel, destination } = tripData;
 
-  const realtimeTables = React.useMemo(() => ["hotels"], []);
-  useRealtimeTableSync(realtimeTables);
-
   const [activeFilter, setActiveFilter] = React.useState<FilterKey>("all");
   const [selectedHotelId, setSelectedHotelId] = React.useState<string | null>(
     selectedTripHotel?.hotel_id ?? hotels[0]?.id ?? null
   );
+  const [savedHotelId, setSavedHotelId] = React.useState<string | null>(
+    selectedTripHotel?.hotel_id ?? null
+  );
+  const saveInFlightRef = React.useRef<Promise<unknown> | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = React.useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  // Aggressive Next-Step Prefetching on mount
+  React.useEffect(() => {
+    router.prefetch(`/book/${trip.id}/vehicle`);
+  }, [router, trip.id]);
 
   const nights = Math.max(
     1,
@@ -91,21 +96,25 @@ export function HotelSelectionView({ tripData, hotels }: HotelSelectionViewProps
 
   const selectedHotel = hotels.find((h) => h.id === selectedHotelId);
 
-  const handleSelectHotel = async (hotelId: string) => {
+  const handleSelectHotel = (hotelId: string) => {
     setSelectedHotelId(hotelId);
     setErrorMsg(null);
-    try {
-      const res = await selectTripHotel({
-        tripId: trip.id,
-        hotelId,
-        rooms: defaultRooms,
+    const promise = selectTripHotel({
+      tripId: trip.id,
+      hotelId,
+      rooms: defaultRooms,
+    })
+      .then((res) => {
+        if (res.ok) {
+          setSavedHotelId(hotelId);
+        } else {
+          setErrorMsg(res.error ?? "Failed to save hotel selection.");
+        }
+      })
+      .catch(() => {
+        setErrorMsg("Failed to update hotel selection.");
       });
-      if (!res.ok) {
-        setErrorMsg(res.error ?? "Failed to save hotel selection.");
-      }
-    } catch {
-      setErrorMsg("Failed to update hotel selection.");
-    }
+    saveInFlightRef.current = promise;
   };
 
   const handleNext = async () => {
@@ -117,7 +126,17 @@ export function HotelSelectionView({ tripData, hotels }: HotelSelectionViewProps
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
-      // Ensure selected hotel is persisted
+      if (saveInFlightRef.current) {
+        await saveInFlightRef.current;
+      }
+
+      // If already persisted, immediately navigate without a duplicate mutation!
+      if (selectedHotelId === savedHotelId) {
+        router.push(`/book/${trip.id}/vehicle`);
+        return;
+      }
+
+      // Fallback: save if not yet persisted
       const res = await selectTripHotel({
         tripId: trip.id,
         hotelId: selectedHotelId,
@@ -125,6 +144,7 @@ export function HotelSelectionView({ tripData, hotels }: HotelSelectionViewProps
       });
 
       if (res.ok) {
+        setSavedHotelId(selectedHotelId);
         router.push(`/book/${trip.id}/vehicle`);
       } else {
         setErrorMsg(res.error ?? "Failed to proceed to transport.");

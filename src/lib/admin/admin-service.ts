@@ -25,6 +25,7 @@ import type {
   DestinationHighlight,
   CompanyPolicyAdmin,
   TripStatusHistoryItem,
+  BankMessageInboxRecord,
 } from "./types";
 import {
   adminUpsertCouponAction,
@@ -160,6 +161,7 @@ interface AdminState {
   policies: CompanyPolicyAdmin[];
   tripStatusHistory: TripStatusHistoryItem[];
   admins: AdminUser[];
+  bankMessagesInbox: BankMessageInboxRecord[];
 }
 
 function createDefaultState(): AdminState {
@@ -187,6 +189,7 @@ function createDefaultState(): AdminState {
     policies: [],
     tripStatusHistory: [],
     admins: INITIAL_ADMINS,
+    bankMessagesInbox: [],
   };
 }
 
@@ -232,6 +235,7 @@ export class AdminService {
     highlights?: DestinationHighlight[];
     policies?: CompanyPolicyAdmin[];
     tripStatusHistory?: TripStatusHistoryItem[];
+    bankMessagesInbox?: BankMessageInboxRecord[];
   }) {
     if (snapshot.bookings !== undefined) {
       currentState.bookings = [...snapshot.bookings];
@@ -283,6 +287,9 @@ export class AdminService {
     }
     if (snapshot.tripStatusHistory !== undefined) {
       currentState.tripStatusHistory = [...snapshot.tripStatusHistory];
+    }
+    if (snapshot.bankMessagesInbox !== undefined) {
+      currentState.bankMessagesInbox = [...snapshot.bankMessagesInbox];
     }
 
     this.notify();
@@ -1911,6 +1918,11 @@ export class AdminService {
   // --- Payments & Invoices ---
   static getPayments(): PaymentInvoiceRecord[] {
     return [...currentState.payments];
+  }
+
+  // --- Bank Messages Inbox ---
+  static getBankMessagesInbox(): BankMessageInboxRecord[] {
+    return [...currentState.bankMessagesInbox];
   }
 
   // --- Admin Accounts ---

@@ -1,5 +1,15 @@
 import { redirect } from "next/navigation";
+import * as React from "react";
 import { unstable_noStore as noStore } from "next/cache";
+
+const safeCache = <Args extends unknown[], Return>(
+  fn: (...args: Args) => Promise<Return>
+): ((...args: Args) => Promise<Return>) => {
+  if (typeof React.cache === "function") {
+    return React.cache(fn);
+  }
+  return fn;
+};
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
 
@@ -64,7 +74,7 @@ export function determineEarliestIncompleteStep({
   return "checkout";
 }
 
-export async function getValidatedDraftTrip(
+async function fetchValidatedDraftTrip(
   tripId: string,
   targetStep: BookingStep
 ): Promise<ValidatedDraftTrip> {
@@ -90,41 +100,19 @@ export async function getValidatedDraftTrip(
     redirect("/login");
   }
 
-  // Fetch trip
-  const { data: tripData, error: tripError } = await supabase
-    .from("trips")
-    .select("*")
-    .eq("id", tripId)
-    .single();
-
-  if (tripError || !tripData) {
-    redirect("/home");
-  }
-
-  const trip = tripData as TripRow;
-
-  // Verify ownership
-  if (trip.user_id !== user.id) {
-    redirect("/home");
-  }
-
-  // If not draft, redirect according to FLOWS.md §2
-  if (trip.status !== "draft") {
-    if (trip.status === "confirmed" || trip.status === "pending_approval") {
-      redirect(`/trips/${tripId}`);
-    }
-    redirect("/home");
-  }
-
-  // Fetch child relations
+  // Consolidated parallel batch: Fetch trip with joined destination & circuit and child relations concurrently
   const [
+    tripRes,
     hotelRes,
     vehicleRes,
     stopsRes,
     passengersRes,
-    destinationRes,
-    circuitRes,
   ] = await Promise.all([
+    supabase
+      .from("trips")
+      .select("*, destination:destinations(*), circuit:circuits(*)")
+      .eq("id", tripId)
+      .single(),
     supabase
       .from("trip_hotels")
       .select("*, hotel:hotels(*)")
@@ -144,28 +132,37 @@ export async function getValidatedDraftTrip(
       .select("*")
       .eq("trip_id", tripId)
       .order("created_at", { ascending: true }),
-    trip.destination_id
-      ? supabase
-          .from("destinations")
-          .select("*")
-          .eq("id", trip.destination_id)
-          .single()
-      : Promise.resolve({ data: null }),
-    trip.circuit_id
-      ? supabase
-          .from("circuits")
-          .select("*")
-          .eq("id", trip.circuit_id)
-          .single()
-      : Promise.resolve({ data: null }),
   ]);
+
+  if (tripRes.error || !tripRes.data) {
+    redirect("/home");
+  }
+
+  const rawTrip = tripRes.data as unknown as TripRow & {
+    destination?: DestinationRow | null;
+    circuit?: CircuitRow | null;
+  };
+  const trip = rawTrip as TripRow;
+
+  // Verify ownership
+  if (trip.user_id !== user.id) {
+    redirect("/home");
+  }
+
+  // If not draft, redirect according to FLOWS.md §2
+  if (trip.status !== "draft") {
+    if (trip.status === "confirmed" || trip.status === "pending_approval") {
+      redirect(`/trips/${tripId}`);
+    }
+    redirect("/home");
+  }
 
   const hotel = (hotelRes.data ?? null) as unknown as (TripHotelRow & { hotel?: HotelRow | null }) | null;
   const vehicle = (vehicleRes.data ?? null) as unknown as (TripVehicleRow & { vehicle?: VehicleRow | null }) | null;
   const stops = (stopsRes.data ?? []) as unknown as (TripStopRow & { stop?: StopRow | null })[];
   const passengers = (passengersRes.data ?? []) as unknown as TripPassengerRow[];
-  const destination = (destinationRes.data ?? null) as DestinationRow | null;
-  const circuit = (circuitRes.data ?? null) as CircuitRow | null;
+  const destination = (rawTrip.destination ?? null) as DestinationRow | null;
+  const circuit = (rawTrip.circuit ?? null) as CircuitRow | null;
 
   // Step guards enforcement
   if (targetStep === "hotel") {
@@ -227,3 +224,5 @@ export async function getValidatedDraftTrip(
     circuit,
   };
 }
+
+export const getValidatedDraftTrip = safeCache(fetchValidatedDraftTrip);

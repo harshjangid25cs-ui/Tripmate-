@@ -21,6 +21,7 @@ const ADMIN_SYNC_TABLES = [
   "pricing_config",
   "email_logs",
   "admin_audit_logs",
+  "bank_messages_inbox",
 ];
 
 interface AdminContextType {

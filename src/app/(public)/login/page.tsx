@@ -9,7 +9,9 @@ import { WhatsAppLogin } from "@/components/features/auth/WhatsAppLogin";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [authMethod, setAuthMethod] = React.useState<"whatsapp" | "email">("whatsapp");
+  const [authMethod, setAuthMethod] = React.useState<"whatsapp" | "email">(
+    searchParams.get("method") === "whatsapp" ? "whatsapp" : "email"
+  );
   const [authMode, setAuthMode] = React.useState<"login" | "signup">("login");
 
   const [fullName, setFullName] = React.useState("");
@@ -20,6 +22,12 @@ function LoginForm() {
   const [infoMsg, setInfoMsg] = React.useState<string | null>(null);
 
   React.useEffect(() => {
+    const method = searchParams.get("method");
+    if (method === "whatsapp") {
+      setAuthMethod("whatsapp");
+    } else if (method === "email") {
+      setAuthMethod("email");
+    }
     const error = searchParams.get("error");
     const errorDesc = searchParams.get("error_description");
     if (errorDesc) {

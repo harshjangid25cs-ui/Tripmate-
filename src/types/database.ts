@@ -168,6 +168,8 @@ export interface Database {
           merchant_payee_name?: string | null;
           active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo" | null;
           upi_auto_confirm?: boolean | null;
+          bank_webhook_secret?: string;
+          bank_auto_confirm?: boolean;
           created_at: string;
           updated_at?: string;
         };
@@ -181,6 +183,8 @@ export interface Database {
           merchant_payee_name?: string | null;
           active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo" | null;
           upi_auto_confirm?: boolean | null;
+          bank_webhook_secret?: string;
+          bank_auto_confirm?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -193,6 +197,8 @@ export interface Database {
           merchant_payee_name?: string | null;
           active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo" | null;
           upi_auto_confirm?: boolean | null;
+          bank_webhook_secret?: string;
+          bank_auto_confirm?: boolean;
           updated_at?: string;
         };
         Relationships: [];
@@ -623,6 +629,7 @@ export interface Database {
           origin_lng: number | null;
           calculated_distance_km: number;
           transit_mode: "local_only" | "live_origin_to_destination";
+          checkout_active_at?: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -647,6 +654,7 @@ export interface Database {
           origin_lng?: number | null;
           calculated_distance_km?: number;
           transit_mode?: "local_only" | "live_origin_to_destination";
+          checkout_active_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -676,6 +684,7 @@ export interface Database {
           discount_amount?: number;
           coupon_code?: string | null;
           total_amount?: number;
+          checkout_active_at?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -1189,11 +1198,82 @@ export interface Database {
         Update: Record<string, never>;
         Relationships: [];
       };
+
+      bank_messages_inbox: {
+        Row: {
+          id: string;
+          channel: "sms" | "gmail" | "admin_manual";
+          sender: string;
+          subject: string | null;
+          raw_body: string;
+          amount: number;
+          utr_number: string;
+          payer_vpa: string | null;
+          extracted_trip_ref: string | null;
+          verification_state: "unmatched" | "ready_to_confirm" | "confirmed" | "rejected";
+          matched_trip_id: string | null;
+          confirmed_by: string | null;
+          confirmed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          channel: "sms" | "gmail" | "admin_manual";
+          sender: string;
+          subject?: string | null;
+          raw_body: string;
+          amount: number;
+          utr_number: string;
+          payer_vpa?: string | null;
+          extracted_trip_ref?: string | null;
+          verification_state?: "unmatched" | "ready_to_confirm" | "confirmed" | "rejected";
+          matched_trip_id?: string | null;
+          confirmed_by?: string | null;
+          confirmed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          channel?: "sms" | "gmail" | "admin_manual";
+          sender?: string;
+          subject?: string | null;
+          raw_body?: string;
+          amount?: number;
+          utr_number?: string;
+          payer_vpa?: string | null;
+          extracted_trip_ref?: string | null;
+          verification_state?: "unmatched" | "ready_to_confirm" | "confirmed" | "rejected";
+          matched_trip_id?: string | null;
+          confirmed_by?: string | null;
+          confirmed_at?: string | null;
+        };
+        Relationships: [];
+      };
     };
 
     Views: Record<string, never>;
 
     Functions: {
+      ingest_bank_payment_message: {
+        Args: {
+          p_channel: string;
+          p_sender: string;
+          p_subject?: string | null;
+          p_raw_body: string;
+          p_amount: number;
+          p_utr_number: string;
+          p_payer_vpa?: string | null;
+          p_extracted_trip_ref?: string | null;
+        };
+        Returns: Json;
+      };
+      admin_confirm_bank_inbox_payment: {
+        Args: {
+          p_inbox_id: string;
+          p_trip_id: string;
+        };
+        Returns: Json;
+      };
       demo_pay: {
         Args: {
           p_trip_id: string;

@@ -9,7 +9,6 @@ import type { Vehicle } from "@/lib/data/booking";
 import { getVehicleImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { selectTripVehicle, clearTripVehicleAction } from "@/lib/actions/trips";
-import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 import { LocationCoverageScopeBar } from "./LocationCoverageScopeBar";
 
 interface VehicleSelectionViewProps {
@@ -27,16 +26,22 @@ export function VehicleSelectionView({
   const router = useRouter();
   const { trip, vehicle: selectedTripVehicle, destination } = tripData;
 
-  const realtimeTables = React.useMemo(() => ["vehicles"], []);
-  useRealtimeTableSync(realtimeTables);
-
   const [mode, setMode] = React.useState<ModeFilter>("car");
   const [specFilter, setSpecFilter] = React.useState<SpecFilter>("all");
   const [selectedVehicleId, setSelectedVehicleId] = React.useState<string | null>(
     selectedTripVehicle?.vehicle_id ?? null
   );
+  const [savedVehicleId, setSavedVehicleId] = React.useState<string | null>(
+    selectedTripVehicle?.vehicle_id ?? null
+  );
+  const saveInFlightRef = React.useRef<Promise<unknown> | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  // Aggressive Next-Step Prefetching on mount
+  React.useEffect(() => {
+    router.prefetch(`/book/${trip.id}/stops`);
+  }, [router, trip.id]);
 
   const totalDays = trip.total_days ?? 4;
 
@@ -59,44 +64,65 @@ export function VehicleSelectionView({
 
   const selectedVehicle = vehicles.find((v) => v.id === selectedVehicleId);
 
-  const handleSelectVehicle = async (vehicleId: string) => {
+  const handleSelectVehicle = (vehicleId: string) => {
     setErrorMsg(null);
     if (selectedVehicleId === vehicleId) {
       // Toggle off / deselect
       setSelectedVehicleId(null);
-      try {
-        await clearTripVehicleAction(trip.id);
-      } catch {
-        setErrorMsg("Failed to remove vehicle selection.");
-      }
+      const promise = clearTripVehicleAction(trip.id)
+        .then((res) => {
+          if (res.ok) {
+            setSavedVehicleId(null);
+          } else {
+            setErrorMsg(res.error ?? "Failed to remove vehicle selection.");
+          }
+        })
+        .catch(() => {
+          setErrorMsg("Failed to remove vehicle selection.");
+        });
+      saveInFlightRef.current = promise;
       return;
     }
 
+    // Optimistic selection
     setSelectedVehicleId(vehicleId);
-    try {
-      const res = await selectTripVehicle({
-        tripId: trip.id,
-        vehicleId,
+    const promise = selectTripVehicle({
+      tripId: trip.id,
+      vehicleId,
+    })
+      .then((res) => {
+        if (res.ok) {
+          setSavedVehicleId(vehicleId);
+        } else {
+          setErrorMsg(res.error ?? "Failed to save vehicle choice.");
+        }
+      })
+      .catch(() => {
+        setErrorMsg("Failed to update vehicle selection.");
       });
-      if (!res.ok) {
-        setErrorMsg(res.error ?? "Failed to save vehicle choice.");
-      }
-    } catch {
-      setErrorMsg("Failed to update vehicle selection.");
-    }
+    saveInFlightRef.current = promise;
   };
 
   const handleSkipVehicle = async () => {
     setIsSubmitting(true);
     setErrorMsg(null);
     setSelectedVehicleId(null);
+
     try {
-      const res = await clearTripVehicleAction(trip.id);
-      if (res.ok) {
-        router.push(`/book/${trip.id}/stops`);
+      if (saveInFlightRef.current) {
+        await saveInFlightRef.current;
+      }
+      if (savedVehicleId !== null) {
+        const res = await clearTripVehicleAction(trip.id);
+        if (res.ok) {
+          setSavedVehicleId(null);
+          router.push(`/book/${trip.id}/stops`);
+        } else {
+          setErrorMsg(res.error ?? "Failed to update vehicle choice.");
+          setIsSubmitting(false);
+        }
       } else {
-        setErrorMsg(res.error ?? "Failed to update vehicle choice.");
-        setIsSubmitting(false);
+        router.push(`/book/${trip.id}/stops`);
       }
     } catch {
       setErrorMsg("Failed to clear vehicle choice.");
@@ -108,6 +134,18 @@ export function VehicleSelectionView({
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
+      // Wait for any in-flight background save to settle
+      if (saveInFlightRef.current) {
+        await saveInFlightRef.current;
+      }
+
+      // If already saved in database, immediately navigate without a duplicate mutation!
+      if (selectedVehicleId === savedVehicleId) {
+        router.push(`/book/${trip.id}/stops`);
+        return;
+      }
+
+      // Fallback: save if state differs from saved
       if (selectedVehicleId) {
         const res = await selectTripVehicle({
           tripId: trip.id,
@@ -115,6 +153,7 @@ export function VehicleSelectionView({
         });
 
         if (res.ok) {
+          setSavedVehicleId(selectedVehicleId);
           router.push(`/book/${trip.id}/stops`);
         } else {
           setErrorMsg(res.error ?? "Failed to save vehicle.");
@@ -123,6 +162,7 @@ export function VehicleSelectionView({
       } else {
         const res = await clearTripVehicleAction(trip.id);
         if (res.ok) {
+          setSavedVehicleId(null);
           router.push(`/book/${trip.id}/stops`);
         } else {
           setErrorMsg(res.error ?? "Failed to clear vehicle.");

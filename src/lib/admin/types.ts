@@ -132,6 +132,25 @@ export interface PricingConfig {
   merchant_payee_name?: string;
   active_payment_gateway?: "auto" | "direct_upi_utr" | "razorpay" | "demo";
   upi_auto_confirm?: boolean;
+  bank_webhook_secret?: string;
+  bank_auto_confirm?: boolean;
+}
+
+export interface BankMessageInboxRecord {
+  id: string;
+  channel: "sms" | "gmail" | "admin_manual";
+  sender: string;
+  subject?: string | null;
+  raw_body: string;
+  amount: number;
+  utr_number: string;
+  payer_vpa?: string | null;
+  extracted_trip_ref?: string | null;
+  verification_state: "unmatched" | "ready_to_confirm" | "confirmed" | "rejected";
+  matched_trip_id?: string | null;
+  confirmed_by?: string | null;
+  confirmed_at?: string | null;
+  created_at: string;
 }
 
 export interface DestinationHighlight {
@@ -519,6 +538,7 @@ export interface AdminOperationalSnapshot {
   highlights?: DestinationHighlight[];
   policies?: CompanyPolicyAdmin[];
   tripStatusHistory?: TripStatusHistoryItem[];
+  bankMessagesInbox?: BankMessageInboxRecord[];
   metrics: {
     totalRevenue: number;
     pendingApprovalsCount: number;

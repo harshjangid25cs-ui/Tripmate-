@@ -9,7 +9,6 @@ import type { Stop } from "@/lib/data/booking";
 import { getStopImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { toggleTripStop } from "@/lib/actions/trips";
-import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 
 interface StopsSelectionViewProps {
   tripData: ValidatedDraftTrip;
@@ -20,15 +19,18 @@ export function StopsSelectionView({ tripData, stops }: StopsSelectionViewProps)
   const router = useRouter();
   const { trip, stops: selectedTripStops, destination } = tripData;
 
-  const realtimeTables = React.useMemo(() => ["stops"], []);
-  useRealtimeTableSync(realtimeTables);
-
   const [selectedStopIds, setSelectedStopIds] = React.useState<Set<string>>(
     new Set(selectedTripStops.map((s) => s.stop_id))
   );
   const [togglingId, setTogglingId] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
+
+  // Aggressive Next-Step Prefetching on mount
+  React.useEffect(() => {
+    router.prefetch(`/book/${trip.id}/review`);
+    router.prefetch(`/book/${trip.id}/travellers`);
+  }, [router, trip.id]);
 
   const driveHours = destination?.drive_hours ? Number(destination.drive_hours) : 6.5;
   const driveKm = destination?.drive_km ?? 270;
