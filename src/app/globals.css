@@ -83,22 +83,27 @@
   }
 }
 
-/* Custom subtle scrollbar for sidebar & table panels (flat solid colors) */
-.custom-scrollbar::-webkit-scrollbar {
+/* Custom subtle scrollbar for sidebar & bounded admin boxes (strictly flat solid colors, zero gradients) */
+.custom-scrollbar::-webkit-scrollbar,
+.admin-scroll::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+.custom-scrollbar::-webkit-scrollbar-track,
+.admin-scroll::-webkit-scrollbar-track {
+  background: #FBF9F5;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: #D5D2CA;
   border-radius: 9999px;
 }
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.admin-scroll::-webkit-scrollbar-thumb:hover {
   background: #94A3B8;
 }
-.custom-scrollbar {
+.custom-scrollbar,
+.admin-scroll {
   scrollbar-width: thin;
-  scrollbar-color: #CBD5E1 transparent;
+  scrollbar-color: #D5D2CA #FBF9F5;
 }

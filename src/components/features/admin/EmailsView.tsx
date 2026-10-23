@@ -66,33 +66,43 @@ export function EmailsView() {
         )}
       </div>
 
-      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-        <div className="overflow-x-auto">
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Outbound Dispatch Log</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {emails.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+        </div>
+
+        <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
-                <th className="py-2.5">Recipient</th>
-                <th className="py-2.5">Template / Key</th>
-                <th className="py-2.5">Subject</th>
-                <th className="py-2.5">Booking Ref</th>
-                <th className="py-2.5">Sent By</th>
-                <th className="py-2.5">Dispatched At (IST)</th>
-                <th className="py-2.5 text-right">Status</th>
+            <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+              <tr className="text-[10px] font-extrabold uppercase tracking-wider text-[#6E6D68]">
+                <th className="py-2.5 px-4">Recipient</th>
+                <th className="py-2.5 px-4">Template / Key</th>
+                <th className="py-2.5 px-4">Subject</th>
+                <th className="py-2.5 px-4">Booking Ref</th>
+                <th className="py-2.5 px-4">Sent By</th>
+                <th className="py-2.5 px-4">Dispatched At (IST)</th>
+                <th className="py-2.5 px-4 text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-hairline">
+            <tbody className="divide-y divide-[#E5E3DF]">
               {emails.map((em) => (
                 <tr key={em.id} className="hover:bg-surface-container-low/40">
-                  <td className="py-3.5 font-bold text-text-primary">{em.to_email}</td>
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4 font-bold text-text-primary">{em.to_email}</td>
+                  <td className="py-3.5 px-4">
                     <span className="rounded bg-surface border border-border-hairline px-1.5 py-0.5 text-[10px] font-mono font-bold text-text-secondary">
                       {em.template}
                     </span>
                   </td>
-                  <td className="py-3.5 text-text-primary max-w-xs truncate">{em.subject}</td>
-                  <td className="py-3.5 font-mono text-primary-container font-bold">{em.related_booking_ref || "—"}</td>
-                  <td className="py-3.5 text-text-secondary">{em.sent_by}</td>
-                  <td className="py-3.5 text-text-secondary font-mono">
+                  <td className="py-3.5 px-4 text-text-primary max-w-xs truncate">{em.subject}</td>
+                  <td className="py-3.5 px-4 font-mono text-primary-container font-bold">{em.related_booking_ref || "—"}</td>
+                  <td className="py-3.5 px-4 text-text-secondary">{em.sent_by}</td>
+                  <td className="py-3.5 px-4 text-text-secondary font-mono">
                     {new Date(em.created_at).toLocaleDateString([], {
                       month: "short",
                       day: "numeric",
@@ -100,7 +110,7 @@ export function EmailsView() {
                       minute: "2-digit",
                     })}
                   </td>
-                  <td className="py-3.5 text-right">
+                  <td className="py-3.5 px-4 text-right">
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
                         em.status === "sent"
@@ -117,6 +127,11 @@ export function EmailsView() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {emails.length} dispatched communications (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Email Service §3.E</span>
         </div>
       </div>
 

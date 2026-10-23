@@ -146,8 +146,20 @@ export function CompaniesView() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {companies.map((c) => (
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Corporate Organizations</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {companies.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Showing corporate cards · scroll inside box</span>
+        </div>
+
+        <div className="max-h-[420px] overflow-y-auto custom-scrollbar admin-scroll p-4 overscroll-contain">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {companies.map((c) => (
           <div
             key={c.id}
             className="rounded-2xl border border-border-hairline bg-card-surface p-5 shadow-xs flex flex-col justify-between"
@@ -215,6 +227,13 @@ export function CompaniesView() {
             </div>
           </div>
         ))}
+          </div>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {companies.length} registered corporate accounts (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Corporate Management §3.F</span>
+        </div>
       </div>
 
       {/* Add Company Modal */}
@@ -381,7 +400,7 @@ export function CompaniesView() {
             </div>
 
             {/* Member List */}
-            <div className="mt-4 divide-y divide-border-hairline max-h-52 overflow-y-auto">
+            <div className="mt-4 divide-y divide-border-hairline max-h-[240px] overflow-y-auto custom-scrollbar admin-scroll overscroll-contain">
               {(selectedCompany.members || []).length === 0 ? (
                 <p className="py-4 text-xs text-text-secondary italic text-center">No members added yet.</p>
               ) : (

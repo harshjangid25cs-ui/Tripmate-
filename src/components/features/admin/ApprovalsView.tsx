@@ -99,86 +99,103 @@ export function ApprovalsView() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5">
-          {approvals.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center gap-2.5">
-                  <span className="rounded-full bg-purple-50 text-purple-800 border border-purple-200 px-2.5 py-0.5 text-[11px] font-bold uppercase">
-                    Commercial Policy Trigger
-                  </span>
-                  <span className="text-xs font-mono text-text-secondary">GST: {item.gst_number}</span>
-                </div>
-
-                <h3 className="text-lg font-bold text-text-primary tracking-tight">
-                  {item.company_name} — {item.destination_name}
-                </h3>
-
-                <p className="text-xs text-text-secondary">
-                  Booked by <strong className="text-text-primary">{item.booker_name}</strong> ({item.booker_email}) · Travel Dates:{" "}
-                  <strong className="text-text-primary">{item.dates}</strong>
-                </p>
-
-                <div className="flex flex-wrap gap-2.5 text-xs text-text-secondary pt-1">
-                  <span className="rounded-lg bg-surface border border-border-hairline px-2.5 py-1 font-semibold text-text-primary">
-                    Fleet: {item.vehicle_name}
-                  </span>
-                  <span className="rounded-lg bg-surface border border-border-hairline px-2.5 py-1 font-semibold text-text-primary">
-                    Headcount: {item.passenger_count} Pax
-                  </span>
-                  <span className="rounded-lg bg-rose-50 text-rose-800 px-2.5 py-1 font-bold border border-rose-200">
-                    Exceeds Limit: ₹{item.total_amount.toLocaleString("en-IN")} &gt; ₹
-                    {item.approval_limit.toLocaleString("en-IN")}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
-                <div className="text-right sm:pr-4">
-                  <span className="text-[10px] text-text-secondary uppercase font-bold block">
-                    Total Amount
-                  </span>
-                  <span className="text-xl font-bold text-text-primary font-mono tabular-nums">
-                    ₹{item.total_amount.toLocaleString("en-IN")}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setInspectingItem(item)}
-                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface px-3 py-2 text-xs font-bold text-text-primary transition-colors"
-                >
-                  <Bus className="h-3.5 w-3.5 text-primary-container" />
-                  <span>Inspect Manifest</span>
-                </button>
-
-                {canApprove && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={isMutating}
-                      onClick={() => handleDecision(item, "rejected")}
-                      className="rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-4 py-2 text-xs font-bold transition-colors disabled:opacity-50"
-                    >
-                      Reject
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isMutating}
-                      onClick={() => handleDecision(item, "approved")}
-                      className="rounded-xl bg-primary-container hover:bg-primary-hover text-white px-5 py-2 text-xs font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
-                    >
-                      {isMutating && <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />}
-                      <span>Authorize & Confirm</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+        <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Commercial Fleet Approvals Queue</span>
+              <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+                {approvals.length}
+              </span>
             </div>
-          ))}
+            <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside box for more</span>
+          </div>
+
+          <div className="max-h-[380px] overflow-y-auto custom-scrollbar admin-scroll p-4 space-y-3 overscroll-contain">
+            {approvals.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-xl border border-[#E5E3DF] bg-[#FBF9F5] p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2.5">
+                    <span className="rounded-full bg-purple-50 text-purple-800 border border-purple-200 px-2.5 py-0.5 text-[11px] font-bold uppercase">
+                      Commercial Policy Trigger
+                    </span>
+                    <span className="text-xs font-mono text-text-secondary">GST: {item.gst_number}</span>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-text-primary tracking-tight">
+                    {item.company_name} — {item.destination_name}
+                  </h3>
+
+                  <p className="text-xs text-text-secondary">
+                    Booked by <strong className="text-text-primary">{item.booker_name}</strong> ({item.booker_email}) · Travel Dates:{" "}
+                    <strong className="text-text-primary">{item.dates}</strong>
+                  </p>
+
+                  <div className="flex flex-wrap gap-2.5 text-xs text-text-secondary pt-1">
+                    <span className="rounded-lg bg-surface border border-border-hairline px-2.5 py-1 font-semibold text-text-primary">
+                      Fleet: {item.vehicle_name}
+                    </span>
+                    <span className="rounded-lg bg-surface border border-border-hairline px-2.5 py-1 font-semibold text-text-primary">
+                      Headcount: {item.passenger_count} Pax
+                    </span>
+                    <span className="rounded-lg bg-rose-50 text-rose-800 px-2.5 py-1 font-bold border border-rose-200">
+                      Exceeds Limit: ₹{item.total_amount.toLocaleString("en-IN")} &gt; ₹
+                      {item.approval_limit.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-end sm:items-center gap-4">
+                  <div className="text-right sm:pr-4">
+                    <span className="text-[10px] text-text-secondary uppercase font-bold block">
+                      Total Amount
+                    </span>
+                    <span className="text-xl font-bold text-text-primary font-mono tabular-nums">
+                      ₹{item.total_amount.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setInspectingItem(item)}
+                    className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface px-3 py-2 text-xs font-bold text-text-primary transition-colors"
+                  >
+                    <Bus className="h-3.5 w-3.5 text-primary-container" />
+                    <span>Inspect Manifest</span>
+                  </button>
+
+                  {canApprove && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={isMutating}
+                        onClick={() => handleDecision(item, "rejected")}
+                        className="rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 px-4 py-2 text-xs font-bold transition-colors disabled:opacity-50"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isMutating}
+                        onClick={() => handleDecision(item, "approved")}
+                        className="rounded-xl bg-primary-container hover:bg-primary-hover text-white px-5 py-2 text-xs font-bold shadow-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
+                      >
+                        {isMutating && <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />}
+                        <span>Authorize & Confirm</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+            <span>Showing {approvals.length} pending corporate bookings (scroll inside box for more)</span>
+            <span className="font-mono text-[11px] text-[#8C8A85]">Policy §3.D</span>
+          </div>
         </div>
       )}
 

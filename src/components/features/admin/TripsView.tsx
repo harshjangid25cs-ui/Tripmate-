@@ -269,8 +269,20 @@ export function TripsView() {
       </div>
 
       {/* Circuits List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {circuits.map((circ) => {
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Circuits &amp; Itineraries</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {circuits.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Showing catalog cards · scroll inside box</span>
+        </div>
+
+        <div className="max-h-[420px] overflow-y-auto custom-scrollbar admin-scroll p-4 overscroll-contain">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {circuits.map((circ) => {
           return (
             <div
               key={circ.id}
@@ -397,6 +409,13 @@ export function TripsView() {
             </div>
           );
         })}
+          </div>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {circuits.length} active road trip circuits (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Catalog Operations</span>
+        </div>
       </div>
 
       {/* Edit / Create Modal */}
@@ -611,7 +630,7 @@ export function TripsView() {
                     </label>
                     <span className="text-[10px] text-text-muted">Filtered for destination</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2.5 bg-surface rounded-xl border border-border-hairline">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[240px] overflow-y-auto custom-scrollbar admin-scroll overscroll-contain p-2.5 bg-surface rounded-xl border border-border-hairline">
                     {allHotels
                       .filter((h) => !formData.destination_id || h.destination_id === formData.destination_id)
                       .map((h) => {
@@ -655,7 +674,7 @@ export function TripsView() {
                       <span>Allow Own Transport / No Vehicle</span>
                     </label>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2.5 bg-surface rounded-xl border border-border-hairline">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[240px] overflow-y-auto custom-scrollbar admin-scroll overscroll-contain p-2.5 bg-surface rounded-xl border border-border-hairline">
                     {allVehicles.map((v) => {
                       const current = formData.included_vehicle_ids || formData.vehicle_ids || [];
                       const isChecked = current.includes(v.id);
@@ -689,7 +708,7 @@ export function TripsView() {
                     </label>
                     <span className="text-[10px] text-text-muted">Selectable in Step 4</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto p-2.5 bg-surface rounded-xl border border-border-hairline">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[240px] overflow-y-auto custom-scrollbar admin-scroll overscroll-contain p-2.5 bg-surface rounded-xl border border-border-hairline">
                     {allStops
                       .filter((s) => !formData.destination_id || s.destination_id === formData.destination_id)
                       .map((s) => {

@@ -201,121 +201,140 @@ export function VehiclesView() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {vehicles.map((v) => (
-          <div
-            key={v.id}
-            className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between ${
-              v.is_active ? "border-border-hairline" : "border-border-hairline opacity-75 bg-surface/50"
-            }`}
-          >
-            <div>
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-base font-black text-text-primary">{v.name}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                    <span className="inline-block rounded-md bg-surface text-text-secondary border border-border-hairline px-2 py-0.5 text-[10px] font-extrabold uppercase">
-                      {v.type}
-                    </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-bold text-text-primary">
-                      📍 {v.destination_name || v.city || "Jaipur"}
-                    </span>
-                  </div>
-                </div>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
-                    v.is_active
-                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                      : "bg-surface text-text-secondary border-border-hairline"
-                  }`}
-                >
-                  {v.is_active ? "Active" : "Disabled"}
-                </span>
-              </div>
-
-              <p className="mt-2 text-xs text-text-secondary line-clamp-2">{v.subtitle}</p>
-
-              <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-text-secondary">
-                <div className="rounded-xl bg-surface p-2.5 border border-border-hairline flex items-center gap-2">
-                  <Users className="h-4 w-4 text-text-secondary/70" />
-                  <div>
-                    <span className="text-[10px] text-text-secondary/70 block uppercase font-bold">Capacity</span>
-                    <span className="font-bold text-text-primary">{v.capacity} Seats</span>
-                  </div>
-                </div>
-                <div className="rounded-xl bg-surface p-2.5 border border-border-hairline flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-text-secondary/70" />
-                  <div>
-                    <span className="text-[10px] text-text-secondary/70 block uppercase font-bold">Luggage</span>
-                    <span className="font-bold text-text-primary">{v.luggage_capacity} Bags</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-1">
-                {v.features.map((f, i) => (
-                  <span
-                    key={i}
-                    className="rounded-md bg-surface px-1.5 py-0.5 text-[9px] font-semibold text-text-secondary border border-border-hairline"
-                  >
-                    {f}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline">
-                <span className="text-text-secondary font-semibold">{v.driver_type}</span>
-                <span className="text-sm font-black text-text-primary font-mono">
-                  ₹{v.price_per_day.toLocaleString("en-IN")}{" "}
-                  <span className="text-[10px] text-text-secondary font-normal font-sans">/day</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-border-hairline flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData(v);
-                  setIsEditing(true);
-                }}
-                disabled={!canWrite}
-                className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface disabled:opacity-50"
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-                <span>Edit</span>
-              </button>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleToggleActive(v)}
-                  disabled={!canWrite}
-                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
-                    v.is_active
-                      ? "bg-surface text-text-primary border-border-hairline hover:bg-surface-container-low"
-                      : "bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-800"
-                  } disabled:opacity-50`}
-                >
-                  {v.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  <span>{v.is_active ? "Disable" : "Enable"}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDeleteVehicle(v)}
-                  disabled={!canWrite}
-                  className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all disabled:opacity-50"
-                  title="Delete Vehicle"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Fleet Vehicles Catalog</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {vehicles.length}
+            </span>
           </div>
-        ))}
+          <span className="text-xs text-[#6E6D68]">Showing catalog cards · scroll inside box</span>
+        </div>
+
+        <div className="max-h-[420px] overflow-y-auto custom-scrollbar admin-scroll p-4 overscroll-contain">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {vehicles.map((v) => (
+              <div
+                key={v.id}
+                className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between ${
+                  v.is_active ? "border-border-hairline" : "border-border-hairline opacity-75 bg-surface/50"
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-base font-black text-text-primary">{v.name}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                        <span className="inline-block rounded-md bg-surface text-text-secondary border border-border-hairline px-2 py-0.5 text-[10px] font-extrabold uppercase">
+                          {v.type}
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-bold text-text-primary">
+                          📍 {v.destination_name || v.city || "Jaipur"}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
+                        v.is_active
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : "bg-surface text-text-secondary border-border-hairline"
+                      }`}
+                    >
+                      {v.is_active ? "Active" : "Disabled"}
+                    </span>
+                  </div>
+
+                  <p className="mt-2 text-xs text-text-secondary line-clamp-2">{v.subtitle}</p>
+
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-text-secondary">
+                    <div className="rounded-xl bg-surface p-2.5 border border-border-hairline flex items-center gap-2">
+                      <Users className="h-4 w-4 text-text-secondary/70" />
+                      <div>
+                        <span className="text-[10px] text-text-secondary/70 block uppercase font-bold">Capacity</span>
+                        <span className="font-bold text-text-primary">{v.capacity} Seats</span>
+                      </div>
+                    </div>
+                    <div className="rounded-xl bg-surface p-2.5 border border-border-hairline flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-text-secondary/70" />
+                      <div>
+                        <span className="text-[10px] text-text-secondary/70 block uppercase font-bold">Luggage</span>
+                        <span className="font-bold text-text-primary">{v.luggage_capacity} Bags</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {v.features.map((f, i) => (
+                      <span
+                        key={i}
+                        className="rounded-md bg-surface px-1.5 py-0.5 text-[9px] font-semibold text-text-secondary border border-border-hairline"
+                      >
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline">
+                    <span className="text-text-secondary font-semibold">{v.driver_type}</span>
+                    <span className="text-sm font-black text-text-primary font-mono">
+                      ₹{v.price_per_day.toLocaleString("en-IN")}{" "}
+                      <span className="text-[10px] text-text-secondary font-normal font-sans">/day</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-border-hairline flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(v);
+                      setIsEditing(true);
+                    }}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface disabled:opacity-50"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                    <span>Edit</span>
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleActive(v)}
+                      disabled={!canWrite}
+                      className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
+                        v.is_active
+                          ? "bg-surface text-text-primary border-border-hairline hover:bg-surface-container-low"
+                          : "bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-800"
+                      } disabled:opacity-50`}
+                    >
+                      {v.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      <span>{v.is_active ? "Disable" : "Enable"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteVehicle(v)}
+                      disabled={!canWrite}
+                      className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all disabled:opacity-50"
+                      title="Delete Vehicle"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {vehicles.length} fleet vehicles &amp; bikes (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Catalog Operations</span>
+        </div>
       </div>
 
       {isEditing && (

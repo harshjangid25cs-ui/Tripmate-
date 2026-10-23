@@ -469,12 +469,26 @@ export function BookingsView() {
         </div>
       </div>
 
-      {/* Bookings Table */}
-      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-        <div className="overflow-x-auto">
+      {/* Bookings Table Box */}
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-text-primary">
+              Live Bookings Register
+            </span>
+            <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-bold text-text-secondary border border-border-hairline">
+              {filteredBookings.length}
+            </span>
+          </div>
+          <span className="text-[11px] text-text-secondary hidden sm:inline">
+            Scroll vertically inside table to view all bookings
+          </span>
+        </div>
+
+        <div className="overflow-y-auto overflow-x-auto max-h-[370px] overscroll-contain custom-scrollbar admin-scroll">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border-hairline text-[11px] font-bold uppercase tracking-wider text-text-secondary">
+            <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+              <tr className="border-b border-[#E5E3DF] text-[11px] font-bold uppercase tracking-wider text-text-secondary bg-[#FBF9F5]">
                 <th className="py-2.5">Booking Ref</th>
                 <th className="py-2.5">Customer & Pax</th>
                 <th className="py-2.5">Trip Circuit</th>
@@ -581,6 +595,11 @@ export function BookingsView() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Up to 5 rows visible at a time (scroll inside table for more)</span>
+          <span className="font-semibold text-text-primary">Showing {filteredBookings.length} records</span>
         </div>
       </div>
 

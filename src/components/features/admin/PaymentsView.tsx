@@ -876,27 +876,31 @@ function forwardBankEmailsToTripMate() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* PANEL 1: Live Bank SMS & Gmail Feeds (Left Column, 7 cols) */}
-            <div className="lg:col-span-7 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 rounded-full bg-emerald-700 animate-pulse" />
-                  <h2 className="text-sm font-black text-text-primary tracking-tight uppercase">
-                    Live Verified Bank Stream ({filteredBankInbox.length})
-                  </h2>
+            <div className="lg:col-span-7">
+              <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+                <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 rounded-full bg-emerald-700 animate-pulse" />
+                    <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">
+                      Live Verified Bank Stream
+                    </span>
+                    <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+                      {filteredBankInbox.length}
+                    </span>
+                  </div>
+                  <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside box</span>
                 </div>
-                <span className="text-[11px] text-text-secondary">Strict Bank/UPI signatures only</span>
-              </div>
 
-              {filteredBankInbox.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border-hairline bg-surface p-8 text-center">
-                  <Smartphone className="h-8 w-8 text-text-secondary mx-auto mb-2 opacity-50" />
-                  <h3 className="text-xs font-bold text-text-primary">No Bank Alerts in this filter</h3>
-                  <p className="text-[11px] text-text-secondary mt-1 max-w-sm mx-auto">
-                    Use the 1-Click Simulator on the right to test incoming FamPay SMS or Bank Gmail alerts right now!
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
+                {filteredBankInbox.length === 0 ? (
+                  <div className="p-8 text-center bg-[#FBF9F5]">
+                    <Smartphone className="h-8 w-8 text-text-secondary mx-auto mb-2 opacity-50" />
+                    <h3 className="text-xs font-bold text-text-primary">No Bank Alerts in this filter</h3>
+                    <p className="text-[11px] text-text-secondary mt-1 max-w-sm mx-auto">
+                      Use the 1-Click Simulator on the right to test incoming FamPay SMS or Bank Gmail alerts right now!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="max-h-[380px] overflow-y-auto custom-scrollbar admin-scroll p-4 space-y-3 overscroll-contain">
                   {filteredBankInbox.map((item) => {
                     const matchedBooking = bookings.find((b) => b.id === item.matched_trip_id);
                     const isConfirmed = item.verification_state === "confirmed";
@@ -1051,7 +1055,13 @@ function forwardBankEmailsToTripMate() {
                   })}
                 </div>
               )}
+
+              <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+                <span>Showing {filteredBankInbox.length} bank &amp; UPI messages (scroll inside box for more)</span>
+                <span className="font-mono text-[11px] text-[#8C8A85]">Auto/Manual Ingestion</span>
+              </div>
             </div>
+          </div>
 
             {/* PANEL 2: Internal Paste Console & 1-Click Live Simulator (Right Column, 5 cols) */}
             <div className="lg:col-span-5 space-y-4">
@@ -1234,23 +1244,33 @@ function forwardBankEmailsToTripMate() {
             )}
           </div>
 
-          <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-            <div className="overflow-x-auto">
+          <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+            <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Financial Transactions Ledger</span>
+                <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+                  {filteredPayments.length}
+                </span>
+              </div>
+              <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+            </div>
+
+            <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
               <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
-                    <th className="py-2.5">Invoice Number</th>
-                    <th className="py-2.5">Booking Ref</th>
-                    <th className="py-2.5">Customer / Company</th>
-                    <th className="py-2.5">Total Amount</th>
-                    <th className="py-2.5">GST Breakdown</th>
-                    <th className="py-2.5">Method</th>
-                    <th className="py-2.5">12-Digit UTR</th>
-                    <th className="py-2.5">UTR Verification</th>
-                    <th className="py-2.5 text-right">Payment Status</th>
+                <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+                  <tr className="text-[10px] font-extrabold uppercase tracking-wider text-[#6E6D68]">
+                    <th className="py-2.5 px-4">Invoice Number</th>
+                    <th className="py-2.5 px-4">Booking Ref</th>
+                    <th className="py-2.5 px-4">Customer / Company</th>
+                    <th className="py-2.5 px-4">Total Amount</th>
+                    <th className="py-2.5 px-4">GST Breakdown</th>
+                    <th className="py-2.5 px-4">Method</th>
+                    <th className="py-2.5 px-4">12-Digit UTR</th>
+                    <th className="py-2.5 px-4">UTR Verification</th>
+                    <th className="py-2.5 px-4 text-right">Payment Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border-hairline">
+                <tbody className="divide-y divide-[#E5E3DF]">
                   {filteredPayments.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-12 text-center">
@@ -1375,6 +1395,11 @@ function forwardBankEmailsToTripMate() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+              <span>Showing {filteredPayments.length} of {payments.length} transactions (scroll inside box for more)</span>
+              <span className="font-mono text-[11px] text-[#8C8A85]">GST Compliance §3.A</span>
             </div>
           </div>
         </div>

@@ -12,7 +12,6 @@ import {
   Car,
   MapPin,
   ArrowUpRight,
-  ShieldAlert,
   History,
 } from "lucide-react";
 
@@ -170,11 +169,12 @@ export function DashboardView({ onNavigate }: { onNavigate: (tab: string) => voi
       {/* Main Grid: Recent Bookings & Audit Trail */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bookings Table / 2 cols */}
-        <div className="lg:col-span-2 rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-          <div className="flex items-center justify-between pb-4 border-b border-border-hairline">
+        {/* Bookings Table / 2 cols */}
+        <div className="lg:col-span-2 rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+          <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-text-primary">Recent Bookings Feed</h2>
-              <p className="text-xs text-text-secondary">Real-time status of passenger & commercial bookings</p>
+              <h2 className="text-sm font-bold text-text-primary">Recent Bookings Feed</h2>
+              <p className="text-[11px] text-text-secondary">Real-time status of passenger & commercial bookings</p>
             </div>
             <button
               type="button"
@@ -186,64 +186,73 @@ export function DashboardView({ onNavigate }: { onNavigate: (tab: string) => voi
             </button>
           </div>
 
-          <div className="mt-4 divide-y divide-border-hairline/60 overflow-x-auto">
-            {bookings.slice(0, 5).map((booking) => (
-              <div
-                key={booking.id}
-                className="py-3.5 flex items-center justify-between gap-4 hover:bg-surface-container-low/50 px-2 rounded-xl transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-xl font-bold text-xs border ${
-                      booking.kind === "commercial"
-                        ? "bg-purple-50 text-purple-800 border-purple-200"
-                        : "bg-surface-container-low text-text-primary border-border-hairline"
-                    }`}
-                  >
-                    {booking.kind === "commercial" ? "CORP" : "NORM"}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-text-primary">{booking.booking_ref}</span>
-                      <span className="text-xs text-text-secondary/60">•</span>
-                      <span className="text-xs font-medium text-text-secondary">{booking.customer_name}</span>
+          <div className="overflow-y-auto max-h-[360px] divide-y divide-[#E5E3DF] overscroll-contain custom-scrollbar admin-scroll p-2">
+            {bookings.length === 0 ? (
+              <p className="text-xs text-text-secondary p-4 text-center">No bookings recorded yet.</p>
+            ) : (
+              bookings.map((booking) => (
+                <div
+                  key={booking.id}
+                  className="py-3 px-3 flex items-center justify-between gap-4 hover:bg-[#FBF9F5] rounded-lg transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-9 w-9 items-center justify-center rounded-lg font-bold text-xs border ${
+                        booking.kind === "commercial"
+                          ? "bg-purple-50 text-purple-800 border-purple-200"
+                          : "bg-surface-container-low text-text-primary border-border-hairline"
+                      }`}
+                    >
+                      {booking.kind === "commercial" ? "CORP" : "NORM"}
                     </div>
-                    <p className="text-[11px] text-text-secondary mt-0.5">
-                      {booking.destination_name} · {booking.days} Days · {booking.traveler_count} Pax
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-text-primary">{booking.booking_ref}</span>
+                        <span className="text-xs text-text-secondary/60">•</span>
+                        <span className="text-xs font-medium text-text-secondary">{booking.customer_name}</span>
+                      </div>
+                      <p className="text-[11px] text-text-secondary mt-0.5">
+                        {booking.destination_name} · {booking.days} Days · {booking.traveler_count} Pax
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <p className="text-xs font-bold text-text-primary tabular-nums">
+                      ₹{booking.total_amount.toLocaleString("en-IN")}
                     </p>
+                    <span
+                      className={`inline-block mt-0.5 rounded-full px-2 py-0.5 text-[10px] font-bold capitalize border ${
+                        booking.status === "confirmed"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : booking.status === "pending_approval"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : booking.status === "cancelled"
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : "bg-surface-container-low text-text-secondary border-border-hairline"
+                      }`}
+                    >
+                      {booking.status.replace(/_/g, " ")}
+                    </span>
                   </div>
                 </div>
+              ))
+            )}
+          </div>
 
-                <div className="text-right">
-                  <p className="text-xs font-bold text-text-primary tabular-nums">
-                    ₹{booking.total_amount.toLocaleString("en-IN")}
-                  </p>
-                  <span
-                    className={`inline-block mt-0.5 rounded-full px-2.5 py-0.5 text-[10px] font-bold capitalize border ${
-                      booking.status === "confirmed"
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        : booking.status === "pending_approval"
-                        ? "bg-amber-50 text-amber-700 border-amber-200"
-                        : booking.status === "cancelled"
-                        ? "bg-rose-50 text-rose-700 border-rose-200"
-                        : "bg-surface-container-low text-text-secondary border-border-hairline"
-                    }`}
-                  >
-                    {booking.status.replace(/_/g, " ")}
-                  </span>
-                </div>
-              </div>
-            ))}
+          <div className="px-4 py-2 border-t border-[#E5E3DF] bg-[#FBF9F5] text-[11px] text-text-secondary shrink-0 flex items-center justify-between">
+            <span>Showing up to 5 visible at once</span>
+            <span className="font-semibold text-text-primary">Total: {bookings.length} bookings</span>
           </div>
         </div>
 
         {/* Audit Feed / 1 col */}
-        <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-4 border-b border-border-hairline">
+        <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col justify-between">
+          <div className="flex flex-col flex-1 min-h-0">
+            <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <History className="h-4 w-4 text-text-secondary" />
-                <h2 className="text-base font-bold text-text-primary">Append-Only Audit</h2>
+                <h2 className="text-sm font-bold text-text-primary">Append-Only Audit</h2>
               </div>
               <button
                 type="button"
@@ -254,43 +263,43 @@ export function DashboardView({ onNavigate }: { onNavigate: (tab: string) => voi
               </button>
             </div>
 
-            <div className="mt-4 space-y-3">
-              {auditLogs.slice(0, 4).map((entry) => (
-                <div key={entry.id} className="rounded-xl bg-surface p-3 border border-border-hairline">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-text-primary">{entry.actor_name}</span>
-                    <span className="text-[10px] font-medium text-text-secondary">
-                      {new Date(entry.created_at).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
+            <div className="overflow-y-auto max-h-[360px] p-3 space-y-2.5 overscroll-contain custom-scrollbar admin-scroll flex-1">
+              {auditLogs.length === 0 ? (
+                <p className="text-xs text-text-secondary p-4 text-center">No audit entries logged yet.</p>
+              ) : (
+                auditLogs.map((entry) => (
+                  <div key={entry.id} className="rounded-lg bg-[#FBF9F5] p-2.5 border border-[#E5E3DF]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-text-primary">{entry.actor_name}</span>
+                      <span className="text-[10px] font-medium text-text-secondary">
+                        {new Date(entry.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className="rounded bg-white px-1.5 py-0.5 text-[9px] font-bold uppercase text-text-primary border border-[#E5E3DF]">
+                        {entry.action}
+                      </span>
+                      <span className="text-[11px] text-text-secondary font-medium truncate">
+                        {entry.entity_type} {entry.entity_id ? `(${entry.entity_id})` : ""}
+                      </span>
+                    </div>
+                    {entry.reason && (
+                      <p className="mt-1 text-[11px] italic text-text-secondary leading-tight">
+                        &quot;{entry.reason}&quot;
+                      </p>
+                    )}
                   </div>
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <span className="rounded bg-surface-container px-1.5 py-0.5 text-[9px] font-bold uppercase text-text-primary border border-border-hairline/60">
-                      {entry.action}
-                    </span>
-                    <span className="text-[11px] text-text-secondary font-medium truncate">
-                      {entry.entity_type} {entry.entity_id ? `(${entry.entity_id})` : ""}
-                    </span>
-                  </div>
-                  {entry.reason && (
-                    <p className="mt-1 text-[11px] italic text-text-secondary leading-tight">
-                      &quot;{entry.reason}&quot;
-                    </p>
-                  )}
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
 
-          <div className="mt-6 rounded-xl bg-amber-50 p-3 border border-amber-200">
-            <div className="flex items-start gap-2">
-              <ShieldAlert className="h-4 w-4 text-amber-700 flex-shrink-0 mt-0.5" />
-              <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-                Database guarantees audit rows cannot be edited or deleted by any role or service key.
-              </p>
-            </div>
+          <div className="px-4 py-2 border-t border-[#E5E3DF] bg-[#FBF9F5] text-[11px] text-text-secondary shrink-0 flex items-center justify-between">
+            <span>Trigger protected</span>
+            <span className="font-semibold text-text-primary">Total: {auditLogs.length} entries</span>
           </div>
         </div>
       </div>

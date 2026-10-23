@@ -3,6 +3,7 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AdminSidebar } from "@/components/features/admin/AdminSidebar";
+import { AdminHeader } from "@/components/features/admin/AdminHeader";
 import {
   DashboardView,
   DestinationsView,
@@ -84,11 +85,16 @@ export default function DynamicAdminTabPage() {
   };
 
   return (
-    <div className="flex w-full min-h-[calc(100vh-4rem)]">
+    <div className="flex w-full h-screen overflow-hidden">
       <AdminSidebar activeTab={activeTab} onSelectTab={handleSelectTab} />
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-        {renderActiveView()}
-      </main>
+      <div className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+        <AdminHeader />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 overscroll-contain min-h-0 custom-scrollbar admin-scroll">
+          <div className="max-w-7xl mx-auto w-full space-y-6">
+            {renderActiveView()}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

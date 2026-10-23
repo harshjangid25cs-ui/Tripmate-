@@ -203,8 +203,22 @@ export function AdminSidebar({
   ];
 
   return (
-    <aside className="w-64 shrink-0 border-r border-border-hairline bg-surface-container-low p-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar flex flex-col justify-between self-start">
-      <div className="space-y-6">
+    <aside className="w-64 h-screen shrink-0 border-r border-[#E5E3DF] bg-[#FFFFFF] flex flex-col justify-between overflow-hidden">
+      {/* Pinned Brand Header at Top */}
+      <div className="shrink-0 p-4 border-b border-[#E5E3DF] bg-[#FFFFFF] flex items-center gap-2.5">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-container text-white font-black text-lg shadow-xs">
+          T
+        </div>
+        <div>
+          <span className="text-base font-black tracking-tight text-text-primary">TripMate</span>
+          <span className="ml-2 rounded-md bg-surface-dark px-2 py-0.5 text-[10px] font-bold tracking-wider text-amber-400 uppercase">
+            Admin Portal
+          </span>
+        </div>
+      </div>
+
+      {/* Middle Inner Navigation List (Scrolls independently!) */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar admin-scroll p-4 space-y-6 overscroll-contain">
         {sections.map((section) => (
           <div key={section.title}>
             <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-text-secondary">
@@ -266,19 +280,21 @@ export function AdminSidebar({
       </div>
 
       {/* Role Notice at Footer */}
-      <div className="mt-6 rounded-2xl bg-card-surface p-3.5 border border-border-hairline shadow-xs">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
-            Current Filter
-          </span>
-          <span className="text-[10px] font-bold text-primary-container uppercase">§2 Matrix</span>
+      <div className="shrink-0 p-4 border-t border-[#E5E3DF] bg-[#FFFFFF]">
+        <div className="rounded-xl bg-card-surface p-3.5 border border-[#E5E3DF] shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-secondary">
+              Current Filter
+            </span>
+            <span className="text-[10px] font-bold text-primary-container uppercase">§2 Matrix</span>
+          </div>
+          <p className="mt-1 text-xs font-bold text-text-primary capitalize">
+            {currentRole.replace(/_/g, " ")}
+          </p>
+          <p className="text-[10px] text-text-secondary mt-0.5 leading-snug">
+            Buttons and views automatically enforce role boundaries.
+          </p>
         </div>
-        <p className="mt-1 text-xs font-bold text-text-primary capitalize">
-          {currentRole.replace(/_/g, " ")}
-        </p>
-        <p className="text-[10px] text-text-secondary mt-0.5 leading-snug">
-          Buttons and views automatically enforce role boundaries.
-        </p>
       </div>
     </aside>
   );

@@ -117,36 +117,46 @@ export function UsersView() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-        <div className="overflow-x-auto">
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Customer Directory</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {filteredUsers.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+        </div>
+
+        <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
-                <th className="py-2.5">User</th>
-                <th className="py-2.5">Phone</th>
-                <th className="py-2.5">Bookings</th>
-                <th className="py-2.5">Lifetime Spend</th>
-                <th className="py-2.5">Account State</th>
-                <th className="py-2.5 text-right">Actions</th>
+            <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+              <tr className="text-[10px] font-extrabold uppercase tracking-wider text-[#6E6D68]">
+                <th className="py-2.5 px-4">User</th>
+                <th className="py-2.5 px-4">Phone</th>
+                <th className="py-2.5 px-4">Bookings</th>
+                <th className="py-2.5 px-4">Lifetime Spend</th>
+                <th className="py-2.5 px-4">Account State</th>
+                <th className="py-2.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-hairline">
+            <tbody className="divide-y divide-[#E5E3DF]">
               {filteredUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-surface-container-low/40">
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <p className="font-bold text-text-primary">{u.full_name}</p>
                     <p className="text-[11px] text-text-secondary">{u.email}</p>
                   </td>
 
-                  <td className="py-3.5 font-mono text-text-secondary">{u.phone}</td>
+                  <td className="py-3.5 px-4 font-mono text-text-secondary">{u.phone}</td>
 
-                  <td className="py-3.5 font-bold text-text-primary font-mono">{u.total_bookings} trips</td>
+                  <td className="py-3.5 px-4 font-bold text-text-primary font-mono">{u.total_bookings} trips</td>
 
-                  <td className="py-3.5 font-black text-text-primary font-mono">
+                  <td className="py-3.5 px-4 font-black text-text-primary font-mono">
                     ₹{u.total_spent.toLocaleString("en-IN")}
                   </td>
 
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border ${
                         u.is_suspended ? "bg-rose-50 text-rose-800 border-rose-200" : "bg-emerald-50 text-emerald-800 border-emerald-200"
@@ -161,7 +171,7 @@ export function UsersView() {
                     )}
                   </td>
 
-                  <td className="py-3.5 text-right">
+                  <td className="py-3.5 px-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
@@ -207,6 +217,11 @@ export function UsersView() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {filteredUsers.length} customer accounts (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Customer Directory §3.F</span>
         </div>
       </div>
 

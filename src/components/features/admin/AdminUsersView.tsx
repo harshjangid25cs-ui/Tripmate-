@@ -83,29 +83,37 @@ export function AdminUsersView() {
             <span>Grant Admin Role</span>
           </button>
         )}
-      </div>
+      </div>      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Administrative Accounts</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {admins.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+        </div>
 
-      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-        <div className="overflow-x-auto">
+        <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
-                <th className="py-2.5">Administrator</th>
-                <th className="py-2.5">Designated Role</th>
-                <th className="py-2.5">MFA Status</th>
-                <th className="py-2.5">Provisioned (IST)</th>
-                <th className="py-2.5">Status</th>
-                <th className="py-2.5 text-right">Actions</th>
+            <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+              <tr className="text-[10px] font-extrabold uppercase tracking-wider text-[#6E6D68]">
+                <th className="py-2.5 px-4">Administrator</th>
+                <th className="py-2.5 px-4">Designated Role</th>
+                <th className="py-2.5 px-4">MFA Status</th>
+                <th className="py-2.5 px-4">Provisioned (IST)</th>
+                <th className="py-2.5 px-4">Status</th>
+                <th className="py-2.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-hairline">
+            <tbody className="divide-y divide-[#E5E3DF]">
               {admins.map((a) => {
                 const roleInfo = ADMIN_ROLES.find((r) => r.id === a.role);
                 const isCurrent = a.id === currentAdmin.id;
 
                 return (
                   <tr key={a.id} className="hover:bg-surface-container-low/40">
-                    <td className="py-3.5">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center gap-2.5">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-dark text-white font-bold text-xs border border-border-hairline">
                           {a.full_name.charAt(0)}
@@ -124,7 +132,7 @@ export function AdminUsersView() {
                       </div>
                     </td>
 
-                    <td className="py-3.5">
+                    <td className="py-3.5 px-4">
                       <span
                         className={`rounded-lg border px-2 py-0.5 text-[11px] font-bold ${
                           roleInfo?.badgeColor || "bg-surface text-text-primary border-border-hairline"
@@ -134,13 +142,13 @@ export function AdminUsersView() {
                       </span>
                     </td>
 
-                    <td className="py-3.5">
+                    <td className="py-3.5 px-4">
                       <span className="inline-flex items-center gap-1 font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-2 py-0.5 text-[10px]">
                         <Key className="h-3 w-3 text-emerald-700" /> AAL2 Enforced
                       </span>
                     </td>
 
-                    <td className="py-3.5 text-text-secondary font-medium font-mono">
+                    <td className="py-3.5 px-4 text-text-secondary font-medium font-mono">
                       {new Date(a.created_at).toLocaleDateString([], {
                         month: "short",
                         day: "numeric",
@@ -148,9 +156,9 @@ export function AdminUsersView() {
                       })}
                     </td>
 
-                    <td className="py-3.5">
+                    <td className="py-3.5 px-4">
                       <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border ${
                           a.is_active ? "bg-emerald-50 text-emerald-800 border-emerald-200" : "bg-rose-50 text-rose-800 border-rose-200"
                         }`}
                       >
@@ -158,7 +166,7 @@ export function AdminUsersView() {
                       </span>
                     </td>
 
-                    <td className="py-3.5 text-right">
+                    <td className="py-3.5 px-4 text-right">
                       {canManage && a.is_active && !isCurrent && (
                         <button
                           type="button"
@@ -174,6 +182,11 @@ export function AdminUsersView() {
               })}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {admins.length} administrative operators (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Governance §3.G</span>
         </div>
       </div>
 

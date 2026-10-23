@@ -13,7 +13,7 @@ export function AdminHeader() {
   const activeRoleInfo = ADMIN_ROLES.find((r) => r.id === currentRole);
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-border-hairline bg-card-surface px-6">
+    <header className="sticky top-0 z-30 flex h-16 w-full shrink-0 items-center justify-between border-b border-[#E5E3DF] bg-[#FFFFFF] px-6">
       {/* Brand & Area */}
       <div className="flex items-center gap-4">
         <Link href="/admin" className="flex items-center gap-2.5">

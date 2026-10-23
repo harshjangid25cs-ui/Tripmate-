@@ -167,102 +167,121 @@ export function StopsView() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {stops.map((s) => (
-          <div
-            key={s.id}
-            className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between ${
-              s.is_active ? "border-border-hairline" : "border-border-hairline opacity-75 bg-surface/50"
-            }`}
-          >
-            <div>
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-base font-black text-text-primary">{s.name}</h3>
-                  <p className="text-xs text-text-secondary mt-0.5">{s.destination_name} Highway Corridor</p>
-                </div>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
-                    s.is_active
-                      ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                      : "bg-surface text-text-secondary border-border-hairline"
-                  }`}
-                >
-                  {s.is_active ? "Active" : "Disabled"}
-                </span>
-              </div>
-
-              <div className="mt-3 space-y-1 text-xs text-text-secondary">
-                <p>{s.distance_text}</p>
-                <p className="text-[11px] text-text-secondary/70 italic">{s.turnaround_text}</p>
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-1">
-                {s.amenities.map((a, i) => (
-                  <span
-                    key={i}
-                    className="rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-medium text-text-secondary border border-border-hairline"
-                  >
-                    {a}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline">
-                <span className="text-text-secondary font-semibold uppercase text-[10px]">
-                  {s.pricing_unit.replace("_", " ")}
-                </span>
-                <span className="text-sm font-black text-text-primary font-mono">
-                  ₹{s.price.toLocaleString("en-IN")}{" "}
-                  <span className="text-[10px] text-text-secondary font-normal font-sans">
-                    {s.pricing_unit === "per_person" ? "/pax" : "flat"}
-                  </span>
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-border-hairline flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData(s);
-                  setIsEditing(true);
-                }}
-                disabled={!canWrite}
-                className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface disabled:opacity-50"
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-                <span>Edit</span>
-              </button>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleToggleActive(s)}
-                  disabled={!canWrite}
-                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
-                    s.is_active
-                      ? "bg-surface text-text-primary border-border-hairline hover:bg-surface-container-low"
-                      : "bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-800"
-                  } disabled:opacity-50`}
-                >
-                  {s.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  <span>{s.is_active ? "Disable" : "Enable"}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDeleteStop(s)}
-                  disabled={!canWrite}
-                  className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all disabled:opacity-50"
-                  title="Delete Stop"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Highway Stops Catalog</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {stops.length}
+            </span>
           </div>
-        ))}
+          <span className="text-xs text-[#6E6D68]">Showing catalog cards · scroll inside box</span>
+        </div>
+
+        <div className="max-h-[420px] overflow-y-auto custom-scrollbar admin-scroll p-4 overscroll-contain">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {stops.map((s) => (
+              <div
+                key={s.id}
+                className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between ${
+                  s.is_active ? "border-border-hairline" : "border-border-hairline opacity-75 bg-surface/50"
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-base font-black text-text-primary">{s.name}</h3>
+                      <p className="text-xs text-text-secondary mt-0.5">{s.destination_name} Highway Corridor</p>
+                    </div>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
+                        s.is_active
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : "bg-surface text-text-secondary border-border-hairline"
+                      }`}
+                    >
+                      {s.is_active ? "Active" : "Disabled"}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 space-y-1 text-xs text-text-secondary">
+                    <p>{s.distance_text}</p>
+                    <p className="text-[11px] text-text-secondary/70 italic">{s.turnaround_text}</p>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-1">
+                    {s.amenities.map((a, i) => (
+                      <span
+                        key={i}
+                        className="rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-medium text-text-secondary border border-border-hairline"
+                      >
+                        {a}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline">
+                    <span className="text-text-secondary font-semibold uppercase text-[10px]">
+                      {s.pricing_unit.replace("_", " ")}
+                    </span>
+                    <span className="text-sm font-black text-text-primary font-mono">
+                      ₹{s.price.toLocaleString("en-IN")}{" "}
+                      <span className="text-[10px] text-text-secondary font-normal font-sans">
+                        {s.pricing_unit === "per_person" ? "/pax" : "flat"}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-3 border-t border-border-hairline flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(s);
+                      setIsEditing(true);
+                    }}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface px-3 py-1.5 text-xs font-bold text-text-primary hover:bg-card-surface disabled:opacity-50"
+                  >
+                    <Edit2 className="h-3.5 w-3.5" />
+                    <span>Edit</span>
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleActive(s)}
+                      disabled={!canWrite}
+                      className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
+                        s.is_active
+                          ? "bg-surface text-text-primary border-border-hairline hover:bg-surface-container-low"
+                          : "bg-emerald-700 text-white border-emerald-800 hover:bg-emerald-800"
+                      } disabled:opacity-50`}
+                    >
+                      {s.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      <span>{s.is_active ? "Disable" : "Enable"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteStop(s)}
+                      disabled={!canWrite}
+                      className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-all disabled:opacity-50"
+                      title="Delete Stop"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {stops.length} highway eateries &amp; scenic stopovers (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Catalog Operations</span>
+        </div>
       </div>
 
       {isEditing && (

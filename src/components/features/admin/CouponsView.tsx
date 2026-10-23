@@ -141,24 +141,34 @@ export function CouponsView() {
       </div>
 
       {/* Coupons Table */}
-      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-        <div className="overflow-x-auto">
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Active Promotional Coupons</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {coupons.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+        </div>
+
+        <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
-                <th className="py-2.5">Code</th>
-                <th className="py-2.5">Discount Value</th>
-                <th className="py-2.5">Min Subtotal</th>
-                <th className="py-2.5">Applies To</th>
-                <th className="py-2.5">Redemptions</th>
-                <th className="py-2.5">Type / Flag</th>
-                <th className="py-2.5 text-right">Actions</th>
+            <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+              <tr className="text-[10px] font-extrabold uppercase tracking-wider text-[#6E6D68]">
+                <th className="py-2.5 px-4">Code</th>
+                <th className="py-2.5 px-4">Discount Value</th>
+                <th className="py-2.5 px-4">Min Subtotal</th>
+                <th className="py-2.5 px-4">Applies To</th>
+                <th className="py-2.5 px-4">Redemptions</th>
+                <th className="py-2.5 px-4">Type / Flag</th>
+                <th className="py-2.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-hairline">
+            <tbody className="divide-y divide-[#E5E3DF]">
               {coupons.map((c) => (
                 <tr key={c.id} className="hover:bg-surface-container-low/40">
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-black text-text-primary bg-surface px-2 py-0.5 rounded-lg border border-border-hairline">
                         {c.code}
@@ -174,7 +184,7 @@ export function CouponsView() {
                     </p>
                   </td>
 
-                  <td className="py-3.5 font-black text-text-primary font-mono">
+                  <td className="py-3.5 px-4 font-black text-text-primary font-mono">
                     {c.discount_type === "flat" ? `₹${c.value.toLocaleString("en-IN")}` : `${c.value}%`}
                     {c.max_discount && (
                       <span className="block text-[10px] text-text-secondary font-normal font-sans">
@@ -183,20 +193,20 @@ export function CouponsView() {
                     )}
                   </td>
 
-                  <td className="py-3.5 font-medium text-text-primary font-mono">
+                  <td className="py-3.5 px-4 font-medium text-text-primary font-mono">
                     ₹{c.min_subtotal.toLocaleString("en-IN")}
                   </td>
 
-                  <td className="py-3.5 capitalize text-text-secondary font-medium">{c.applies_to}</td>
+                  <td className="py-3.5 px-4 capitalize text-text-secondary font-medium">{c.applies_to}</td>
 
-                  <td className="py-3.5 text-text-primary">
+                  <td className="py-3.5 px-4 text-text-primary">
                     <span className="font-bold font-mono">{c.usage_count}</span>
                     <span className="text-text-secondary">{c.usage_limit_total ? ` / ${c.usage_limit_total}` : " (unlimited)"}</span>
                   </td>
 
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase border ${
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border ${
                         c.is_active
                           ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                           : "bg-surface text-text-secondary border-border-hairline"
@@ -206,7 +216,7 @@ export function CouponsView() {
                     </span>
                   </td>
 
-                  <td className="py-3.5 text-right">
+                  <td className="py-3.5 px-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         type="button"
@@ -244,6 +254,11 @@ export function CouponsView() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {coupons.length} promotional redeem codes (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Discounts §3.C, §7</span>
         </div>
       </div>
 

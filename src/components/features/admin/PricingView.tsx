@@ -525,37 +525,43 @@ export function PricingView() {
           </form>
         )}
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
-                <th className="py-2.5">Rule Tier</th>
-                <th className="py-2.5">Window Condition</th>
-                <th className="py-2.5">Customer Refund %</th>
-                <th className="py-2.5">Applies To</th>
-                <th className="py-2.5 text-right">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border-hairline">
-              {refundRules
-                .sort((a, b) => b.hours_before_min - a.hours_before_min)
-                .map((r, i) => (
-                  <tr key={r.id} className="hover:bg-surface-container-low/40">
-                    <td className="py-3 font-mono font-bold text-text-primary">Tier #{i + 1}</td>
-                    <td className="py-3 font-semibold text-text-primary">
-                      ≥ {r.hours_before_min} hours before departure
-                    </td>
-                    <td className="py-3 font-black text-emerald-700 font-mono">{r.refund_percent}% of Total Paid</td>
-                    <td className="py-3 text-text-secondary capitalize">{r.applies_to}</td>
-                    <td className="py-3 text-right">
-                      <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 text-[10px] font-extrabold uppercase">
-                        Active
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+        <div className="mt-4 rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+          <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
+            <table className="w-full text-left text-xs">
+              <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+                <tr className="text-[10px] font-extrabold uppercase tracking-wider text-[#6E6D68]">
+                  <th className="py-2.5 px-4">Rule Tier</th>
+                  <th className="py-2.5 px-4">Window Condition</th>
+                  <th className="py-2.5 px-4">Customer Refund %</th>
+                  <th className="py-2.5 px-4">Applies To</th>
+                  <th className="py-2.5 px-4 text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#E5E3DF]">
+                {refundRules
+                  .sort((a, b) => b.hours_before_min - a.hours_before_min)
+                  .map((r, i) => (
+                    <tr key={r.id} className="hover:bg-surface-container-low/40">
+                      <td className="py-3 px-4 font-mono font-bold text-text-primary">Tier #{i + 1}</td>
+                      <td className="py-3 px-4 font-semibold text-text-primary">
+                        ≥ {r.hours_before_min} hours before departure
+                      </td>
+                      <td className="py-3 px-4 font-black text-emerald-700 font-mono">{r.refund_percent}% of Total Paid</td>
+                      <td className="py-3 px-4 text-text-secondary capitalize">{r.applies_to}</td>
+                      <td className="py-3 px-4 text-right">
+                        <span className="rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 text-[10px] font-extrabold uppercase">
+                          Active
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+            <span>Showing {refundRules.length} cancellation refund tiers (scroll inside box for more)</span>
+            <span className="font-mono text-[11px] text-[#8C8A85]">Refund Policy §3.C</span>
+          </div>
         </div>
       </div>
     </div>

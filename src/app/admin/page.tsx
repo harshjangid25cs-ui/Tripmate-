@@ -25,6 +25,7 @@ import {
   AdminUsersView,
 } from "@/components/features/admin/AdminDynamicViews";
 
+import { AdminHeader } from "@/components/features/admin/AdminHeader";
 import { AdminViewSkeleton } from "@/components/features/admin/AdminViewSkeleton";
 
 function AdminPageContent() {
@@ -91,11 +92,16 @@ function AdminPageContent() {
   };
 
   return (
-    <div className="flex w-full min-h-[calc(100vh-4rem)]">
+    <div className="flex w-full h-screen overflow-hidden">
       <AdminSidebar activeTab={activeTab} onSelectTab={handleSelectTab} />
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-        {renderActiveView()}
-      </main>
+      <div className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+        <AdminHeader />
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 overscroll-contain min-h-0 custom-scrollbar admin-scroll">
+          <div className="max-w-7xl mx-auto w-full space-y-6">
+            {renderActiveView()}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
@@ -104,11 +110,14 @@ export default function AdminPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex w-full min-h-[calc(100vh-4rem)]">
-          <div className="hidden lg:block w-64 bg-surface-dark border-r border-border-hairline shrink-0" />
-          <main className="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">
-            <AdminViewSkeleton />
-          </main>
+        <div className="flex w-full h-screen overflow-hidden">
+          <div className="hidden lg:block w-64 bg-[#FFFFFF] border-r border-[#E5E3DF] shrink-0" />
+          <div className="flex-1 flex flex-col h-screen min-w-0 overflow-hidden">
+            <div className="h-16 w-full border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0" />
+            <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full overflow-hidden">
+              <AdminViewSkeleton />
+            </main>
+          </div>
         </div>
       }
     >

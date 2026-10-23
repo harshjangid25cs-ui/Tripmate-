@@ -33,9 +33,9 @@ export default async function AdminLayout({
   if (pathname === "/admin/login") {
     return (
       <AdminProvider>
-        <div className="min-h-screen bg-surface font-sans text-text-primary antialiased selection:bg-primary-container selection:text-white flex flex-col">
+        <div className="h-screen w-screen overflow-hidden bg-[#FBF9F5] font-sans text-text-primary antialiased selection:bg-primary-container selection:text-white flex flex-col">
           <AdminHeader />
-          <div className="flex-1 flex overflow-hidden">{children}</div>
+          <div className="flex-1 overflow-y-auto flex items-center justify-center p-6">{children}</div>
         </div>
       </AdminProvider>
     );
@@ -57,9 +57,8 @@ export default async function AdminLayout({
 
   return (
     <AdminProvider initialSnapshot={initialSnapshot}>
-      <div className="min-h-screen bg-surface font-sans text-text-primary antialiased selection:bg-primary-container selection:text-white flex flex-col">
-        <AdminHeader />
-        <div className="flex-1 flex overflow-hidden">{children}</div>
+      <div className="h-screen w-screen overflow-hidden bg-[#FBF9F5] font-sans text-text-primary antialiased selection:bg-primary-container selection:text-white flex flex-col md:flex-row">
+        {children}
       </div>
     </AdminProvider>
   );

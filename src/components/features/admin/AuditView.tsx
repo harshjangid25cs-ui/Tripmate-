@@ -52,23 +52,33 @@ export function AuditView() {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-        <div className="overflow-x-auto">
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Immutable Security Audit</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {filteredLogs.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+        </div>
+
+        <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
-                <th className="py-2.5">Timestamp (IST)</th>
-                <th className="py-2.5">Actor & Role</th>
-                <th className="py-2.5">Action</th>
-                <th className="py-2.5">Target Entity</th>
-                <th className="py-2.5">Mandatory Reason</th>
-                <th className="py-2.5 text-right">Inspection</th>
+            <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+              <tr className="text-[10px] font-extrabold uppercase tracking-wider text-[#6E6D68]">
+                <th className="py-2.5 px-4">Timestamp (IST)</th>
+                <th className="py-2.5 px-4">Actor &amp; Role</th>
+                <th className="py-2.5 px-4">Action</th>
+                <th className="py-2.5 px-4">Target Entity</th>
+                <th className="py-2.5 px-4">Mandatory Reason</th>
+                <th className="py-2.5 px-4 text-right">Inspection</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-hairline">
+            <tbody className="divide-y divide-[#E5E3DF]">
               {filteredLogs.map((entry) => (
                 <tr key={entry.id} className="hover:bg-surface-container-low/40">
-                  <td className="py-3.5 font-mono text-text-secondary text-[11px]">
+                  <td className="py-3.5 px-4 font-mono text-text-secondary text-[11px]">
                     {new Date(entry.created_at).toLocaleDateString([], {
                       month: "short",
                       day: "numeric",
@@ -80,25 +90,25 @@ export function AuditView() {
                     })}
                   </td>
 
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <p className="font-bold text-text-primary">{entry.actor_name}</p>
                     <span className="text-[10px] text-text-secondary font-mono">{entry.actor_role}</span>
                   </td>
 
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <span className="rounded bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-mono font-extrabold uppercase text-text-primary">
                       {entry.action}
                     </span>
                   </td>
 
-                  <td className="py-3.5 font-semibold text-text-primary">
+                  <td className="py-3.5 px-4 font-semibold text-text-primary">
                     {entry.entity_type}{" "}
                     {entry.entity_id && (
                       <span className="font-mono text-text-secondary text-[10px]">({entry.entity_id})</span>
                     )}
                   </td>
 
-                  <td className="py-3.5 text-text-secondary max-w-sm">
+                  <td className="py-3.5 px-4 text-text-secondary max-w-sm">
                     {entry.reason ? (
                       <span className="italic text-[11px]">&quot;{entry.reason}&quot;</span>
                     ) : (
@@ -106,7 +116,7 @@ export function AuditView() {
                     )}
                   </td>
 
-                  <td className="py-3.5 text-right">
+                  <td className="py-3.5 px-4 text-right">
                     {(entry.before || entry.after) && (
                       <button
                         type="button"
@@ -122,6 +132,11 @@ export function AuditView() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {filteredLogs.length} audit entries (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Append-Only Log §3.G</span>
         </div>
       </div>
 

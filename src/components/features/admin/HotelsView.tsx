@@ -175,110 +175,129 @@ export function HotelsView() {
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {hotels.map((h) => (
-          <div
-            key={h.id}
-            className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between transition-colors ${
-              h.is_active ? "border-border-hairline hover:border-text-primary/30" : "border-border-hairline opacity-75 bg-surface/50"
-            }`}
-          >
-            <div>
-              <div className="flex items-start justify-between">
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Hotels Catalog</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {hotels.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Showing catalog cards · scroll inside box</span>
+        </div>
+
+        <div className="max-h-[420px] overflow-y-auto custom-scrollbar admin-scroll p-4 overscroll-contain">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {hotels.map((h) => (
+              <div
+                key={h.id}
+                className={`rounded-2xl border bg-card-surface p-5 shadow-xs flex flex-col justify-between transition-colors ${
+                  h.is_active ? "border-border-hairline hover:border-text-primary/30" : "border-border-hairline opacity-75 bg-surface/50"
+                }`}
+              >
                 <div>
-                  <h3 className="text-base font-bold text-text-primary">{h.name}</h3>
-                  <div className="flex items-center gap-1.5 flex-wrap mt-1">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-bold text-text-primary">
-                      📍 {h.destination_name || "Jaipur"}
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-base font-bold text-text-primary">{h.name}</h3>
+                      <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                        <span className="inline-flex items-center gap-1 rounded-md bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-bold text-text-primary">
+                          📍 {h.destination_name || "Jaipur"}
+                        </span>
+                        {h.neighborhood && (
+                          <span className="text-xs text-text-secondary">· {h.neighborhood}</span>
+                        )}
+                      </div>
+                    </div>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
+                        h.is_active
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-surface-container text-text-secondary border-border-hairline"
+                      }`}
+                    >
+                      {h.is_active ? "Active" : "Disabled"}
                     </span>
-                    {h.neighborhood && (
-                      <span className="text-xs text-text-secondary">· {h.neighborhood}</span>
-                    )}
+                  </div>
+
+                  {h.badge && (
+                    <span className="inline-block mt-2 rounded-md bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 text-[10px] font-bold">
+                      ★ {h.badge}
+                    </span>
+                  )}
+
+                  <p className="mt-2 text-xs text-text-secondary">{h.distance_text}</p>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {h.amenities.map((a, i) => (
+                      <span
+                        key={i}
+                        className="rounded-lg bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-medium text-text-secondary"
+                      >
+                        {a}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline/60">
+                    <span className="flex items-center gap-1 font-bold text-amber-600">
+                      <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> {h.rating}
+                    </span>
+                    <span className="text-sm font-bold text-text-primary tabular-nums">
+                      ₹{h.price_per_night.toLocaleString("en-IN")}{" "}
+                      <span className="text-[10px] text-text-secondary font-normal">/night</span>
+                    </span>
                   </div>
                 </div>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase border ${
-                    h.is_active
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-surface-container text-text-secondary border-border-hairline"
-                  }`}
-                >
-                  {h.is_active ? "Active" : "Disabled"}
-                </span>
-              </div>
 
-              {h.badge && (
-                <span className="inline-block mt-2 rounded-md bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 text-[10px] font-bold">
-                  ★ {h.badge}
-                </span>
-              )}
-
-              <p className="mt-2 text-xs text-text-secondary">{h.distance_text}</p>
-
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {h.amenities.map((a, i) => (
-                  <span
-                    key={i}
-                    className="rounded-lg bg-surface border border-border-hairline px-2 py-0.5 text-[10px] font-medium text-text-secondary"
+                <div className="mt-5 pt-3 border-t border-border-hairline/60 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFormData(h);
+                      setIsEditing(true);
+                    }}
+                    disabled={!canWrite}
+                    className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface hover:border-text-primary px-3 py-1.5 text-xs font-bold text-text-primary disabled:opacity-50 transition-colors"
                   >
-                    {a}
-                  </span>
-                ))}
+                    <Edit2 className="h-3.5 w-3.5" />
+                    <span>Edit</span>
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleActive(h)}
+                      disabled={!canWrite}
+                      className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${
+                        h.is_active
+                          ? "bg-surface-container text-text-primary hover:bg-surface-container-high border border-border-hairline"
+                          : "bg-emerald-600 text-white hover:bg-emerald-700"
+                      } disabled:opacity-50`}
+                    >
+                      {h.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      <span>{h.is_active ? "Disable" : "Enable"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteHotel(h)}
+                      disabled={!canWrite}
+                      className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
+                      title="Delete Hotel"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
               </div>
-
-              <div className="mt-4 flex items-center justify-between text-xs pt-3 border-t border-border-hairline/60">
-                <span className="flex items-center gap-1 font-bold text-amber-600">
-                  <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" /> {h.rating}
-                </span>
-                <span className="text-sm font-bold text-text-primary tabular-nums">
-                  ₹{h.price_per_night.toLocaleString("en-IN")}{" "}
-                  <span className="text-[10px] text-text-secondary font-normal">/night</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-border-hairline/60 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData(h);
-                  setIsEditing(true);
-                }}
-                disabled={!canWrite}
-                className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-card-surface hover:border-text-primary px-3 py-1.5 text-xs font-bold text-text-primary disabled:opacity-50 transition-colors"
-              >
-                <Edit2 className="h-3.5 w-3.5" />
-                <span>Edit</span>
-              </button>
-
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleToggleActive(h)}
-                  disabled={!canWrite}
-                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${
-                    h.is_active
-                      ? "bg-surface-container text-text-primary hover:bg-surface-container-high border border-border-hairline"
-                      : "bg-emerald-600 text-white hover:bg-emerald-700"
-                  } disabled:opacity-50`}
-                >
-                  {h.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  <span>{h.is_active ? "Disable" : "Enable"}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleDeleteHotel(h)}
-                  disabled={!canWrite}
-                  className="flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition-colors disabled:opacity-50"
-                  title="Delete Hotel"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {hotels.length} hotels &amp; partner resorts (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Catalog Operations</span>
+        </div>
       </div>
 
       {isEditing && (

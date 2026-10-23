@@ -514,7 +514,19 @@ export function DestinationsView() {
       )}
 
       {/* Destinations Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Destinations Catalog</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {destinations.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Showing catalog cards · scroll inside box</span>
+        </div>
+
+        <div className="max-h-[420px] overflow-y-auto custom-scrollbar admin-scroll p-4 overscroll-contain">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         {destinations.map((dest) => {
           const readiness = AdminService.checkPublishReadiness(dest.id);
 
@@ -653,6 +665,13 @@ export function DestinationsView() {
             </div>
           );
         })}
+          </div>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {destinations.length} destination itineraries (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Catalog Operations</span>
+        </div>
       </div>
 
       {/* Edit / Create Modal */}
@@ -909,7 +928,7 @@ export function DestinationsView() {
                 {formData.id ? (
                   <div className="space-y-3">
                     {modalHighlights.length > 0 ? (
-                      <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      <div className="space-y-2 max-h-[240px] overflow-y-auto custom-scrollbar admin-scroll overscroll-contain pr-1">
                         {modalHighlights.map((h) => (
                           <div key={h.id} className="flex items-center justify-between rounded-xl border border-border-hairline bg-surface p-2.5 text-xs">
                             <div className="flex-1 min-w-0 pr-3">
@@ -1009,7 +1028,7 @@ export function DestinationsView() {
                         Hotels ({allHotels.filter(h => h.destination_id === formData.id).length} linked)
                       </span>
                     </div>
-                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                    <div className="max-h-[240px] overflow-y-auto custom-scrollbar admin-scroll overscroll-contain space-y-1.5 pr-1">
                       {allHotels.map((h) => {
                         const isLinked = h.destination_id === formData.id;
                         return (
@@ -1036,7 +1055,7 @@ export function DestinationsView() {
                         Highway Stops ({allStops.filter(s => s.destination_id === formData.id).length} linked)
                       </span>
                     </div>
-                    <div className="max-h-40 overflow-y-auto space-y-1.5 pr-1">
+                    <div className="max-h-[240px] overflow-y-auto custom-scrollbar admin-scroll overscroll-contain space-y-1.5 pr-1">
                       {allStops.map((s) => {
                         const isLinked = s.destination_id === formData.id;
                         return (

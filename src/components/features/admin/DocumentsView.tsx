@@ -171,39 +171,49 @@ export function DocumentsView() {
       </div>
 
       {/* Review Queue Table */}
-      <div className="rounded-2xl border border-border-hairline bg-card-surface p-6 shadow-xs">
-        <div className="overflow-x-auto">
+      <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Identity Document Queue</span>
+            <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
+              {reviews.length}
+            </span>
+          </div>
+          <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+        </div>
+
+        <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
           <table className="w-full text-left text-xs">
-            <thead>
-              <tr className="border-b border-border-hairline text-[10px] font-extrabold uppercase tracking-wider text-text-secondary">
-                <th className="py-2.5">Booking Ref</th>
-                <th className="py-2.5">Passenger Name</th>
-                <th className="py-2.5">Customer Contact</th>
-                <th className="py-2.5">Document Type</th>
-                <th className="py-2.5">Submitted (IST)</th>
-                <th className="py-2.5">Review Status</th>
-                <th className="py-2.5 text-right">Actions</th>
+            <thead className="sticky top-0 z-10 bg-[#FBF9F5] border-b border-[#E5E3DF]">
+              <tr className="text-[10px] font-extrabold uppercase tracking-wider text-[#6E6D68]">
+                <th className="py-2.5 px-4">Booking Ref</th>
+                <th className="py-2.5 px-4">Passenger Name</th>
+                <th className="py-2.5 px-4">Customer Contact</th>
+                <th className="py-2.5 px-4">Document Type</th>
+                <th className="py-2.5 px-4">Submitted (IST)</th>
+                <th className="py-2.5 px-4">Review Status</th>
+                <th className="py-2.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border-hairline">
+            <tbody className="divide-y divide-[#E5E3DF]">
               {reviews.map((item) => (
                 <tr key={item.id} className="hover:bg-surface-container-low/40">
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <span className="font-mono font-bold text-text-primary bg-surface px-2 py-0.5 rounded-lg border border-border-hairline">
                       {item.booking_ref}
                     </span>
                   </td>
 
-                  <td className="py-3.5 font-bold text-text-primary">{item.passenger_name}</td>
+                  <td className="py-3.5 px-4 font-bold text-text-primary">{item.passenger_name}</td>
 
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <p className="text-text-primary font-medium">{item.customer_name}</p>
                     <p className="text-[11px] text-text-secondary">{item.customer_email}</p>
                   </td>
 
-                  <td className="py-3.5 font-medium text-text-secondary">{item.doc_type}</td>
+                  <td className="py-3.5 px-4 font-medium text-text-secondary">{item.doc_type}</td>
 
-                  <td className="py-3.5 text-text-secondary font-medium font-mono">
+                  <td className="py-3.5 px-4 text-text-secondary font-medium font-mono">
                     {new Date(item.submitted_at).toLocaleDateString([], {
                       month: "short",
                       day: "numeric",
@@ -212,7 +222,7 @@ export function DocumentsView() {
                     })}
                   </td>
 
-                  <td className="py-3.5">
+                  <td className="py-3.5 px-4">
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase border ${
                         item.status === "approved"
@@ -231,7 +241,7 @@ export function DocumentsView() {
                     )}
                   </td>
 
-                  <td className="py-3.5 text-right">
+                  <td className="py-3.5 px-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"
@@ -267,6 +277,11 @@ export function DocumentsView() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-[#E5E3DF] bg-[#FBF9F5] text-xs text-[#6E6D68] shrink-0 flex items-center justify-between">
+          <span>Showing {reviews.length} passenger ID submissions (scroll inside box for more)</span>
+          <span className="font-mono text-[11px] text-[#8C8A85]">Data Privacy §8.4</span>
         </div>
       </div>
 
