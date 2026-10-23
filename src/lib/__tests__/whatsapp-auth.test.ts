@@ -285,6 +285,7 @@ describe("WhatsApp OTP Authentication - Comprehensive Test Suite", () => {
               data: { properties: { hashed_token: "test-hashed-token" } },
               error: null,
             }),
+            updateUserById: async () => ({ error: null }),
           },
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

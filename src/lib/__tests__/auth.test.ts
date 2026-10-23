@@ -1,8 +1,41 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   getAuthRedirectPath,
   ONBOARDING_COOKIE_NAME,
 } from "@/lib/auth-guard";
+
+vi.mock("@supabase/ssr", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@supabase/ssr")>();
+  return {
+    ...actual,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createServerClient: vi.fn((url: string, key: string, options: any) => {
+      const client = actual.createServerClient(url, key, options);
+      const origVerifyOtp = client.auth.verifyOtp.bind(client.auth);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (client.auth as any).verifyOtp = async (params: any) => {
+        if (params?.token_hash === "mock-hashed-token") {
+          options?.cookies?.setAll?.([
+            {
+              name: "sb-mock-auth-token",
+              value: "mock-token-value",
+              options: { path: "/", httpOnly: true, sameSite: "lax" },
+            },
+          ]);
+          return {
+            data: {
+              session: { access_token: "mock-jwt-token" },
+              user: { id: "cust-1234-uuid", email: "9876543210@phone.tripmate.in" },
+            },
+            error: null,
+          };
+        }
+        return origVerifyOtp(params);
+      };
+      return client;
+    }),
+  };
+});
 
 describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
   describe("Root route '/'", () => {
@@ -482,24 +515,105 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
       expect(profileUpsert.phone).toBe("9876543210");
     });
 
-    it("confirms generateLink + verifyOtp pattern avoids all dummy password risks", async () => {
-      // Validate that synthetic credentials strictly use non-password magiclink tokens
-      const mockAdminGenerateLink = async (params: { type: string; email: string }) => {
-        expect(params.type).toBe("magiclink");
-        expect(params.email).toMatch(/^\d{10}@phone\.tripmate\.in$/);
-        return {
-          data: { properties: { hashed_token: "cryptographic_token_hash_value" } },
-          error: null,
-        };
+    it("calls POST /api/auth/verify-otp and verifies magiclink session bridge minting without static passwords", async () => {
+      const { POST: verifyOtpHandler } = await import("@/app/api/auth/verify-otp/route");
+      const waSupabase = await import("@/lib/wa-auth/supabase");
+      const { NextRequest } = await import("next/server");
+
+      let generatedLinkParams: { type: string; email: string } | null = null;
+      let invalidatedPassword = "";
+
+      const mockCustomer = {
+        id: "cust-test-1",
+        mobile: "9876543210",
+        name: "Test Traveler",
+        status: "ACTIVE",
       };
 
-      const linkResult = await mockAdminGenerateLink({
+      const mockRpc = vi.fn().mockResolvedValue({
+        data: { status: "ok", name: "Test Traveler", email: "test@tripmate.in" },
+        error: null,
+      });
+
+      const mockFrom = vi.fn().mockImplementation((table: string) => {
+        if (table === "wa_customers") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: mockCustomer, error: null }),
+              }),
+            }),
+            update: () => ({
+              eq: async () => ({ error: null }),
+            }),
+            insert: async () => ({ error: null }),
+          };
+        }
+        if (table === "wa_sessions") {
+          return {
+            insert: async () => ({ error: null }),
+          };
+        }
+        if (table === "profiles") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: null, error: null }),
+              }),
+            }),
+            upsert: async () => ({ error: null }),
+          };
+        }
+        return {};
+      });
+
+      vi.spyOn(waSupabase, "db").mockReturnValue({
+        rpc: mockRpc,
+        from: mockFrom,
+        auth: {
+          admin: {
+            createUser: async () => ({ data: null }),
+            generateLink: async (params: { type: string; email: string }) => {
+              generatedLinkParams = params;
+              return {
+                data: { properties: { hashed_token: "mock-hashed-token" } },
+                error: null,
+              };
+            },
+            updateUserById: async (_uid: string, attrs: { password?: string }) => {
+              if (attrs.password) invalidatedPassword = attrs.password;
+              return { error: null };
+            },
+          },
+        },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+
+      const req = new NextRequest("http://localhost:3000/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile: "9876543210", otp: "654321" }),
+      });
+
+      const res = await verifyOtpHandler(req);
+      expect(res.status).toBe(200);
+
+      // Verify the route called generateLink with type: 'magiclink' (cryptographic, non-password)
+      expect(generatedLinkParams).toEqual({
         type: "magiclink",
         email: "9876543210@phone.tripmate.in",
       });
 
-      expect(linkResult.data.properties.hashed_token).toBeDefined();
-      expect(linkResult.error).toBeNull();
+      // Verify rogue passwords were neutralized
+      expect(invalidatedPassword.length).toBeGreaterThanOrEqual(32);
+
+      // Verify session cookies were set on the response
+      const setCookie = res.headers.get("set-cookie");
+      expect(setCookie).toBeDefined();
+      expect(setCookie).toContain("sb-mock-auth-token=");
+      expect(setCookie).toContain("wa_session=");
+
+      vi.restoreAllMocks();
     });
   });
 });

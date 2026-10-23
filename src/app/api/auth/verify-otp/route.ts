@@ -76,7 +76,10 @@ export async function POST(req: NextRequest) {
 
   const cleanPhone = mobile;
   const syntheticEmail = `${cleanPhone}@phone.tripmate.in`;
-  const customerName = (customer.name || result.name || body.name || '').trim() || 'Verified Traveler';
+  const rawBodyName = typeof body.name === 'string' ? body.name.trim() : '';
+  const rawResultName = typeof result.name === 'string' ? result.name.trim() : '';
+  const rawCustomerName = typeof customer.name === 'string' ? customer.name.trim() : '';
+  const fallbackName = rawBodyName || rawCustomerName || rawResultName || 'Verified Traveler';
   const adminClient = db();
 
   // 2. Cryptographic Server-Side Session Bridge (ZERO dummy passwords!)
@@ -85,7 +88,7 @@ export async function POST(req: NextRequest) {
     email: syntheticEmail,
     email_confirm: true,
     user_metadata: {
-      full_name: customerName,
+      full_name: fallbackName,
       phone: cleanPhone,
       auth_provider: 'whatsapp_otp'
     }
@@ -112,7 +115,7 @@ export async function POST(req: NextRequest) {
     success: true,
     customer: {
       id: customer.id,
-      name: customerName,
+      name: fallbackName,
       email: customer.email || syntheticEmail,
       mobile: customer.mobile
     }
@@ -150,17 +153,40 @@ export async function POST(req: NextRequest) {
 
   const authUserId = sessionData.user.id;
 
-  // 4. Synchronize public.profiles and public.wa_customers atomically
+  // 4. Invalidate credentials for pre-registered synthetic account so it can NEVER be accessed via password
+  const randomUnguessableSecret = crypto.randomUUID() + crypto.randomUUID();
+  const { error: invalidateErr } = await adminClient.auth.admin.updateUserById(authUserId, {
+    password: randomUnguessableSecret,
+    email_confirm: true
+  });
+  if (invalidateErr) {
+    console.warn('[wa-auth] Invalidate credentials notice:', invalidateErr.message);
+  }
+
+  // 5. Synchronize public.profiles, strictly preserving existing profile name & KYC Vault
   const { data: existingProfile } = await adminClient
     .from('profiles')
     .select('full_name, saved_id_type, saved_id_storage_path, saved_id_file_size_bytes, saved_id_verified, saved_id_updated_at, saved_companions')
     .eq('id', authUserId)
     .maybeSingle();
 
+  // Name Precedence: An existing customized profile name is NEVER overwritten by a login fallback
+  const existingName = existingProfile?.full_name?.trim();
+  const hasCustomizedProfileName = Boolean(
+    existingName &&
+    existingName !== 'Verified Traveler' &&
+    existingName !== 'Traveler' &&
+    existingName !== 'TripMate Explorer'
+  );
+
+  const resolvedFullName = hasCustomizedProfileName
+    ? existingName!
+    : fallbackName;
+
   const profileUpsert = {
     id: authUserId,
     email: sessionData.user.email || syntheticEmail,
-    full_name: customerName || existingProfile?.full_name || 'Verified Traveler',
+    full_name: resolvedFullName,
     phone: cleanPhone,
     updated_at: now,
     // Preserve any existing KYC ID Vault fields
@@ -180,16 +206,20 @@ export async function POST(req: NextRequest) {
     console.error('[wa-auth] Profile sync error:', profileErr.message);
   }
 
-  // Update wa_customers with auth_user_id link
-  await adminClient
+  // 6. Update wa_customers with auth_user_id link and verify error
+  const { error: waUpdateErr } = await adminClient
     .from('wa_customers')
     .update({
       auth_user_id: authUserId,
-      name: customerName,
+      name: resolvedFullName,
       is_phone_verified: true,
       last_login_at: now
     })
     .eq('id', customer.id);
+
+  if (waUpdateErr) {
+    console.error('[wa-auth] Failed to link wa_customers to auth_user_id:', waUpdateErr.message);
+  }
 
   // Set wa_session cookie for complete dual backward compatibility
   await createSession(customer.id, req, res);

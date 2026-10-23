@@ -165,9 +165,12 @@ export function WhatsAppLogin({
 
       if (onSuccess && data.customer) {
         onSuccess(data.customer);
-      } else {
         const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
-        const target = params?.get("redirect") || "/home";
+        const rawTarget = params?.get("redirect");
+        const target =
+          rawTarget && rawTarget.startsWith("/") && !rawTarget.startsWith("//")
+            ? rawTarget
+            : "/home";
         // Full navigation ensures fresh session cookies are loaded
         window.location.assign(target);
       }
