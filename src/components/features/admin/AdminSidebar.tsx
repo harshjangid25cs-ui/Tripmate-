@@ -203,7 +203,7 @@ export function AdminSidebar({
   ];
 
   return (
-    <aside className="w-64 flex-shrink-0 border-r border-border-hairline bg-surface-container-low p-4 min-h-[calc(100vh-4rem)] flex flex-col justify-between">
+    <aside className="w-64 shrink-0 border-r border-border-hairline bg-surface-container-low p-4 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto custom-scrollbar flex flex-col justify-between self-start">
       <div className="space-y-6">
         {sections.map((section) => (
           <div key={section.title}>

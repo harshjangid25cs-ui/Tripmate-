@@ -23,6 +23,8 @@ import {
   Code2,
   ChevronDown,
   ChevronUp,
+  Calendar,
+  Receipt,
 } from "lucide-react";
 import {
   adminVerifyUpiPaymentAction,
@@ -51,6 +53,7 @@ export function PaymentsView() {
 
   // Filter & Control state for Bank Hub
   const [channelFilter, setChannelFilter] = useState<"all" | "sms" | "gmail" | "pending" | "confirmed">("all");
+  const [dateFilter, setDateFilter] = useState<"1m" | "3m" | "6m" | "all">("1m");
   const [isAutoConfirming, setIsAutoConfirming] = useState<boolean>(() => pricing.bank_auto_confirm ?? true);
   const [togglingAutoConfirm, setTogglingAutoConfirm] = useState(false);
 
@@ -296,6 +299,57 @@ export function PaymentsView() {
     }
   };
 
+  // Date cutoff calculation
+  const getDateCutoff = (filter: "1m" | "3m" | "6m" | "all"): number => {
+    const now = Date.now();
+    if (filter === "1m") return now - 30 * 24 * 60 * 60 * 1000;
+    if (filter === "3m") return now - 90 * 24 * 60 * 60 * 1000;
+    if (filter === "6m") return now - 180 * 24 * 60 * 60 * 1000;
+    return 0; // "all"
+  };
+
+  const cutoff = getDateCutoff(dateFilter);
+
+  // 1. Arrange latest payments on top in decreasing chronological order
+  const sortedPayments = [...payments].sort((a, b) => {
+    const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return tB - tA;
+  });
+
+  // 2. Filter payments by selected date range (1 month default)
+  const filteredPayments = sortedPayments.filter((p) => {
+    if (cutoff === 0) return true;
+    if (!p.created_at) return true;
+    const t = new Date(p.created_at).getTime();
+    return !isNaN(t) && t >= cutoff;
+  });
+
+  // 3. Arrange latest bank alerts on top in decreasing chronological order
+  const sortedBankInbox = [...bankInbox].sort((a, b) => {
+    const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return tB - tA;
+  });
+
+  // 4. Filter bank alerts by channel and selected date range
+  const filteredBankInbox = sortedBankInbox.filter((item) => {
+    if (channelFilter === "sms" && item.channel !== "sms") return false;
+    if (channelFilter === "gmail" && item.channel !== "gmail") return false;
+    if (
+      channelFilter === "pending" &&
+      !(item.verification_state === "ready_to_confirm" || item.verification_state === "unmatched")
+    )
+      return false;
+    if (channelFilter === "confirmed" && item.verification_state !== "confirmed") return false;
+
+    if (cutoff !== 0 && item.created_at) {
+      const t = new Date(item.created_at).getTime();
+      if (!isNaN(t) && t < cutoff) return false;
+    }
+    return true;
+  });
+
   // CSV Export helper
   const exportCsv = (type: "payments" | "bookings" | "coupons") => {
     if (!canExport) {
@@ -309,7 +363,7 @@ export function PaymentsView() {
     if (type === "payments") {
       csvContent =
         "InvoiceNumber,BookingRef,Customer,Amount,GSTAmount,Method,UTRNumber,VerificationStatus,Status,Timestamp\n";
-      for (const p of payments) {
+      for (const p of filteredPayments) {
         csvContent += `"${p.invoice_number}","${p.booking_ref}","${p.customer_name}",${p.amount},${p.gst_amount},"${p.method}","${p.utr_number || ""}","${p.verification_status || ""}","${p.status}","${p.created_at}"\n`;
       }
       filename = `tripmate-payments-${new Date().toISOString().slice(0, 10)}.csv`;
@@ -333,15 +387,6 @@ export function PaymentsView() {
 
     toast(`Exported ${filename} successfully`, "success");
   };
-
-  // Filtered Bank Inbox list
-  const filteredBankInbox = bankInbox.filter((item) => {
-    if (channelFilter === "sms") return item.channel === "sms";
-    if (channelFilter === "gmail") return item.channel === "gmail";
-    if (channelFilter === "pending") return item.verification_state === "ready_to_confirm" || item.verification_state === "unmatched";
-    if (channelFilter === "confirmed") return item.verification_state === "confirmed";
-    return true;
-  });
 
   const pendingConfirmationCount = bankInbox.filter(
     (b) => b.verification_state === "ready_to_confirm" || b.verification_state === "unmatched"
@@ -404,7 +449,67 @@ export function PaymentsView() {
             }`}
           >
             <FileSpreadsheet className="h-3.5 w-3.5" />
-            <span>Invoices & Ledger ({payments.length})</span>
+            <span>Invoices & Ledger ({filteredPayments.length})</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Date Range Filter Bar (1 Month default, 3 Months, 6 Months, All Time) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border-hairline bg-card-surface px-4 py-3 shadow-xs">
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-primary-container" />
+          <span className="text-xs font-black uppercase tracking-wider text-text-primary">
+            Payment Period:
+          </span>
+          <span className="text-[11px] text-text-secondary">
+            (Arranged Latest on Top ↓)
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setDateFilter("1m")}
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
+              dateFilter === "1m"
+                ? "bg-primary-container text-white border-primary-container shadow-xs"
+                : "bg-surface text-text-secondary border-border-hairline hover:text-text-primary hover:bg-card-surface"
+            }`}
+          >
+            1 Month (Default)
+          </button>
+          <button
+            type="button"
+            onClick={() => setDateFilter("3m")}
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
+              dateFilter === "3m"
+                ? "bg-primary-container text-white border-primary-container shadow-xs"
+                : "bg-surface text-text-secondary border-border-hairline hover:text-text-primary hover:bg-card-surface"
+            }`}
+          >
+            3 Months
+          </button>
+          <button
+            type="button"
+            onClick={() => setDateFilter("6m")}
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
+              dateFilter === "6m"
+                ? "bg-primary-container text-white border-primary-container shadow-xs"
+                : "bg-surface text-text-secondary border-border-hairline hover:text-text-primary hover:bg-card-surface"
+            }`}
+          >
+            6 Months
+          </button>
+          <button
+            type="button"
+            onClick={() => setDateFilter("all")}
+            className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all border ${
+              dateFilter === "all"
+                ? "bg-primary-container text-white border-primary-container shadow-xs"
+                : "bg-surface text-text-secondary border-border-hairline hover:text-text-primary hover:bg-card-surface"
+            }`}
+          >
+            All Time
           </button>
         </div>
       </div>
@@ -1146,9 +1251,38 @@ function forwardBankEmailsToTripMate() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-hairline">
-                  {payments.map((p) => (
-                    <tr key={p.id} className="hover:bg-surface-container-low/40">
-                      <td className="py-3.5 font-mono font-bold text-text-primary">{p.invoice_number}</td>
+                  {filteredPayments.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="py-12 text-center">
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <Receipt className="h-8 w-8 text-text-secondary/40" />
+                          <p className="text-xs font-bold text-text-primary">
+                            No payment transactions found in {dateFilter === "1m" ? "the last 1 month" : dateFilter === "3m" ? "the last 3 months" : dateFilter === "6m" ? "the last 6 months" : "the financial ledger"}
+                          </p>
+                          <p className="text-[11px] text-text-secondary">
+                            Try expanding the date filter or switch to &quot;All Time&quot; to review historical records.
+                          </p>
+                          {dateFilter !== "all" && payments.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setDateFilter("all")}
+                              className="mt-2 rounded-xl bg-surface px-3 py-1.5 text-xs font-bold text-primary-container border border-border-hairline hover:bg-card-surface transition-colors shadow-xs"
+                            >
+                              Show All Time ({payments.length} total)
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ) :
+                    filteredPayments.map((p) => (
+                      <tr key={p.id} className="hover:bg-surface-container-low/40">
+                        <td className="py-3.5 font-mono">
+                          <span className="font-bold text-text-primary block">{p.invoice_number}</span>
+                          <span className="text-[10px] text-text-secondary block">
+                            {p.created_at ? new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                          </span>
+                        </td>
                       <td className="py-3.5 font-mono font-bold text-primary-container">{p.booking_ref}</td>
                       <td className="py-3.5 font-semibold text-text-primary">{p.customer_name}</td>
                       <td className="py-3.5 font-black text-text-primary font-mono">
