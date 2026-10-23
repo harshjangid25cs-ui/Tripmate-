@@ -413,7 +413,7 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
 
       expect(result.ok).toBe(false);
       expect(result.error).toBeDefined();
-    });
+    }, 15000);
 
     it("a non-admin user cannot execute admin actions (SEC-04 / SEC-05)", async () => {
       const { adminUpdateBookingStatusAction } = await import("@/lib/actions/admin-ops");

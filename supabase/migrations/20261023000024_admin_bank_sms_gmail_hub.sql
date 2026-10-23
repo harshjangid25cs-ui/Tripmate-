@@ -92,8 +92,8 @@ AS $$
 DECLARE
   v_clean_utr text;
   v_inbox_id uuid;
-  v_existing_inbox record;
-  v_matched_trip record;
+  v_existing_inbox public.bank_messages_inbox%ROWTYPE;
+  v_matched_trip public.trips%ROWTYPE;
   v_auto_confirm boolean;
   v_verification_state text;
   v_payment_id uuid;
@@ -109,7 +109,7 @@ BEGIN
   FROM public.bank_messages_inbox
   WHERE utr_number = v_clean_utr;
 
-  IF v_existing_inbox.id IS NOT NULL THEN
+  IF FOUND THEN
     RETURN jsonb_build_object(
       'ok', true,
       'inbox_id', v_existing_inbox.id,

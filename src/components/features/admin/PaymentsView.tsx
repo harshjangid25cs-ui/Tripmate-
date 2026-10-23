@@ -711,8 +711,9 @@ const TRIPMATE_WEBHOOK_URL = "${typeof window !== "undefined" ? window.location.
 const WEBHOOK_SECRET = "tm_internal_bank_secret_2026";
 
 function forwardBankEmailsToTripMate() {
-  const query = 'is:unread (from:fampay.in OR from:hdfcbank.net OR from:sbi.co.in OR from:icicibank.com OR subject:"credited" OR subject:"payment received")';
+  const query = 'is:unread (from:fampay.in OR from:hdfcbank.net OR from:sbi.co.in OR from:icicibank.com OR subject:"credited" OR subject:"payment received" OR subject:"credit")';
   const threads = GmailApp.search(query, 0, 10);
+  Logger.log("Found " + threads.length + " unread threads matching bank query.");
   for (let i = 0; i < threads.length; i++) {
     const msgs = threads[i].getMessages();
     for (let j = 0; j < msgs.length; j++) {
@@ -732,9 +733,10 @@ function forwardBankEmailsToTripMate() {
         };
         try {
           const resp = UrlFetchApp.fetch(TRIPMATE_WEBHOOK_URL, options);
+          Logger.log("TripMate Response (" + resp.getResponseCode() + "): " + resp.getContentText());
           if (resp.getResponseCode() === 200) msg.markRead();
         } catch (e) {
-          Logger.log(e);
+          Logger.log("Fetch error: " + e);
         }
       }
     }
@@ -754,8 +756,8 @@ function forwardBankEmailsToTripMate() {
                     <ol className="text-[11px] text-text-secondary space-y-1.5 list-decimal pl-4">
                       <li>Log into <strong>{pricing.bank_alert_email || "tripmateoffical007@gmail.com"}</strong>.</li>
                       <li>Go to <strong>script.google.com</strong> &gt; click <strong>New Project</strong>.</li>
-                      <li>Paste the copied script &gt; Click <strong>Save</strong>.</li>
-                      <li>Click <strong>Triggers (Clock icon)</strong> &gt; Add Trigger: run every 1 minute. Free forever!</li>
+                      <li>Press <strong>Ctrl+A</strong> to delete default template, paste copied script &gt; Click <strong>Save (Floppy icon)</strong>.</li>
+                      <li>Click <strong>Triggers (Clock icon on left)</strong> &gt; Add Trigger: run function <strong>forwardBankEmailsToTripMate</strong> every 1 minute. Free forever!</li>
                     </ol>
                   </div>
                 </div>
