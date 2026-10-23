@@ -83,6 +83,7 @@ import {
   adminConfirmBankInboxPaymentAction,
   adminIngestManualBankMessageAction,
   adminToggleBankAutoConfirmAction,
+  adminUpdateBankAlertConfigAction,
   markTripCheckoutActiveAction,
 } from "../actions/admin-ops";
 
@@ -480,6 +481,41 @@ describe("Admin Bank Hub Server Action Authorization & Workflows", () => {
     const res = await markTripCheckoutActiveAction("trip-active-123");
     expect(res.ok).toBe(true);
     expect(mockUpdateCalls.some((c) => c.table === "trips")).toBe(true);
+  });
+
+  it("updates bank_alert_email and bank_alert_phone in pricing_config (authorized admin)", async () => {
+    mockAdminAuthorized = true;
+
+    const res = await adminUpdateBankAlertConfigAction({
+      bankAlertEmail: "finance.alerts@gmail.com",
+      bankAlertPhone: "+91 98765 43210",
+    });
+
+    expect(res.ok).toBe(true);
+    expect(res.data?.bankAlertEmail).toBe("finance.alerts@gmail.com");
+    expect(res.data?.bankAlertPhone).toBe("9876543210");
+    expect(mockUpdateCalls.length).toBe(1);
+    expect(mockUpdateCalls[0]?.table).toBe("pricing_config");
+    expect(mockUpdateCalls[0]?.payload.bank_alert_email).toBe("finance.alerts@gmail.com");
+    expect(mockUpdateCalls[0]?.payload.bank_alert_phone).toBe("9876543210");
+  });
+
+  it("rejects invalid bank alert email or phone", async () => {
+    mockAdminAuthorized = true;
+
+    const res1 = await adminUpdateBankAlertConfigAction({
+      bankAlertEmail: "invalid-email",
+      bankAlertPhone: "9876543210",
+    });
+    expect(res1.ok).toBe(false);
+    expect(res1.error).toMatch(/Valid Bank Alert Email is required/i);
+
+    const res2 = await adminUpdateBankAlertConfigAction({
+      bankAlertEmail: "valid@gmail.com",
+      bankAlertPhone: "123", // too short
+    });
+    expect(res2.ok).toBe(false);
+    expect(res2.error).toMatch(/Valid 10-digit Bank Mobile Number is required/i);
   });
 });
 

@@ -3422,4 +3422,81 @@ export async function markTripCheckoutActiveAction(
   }
 }
 
+// ============================================================================
+// MUTATION 29: adminUpdateBankAlertConfigAction
+// ============================================================================
+
+export async function adminUpdateBankAlertConfigAction(input: {
+  bankAlertEmail: string;
+  bankAlertPhone: string;
+}): Promise<{
+  ok: boolean;
+  error?: string;
+  data?: { bankAlertEmail: string; bankAlertPhone: string };
+}> {
+  const { authorized, user } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, error: "Unauthorized admin access." };
+  }
+
+  const emailTrimmed = input.bankAlertEmail?.trim();
+  const phoneTrimmed = input.bankAlertPhone?.trim();
+
+  if (!emailTrimmed || !emailTrimmed.includes("@")) {
+    return { ok: false, error: "Valid Bank Alert Email is required." };
+  }
+  const cleanPhone = phoneTrimmed ? phoneTrimmed.replace(/\D/g, "") : "";
+  if (cleanPhone.length < 10) {
+    return { ok: false, error: "Valid 10-digit Bank Mobile Number is required." };
+  }
+
+  const normalizedPhone = cleanPhone.slice(-10);
+  const supabase = createAdminClient();
+
+  try {
+    const { error } = await supabase
+      .from("pricing_config")
+      .update({
+        bank_alert_email: emailTrimmed,
+        bank_alert_phone: normalizedPhone,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", 1);
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+
+    try {
+      await supabase.from("admin_audit_logs").insert({
+        actor_id: user?.id || "admin",
+        actor_name: user?.email || "Admin",
+        actor_role: "superadmin",
+        action: "UPDATE_BANK_ALERT_CONFIG",
+        entity_type: "pricing_config",
+        entity_id: "1",
+        after: { bank_alert_email: emailTrimmed, bank_alert_phone: normalizedPhone },
+      });
+    } catch {
+      // Safe audit ignore
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/admin?tab=payments");
+    revalidatePath("/admin?tab=pricing");
+
+    return {
+      ok: true,
+      data: {
+        bankAlertEmail: emailTrimmed,
+        bankAlertPhone: normalizedPhone,
+      },
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to update bank alert config.";
+    return { ok: false, error: message };
+  }
+}
+
+
 

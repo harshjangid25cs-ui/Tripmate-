@@ -54,6 +54,8 @@ const INITIAL_PRICING_CONFIG: PricingConfig = {
   merchant_payee_name: "TripMate Travels",
   active_payment_gateway: "auto",
   upi_auto_confirm: true,
+  bank_alert_email: "tripmateoffical007@gmail.com",
+  bank_alert_phone: "9664340734",
 };
 
 const INITIAL_REFUND_RULES: RefundRule[] = [

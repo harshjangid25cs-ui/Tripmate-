@@ -170,6 +170,8 @@ export interface Database {
           upi_auto_confirm?: boolean | null;
           bank_webhook_secret?: string;
           bank_auto_confirm?: boolean;
+          bank_alert_email?: string;
+          bank_alert_phone?: string;
           created_at: string;
           updated_at?: string;
         };
@@ -185,6 +187,8 @@ export interface Database {
           upi_auto_confirm?: boolean | null;
           bank_webhook_secret?: string;
           bank_auto_confirm?: boolean;
+          bank_alert_email?: string;
+          bank_alert_phone?: string;
           created_at?: string;
           updated_at?: string;
         };
@@ -199,6 +203,8 @@ export interface Database {
           upi_auto_confirm?: boolean | null;
           bank_webhook_secret?: string;
           bank_auto_confirm?: boolean;
+          bank_alert_email?: string;
+          bank_alert_phone?: string;
           updated_at?: string;
         };
         Relationships: [];

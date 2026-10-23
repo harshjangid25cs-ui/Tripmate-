@@ -134,6 +134,8 @@ export interface PricingConfig {
   upi_auto_confirm?: boolean;
   bank_webhook_secret?: string;
   bank_auto_confirm?: boolean;
+  bank_alert_email?: string;
+  bank_alert_phone?: string;
 }
 
 export interface BankMessageInboxRecord {

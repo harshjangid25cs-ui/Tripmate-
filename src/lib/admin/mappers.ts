@@ -503,6 +503,8 @@ export function mapDatabasePricingToAdminPricing(p: DbRecord): PricingConfig {
     upi_auto_confirm: p.upi_auto_confirm !== undefined && p.upi_auto_confirm !== null ? Boolean(p.upi_auto_confirm) : true,
     bank_webhook_secret: p.bank_webhook_secret ? String(p.bank_webhook_secret) : "tm_internal_bank_secret_2026",
     bank_auto_confirm: p.bank_auto_confirm !== undefined && p.bank_auto_confirm !== null ? Boolean(p.bank_auto_confirm) : true,
+    bank_alert_email: p.bank_alert_email ? String(p.bank_alert_email) : "tripmateoffical007@gmail.com",
+    bank_alert_phone: p.bank_alert_phone ? String(p.bank_alert_phone) : "9664340734",
   };
 }
 

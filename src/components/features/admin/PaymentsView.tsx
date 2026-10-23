@@ -19,12 +19,17 @@ import {
   AlertCircle,
   Check,
   Copy,
+  Settings2,
+  Code2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   adminVerifyUpiPaymentAction,
   adminIngestManualBankMessageAction,
   adminConfirmBankInboxPaymentAction,
   adminToggleBankAutoConfirmAction,
+  adminUpdateBankAlertConfigAction,
 } from "@/lib/actions/admin-ops";
 
 export function PaymentsView() {
@@ -58,6 +63,15 @@ export function PaymentsView() {
   const [selectedTripOverrides, setSelectedTripOverrides] = useState<Record<string, string>>({});
   const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
 
+  // Channel Ingestion Settings State
+  const [bankAlertEmail, setBankAlertEmail] = useState(pricing.bank_alert_email || "tripmateoffical007@gmail.com");
+  const [bankAlertPhone, setBankAlertPhone] = useState(pricing.bank_alert_phone || "9664340734");
+  const [isEditingChannels, setIsEditingChannels] = useState(false);
+  const [isSavingChannels, setIsSavingChannels] = useState(false);
+  const [showSetupGuide, setShowSetupGuide] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
+  const [copiedSmsFormat, setCopiedSmsFormat] = useState(false);
+
   const canExport = hasPermission("payments_export");
 
   // Subscribe to live AdminService updates
@@ -77,6 +91,33 @@ export function PaymentsView() {
     setBookings(AdminService.getBookings());
     setPricing(AdminService.getPricing());
     await refreshOperationalData();
+  };
+
+  useEffect(() => {
+    if (pricing.bank_alert_email) setBankAlertEmail(pricing.bank_alert_email);
+    if (pricing.bank_alert_phone) setBankAlertPhone(pricing.bank_alert_phone);
+  }, [pricing.bank_alert_email, pricing.bank_alert_phone]);
+
+  const handleSaveBankAlertConfig = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingChannels(true);
+    try {
+      const res = await adminUpdateBankAlertConfigAction({
+        bankAlertEmail,
+        bankAlertPhone,
+      });
+      if (res.ok) {
+        toast("Bank alert email and phone configuration updated successfully", "success");
+        setIsEditingChannels(false);
+        await refreshAll();
+      } else {
+        toast(res.error || "Failed to update configuration", "error");
+      }
+    } catch {
+      toast("Error saving bank alert configuration", "error");
+    } finally {
+      setIsSavingChannels(false);
+    }
   };
 
   // Toggle Auto-Confirm Mode
@@ -443,6 +484,283 @@ export function PaymentsView() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* Active Ingestion Channels & Setup Bar */}
+          <div className="rounded-2xl border border-border-hairline bg-card-surface p-4 shadow-xs">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-border-hairline">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-primary-container text-white">
+                  <Smartphone className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-black text-text-primary tracking-tight">
+                      Bank Tracking Channels & KYC Ingestion
+                    </h3>
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.2 text-[9px] font-black uppercase">
+                      Active
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-text-secondary">
+                    Directly linked to your merchant bank account & SIM card. Easily customize for separate bank inboxes.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingChannels(!isEditingChannels)}
+                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-surface hover:bg-surface-container-low px-3 py-1.5 text-xs font-bold text-text-primary transition-colors shadow-xs"
+                >
+                  <Settings2 className="h-3.5 w-3.5" />
+                  <span>{isEditingChannels ? "Cancel" : "Configure Separate Bank Email / Phone"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowSetupGuide(!showSetupGuide)}
+                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-primary-container text-white px-3 py-1.5 text-xs font-bold transition-colors shadow-xs"
+                >
+                  <Code2 className="h-3.5 w-3.5" />
+                  <span>{showSetupGuide ? "Hide Setup Guide" : "1-Click Setup Guide & Scripts"}</span>
+                  {showSetupGuide ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Display / Edit Form */}
+            {isEditingChannels ? (
+              <form onSubmit={handleSaveBankAlertConfig} className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-text-primary mb-1">
+                    Separate Bank / FamPay Alert Gmail
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={bankAlertEmail}
+                    onChange={(e) => setBankAlertEmail(e.target.value)}
+                    placeholder="e.g. finance@tripmate.in or your.personal@gmail.com"
+                    className="w-full rounded-xl border border-border-hairline bg-surface px-3 py-2 text-xs font-mono text-text-primary focus:border-primary-container focus:outline-hidden"
+                  />
+                  <p className="text-[10px] text-text-secondary mt-1">
+                    Where your bank/FamPay sends transaction alert emails. Does NOT need to be your admin login.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-text-primary mb-1">
+                    Bank Registered Mobile Number (SMS Alerts)
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-xl border border-border-hairline bg-surface px-3 py-2 text-xs font-mono text-text-secondary">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      required
+                      value={bankAlertPhone}
+                      onChange={(e) => setBankAlertPhone(e.target.value)}
+                      placeholder="10-digit mobile number"
+                      className="w-full rounded-xl border border-border-hairline bg-surface px-3 py-2 text-xs font-mono text-text-primary focus:border-primary-container focus:outline-hidden"
+                    />
+                  </div>
+                  <p className="text-[10px] text-text-secondary mt-1">
+                    Mobile SIM card receiving AX-FAMPAY, SBIBNK, or HDFCBK credit SMS.
+                  </p>
+                </div>
+
+                <div className="sm:col-span-2 flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingChannels(false)}
+                    className="rounded-xl border border-border-hairline bg-surface px-3.5 py-1.5 text-xs font-bold text-text-secondary hover:text-text-primary"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingChannels}
+                    className="rounded-xl bg-primary-container px-4 py-1.5 text-xs font-bold text-white shadow-xs hover:opacity-90 disabled:opacity-50"
+                  >
+                    {isSavingChannels ? "Saving..." : "Save Bank Channels"}
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="pt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {/* Mobile Card */}
+                <div className="rounded-xl border border-border-hairline bg-surface p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+                      Bank SMS Phone
+                    </span>
+                    <span className="rounded bg-sky-50 border border-sky-200 text-sky-800 text-[9px] font-black px-1.5 py-0.2">
+                      📱 SIM CARD
+                    </span>
+                  </div>
+                  <div className="text-sm font-black font-mono text-text-primary">
+                    +91 {pricing.bank_alert_phone || "9664340734"}
+                  </div>
+                  <div className="text-[10px] text-text-secondary mt-1">
+                    Receives incoming credit alerts (AX-FAMPAY, SBIBNK, etc.)
+                  </div>
+                </div>
+
+                {/* Gmail Card */}
+                <div className="rounded-xl border border-border-hairline bg-surface p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+                      Bank Alert Gmail
+                    </span>
+                    <span className="rounded bg-amber-50 border border-amber-200 text-amber-800 text-[9px] font-black px-1.5 py-0.2">
+                      ✉️ GMAIL INBOX
+                    </span>
+                  </div>
+                  <div className="text-sm font-black font-mono text-text-primary truncate">
+                    {pricing.bank_alert_email || "tripmateoffical007@gmail.com"}
+                  </div>
+                  <div className="text-[10px] text-text-secondary mt-1">
+                    Receives FamPay / Bank payment confirmation emails
+                  </div>
+                </div>
+
+                {/* UPI QR VPA */}
+                <div className="rounded-xl border border-border-hairline bg-surface p-3 sm:col-span-2 lg:col-span-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+                      Active Payee UPI VPA
+                    </span>
+                    <span className="rounded bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-black px-1.5 py-0.2">
+                      ⚡ PAYEE VPA
+                    </span>
+                  </div>
+                  <div className="text-sm font-black font-mono text-text-primary">
+                    {pricing.merchant_upi_vpa || "9664340734@fam"}
+                  </div>
+                  <div className="text-[10px] text-text-secondary mt-1">
+                    Target UPI QR destination for customers on checkout
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Expandable Setup Guide & Scripts */}
+            {showSetupGuide && (
+              <div className="mt-4 pt-4 border-t border-border-hairline space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* SMS Setup Instructions */}
+                  <div className="rounded-xl border border-border-hairline bg-surface p-3.5 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded bg-sky-50 border border-sky-200 text-sky-800 px-1.5 py-0.5 text-[10px] font-black">
+                          📱 Mobile SMS Setup
+                        </span>
+                        <span className="text-xs font-bold text-text-primary">Android Forwarder</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const conf = JSON.stringify(
+                            {
+                              url: `${typeof window !== "undefined" ? window.location.origin : "https://tripmate.in"}/api/webhooks/bank-sms`,
+                              headers: { "x-sms-secret": "tm_internal_bank_secret_2026" },
+                              body: { sender: "%from%", message: "%text%" },
+                            },
+                            null,
+                            2
+                          );
+                          void navigator.clipboard.writeText(conf);
+                          setCopiedSmsFormat(true);
+                          setTimeout(() => setCopiedSmsFormat(false), 2000);
+                        }}
+                        className="flex items-center gap-1 rounded bg-surface hover:bg-surface-container-low border border-border-hairline px-2 py-1 text-[10px] font-bold text-text-primary shadow-xs"
+                      >
+                        {copiedSmsFormat ? <Check className="h-3 w-3 text-emerald-700" /> : <Copy className="h-3 w-3" />}
+                        <span>{copiedSmsFormat ? "Copied" : "Copy Config"}</span>
+                      </button>
+                    </div>
+
+                    <ol className="text-[11px] text-text-secondary space-y-1.5 list-decimal pl-4">
+                      <li>Install any free <strong>SMS Forwarder</strong> app on phone <strong>+91 {pricing.bank_alert_phone || "9664340734"}</strong>.</li>
+                      <li>Set Target Webhook URL: <code className="bg-card-surface px-1 py-0.5 rounded border border-border-hairline text-text-primary font-mono text-[10px]">{typeof window !== "undefined" ? window.location.origin : "https://tripmate.in"}/api/webhooks/bank-sms</code></li>
+                      <li>Set HTTP Header: <code className="bg-card-surface px-1 py-0.5 rounded border border-border-hairline text-text-primary font-mono text-[10px]">x-sms-secret: tm_internal_bank_secret_2026</code></li>
+                      <li>Payload Template: <code className="bg-card-surface px-1 py-0.5 rounded border border-border-hairline text-text-primary font-mono text-[10px]">&#123;&quot;sender&quot;: &quot;%from%&quot;, &quot;message&quot;: &quot;%text%&quot;&#125;</code></li>
+                    </ol>
+                  </div>
+
+                  {/* Gmail Setup Instructions */}
+                  <div className="rounded-xl border border-border-hairline bg-surface p-3.5 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded bg-amber-50 border border-amber-200 text-amber-800 px-1.5 py-0.5 text-[10px] font-black">
+                          ✉️ Gmail Cloud Setup
+                        </span>
+                        <span className="text-xs font-bold text-text-primary">Google Apps Script</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const script = `/**
+ * TripMate Bank & FamPay Gmail Forwarder
+ * Runs inside ${pricing.bank_alert_email || "tripmateoffical007@gmail.com"}
+ */
+const TRIPMATE_WEBHOOK_URL = "${typeof window !== "undefined" ? window.location.origin : "https://tripmate.in"}/api/webhooks/bank-email";
+const WEBHOOK_SECRET = "tm_internal_bank_secret_2026";
+
+function forwardBankEmailsToTripMate() {
+  const query = 'is:unread (from:fampay.in OR from:hdfcbank.net OR from:sbi.co.in OR from:icicibank.com OR subject:"credited" OR subject:"payment received")';
+  const threads = GmailApp.search(query, 0, 10);
+  for (let i = 0; i < threads.length; i++) {
+    const msgs = threads[i].getMessages();
+    for (let j = 0; j < msgs.length; j++) {
+      const msg = msgs[j];
+      if (msg.isUnread()) {
+        const payload = {
+          from: msg.getFrom(),
+          subject: msg.getSubject(),
+          body: msg.getPlainBody() || msg.getBody()
+        };
+        const options = {
+          method: "post",
+          contentType: "application/json",
+          headers: { "x-webhook-secret": WEBHOOK_SECRET },
+          payload: JSON.stringify(payload),
+          muteHttpExceptions: true
+        };
+        try {
+          const resp = UrlFetchApp.fetch(TRIPMATE_WEBHOOK_URL, options);
+          if (resp.getResponseCode() === 200) msg.markRead();
+        } catch (e) {
+          Logger.log(e);
+        }
+      }
+    }
+  }
+}`;
+                          void navigator.clipboard.writeText(script);
+                          setCopiedScript(true);
+                          setTimeout(() => setCopiedScript(false), 2000);
+                        }}
+                        className="flex items-center gap-1 rounded bg-surface hover:bg-surface-container-low border border-border-hairline px-2 py-1 text-[10px] font-bold text-text-primary shadow-xs"
+                      >
+                        {copiedScript ? <Check className="h-3 w-3 text-emerald-700" /> : <Copy className="h-3 w-3" />}
+                        <span>{copiedScript ? "Copied" : "Copy Google Script"}</span>
+                      </button>
+                    </div>
+
+                    <ol className="text-[11px] text-text-secondary space-y-1.5 list-decimal pl-4">
+                      <li>Log into <strong>{pricing.bank_alert_email || "tripmateoffical007@gmail.com"}</strong>.</li>
+                      <li>Go to <strong>script.google.com</strong> &gt; click <strong>New Project</strong>.</li>
+                      <li>Paste the copied script &gt; Click <strong>Save</strong>.</li>
+                      <li>Click <strong>Triggers (Clock icon)</strong> &gt; Add Trigger: run every 1 minute. Free forever!</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

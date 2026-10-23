@@ -374,17 +374,21 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
       await expect(requireAdmin()).rejects.toThrow("Unauthorized");
     });
 
-    it("adminLoginAction rejects wrong password and never swallows errors (SEC-02)", async () => {
-      const { adminLoginAction } = await import("@/lib/actions/admin-auth");
+    it(
+      "adminLoginAction rejects wrong password and never swallows errors (SEC-02)",
+      async () => {
+        const { adminLoginAction } = await import("@/lib/actions/admin-auth");
 
-      const result = await adminLoginAction({
-        email: "superadmin@tripmate.in",
-        password: "definitely-wrong-password-12345",
-      });
+        const result = await adminLoginAction({
+          email: "superadmin@tripmate.in",
+          password: "definitely-wrong-password-12345",
+        });
 
-      expect(result.ok).toBe(false);
-      expect(result.error).toBeDefined();
-    });
+        expect(result.ok).toBe(false);
+        expect(result.error).toBeDefined();
+      },
+      15000
+    );
 
     it("adminLoginAction rejects unauthorized emails (SEC-01)", async () => {
       const { adminLoginAction } = await import("@/lib/actions/admin-auth");

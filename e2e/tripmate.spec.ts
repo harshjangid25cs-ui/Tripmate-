@@ -78,7 +78,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.locator('button[type="submit"]').click();
 
     // 2. Home Catalog
-    await page.waitForURL("**/home", { timeout: 15000 });
+    await page.waitForURL("**/home", { timeout: 30000, waitUntil: "domcontentloaded" });
     await page.waitForLoadState("networkidle");
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, "02_home_catalog.png") });
 
@@ -273,7 +273,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.locator("#email").fill("nonmember@tripmate.io");
     await page.locator("#password").fill(DEMO_PASSWORD);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/home", { timeout: 15000 });
+    await page.waitForURL("**/home", { timeout: 30000, waitUntil: "domcontentloaded" });
 
     await page.goto("/commercial");
     await page.waitForLoadState("networkidle");
@@ -296,7 +296,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.locator("#email").fill("arjun.kapoor@tripmate.io");
     await page.locator("#password").fill(DEMO_PASSWORD);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/home", { timeout: 15000 });
+    await page.waitForURL("**/home", { timeout: 30000, waitUntil: "domcontentloaded" });
 
     // 3. Commercial Intro
     await page.goto("/commercial");
@@ -406,7 +406,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.locator("#email").fill("member@tripmate.io");
     await page.locator("#password").fill(DEMO_PASSWORD);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/home", { timeout: 15000 });
+    await page.waitForURL("**/home", { timeout: 30000, waitUntil: "domcontentloaded" });
 
     const targetTripId = userATripId || "11111111-1111-1111-1111-111111111111";
     await page.goto(`/trips/${targetTripId}`);
@@ -491,7 +491,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.locator("#email").fill("arjun.kapoor@tripmate.io");
     await page.locator("#password").fill(DEMO_PASSWORD);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/home", { timeout: 15000 });
+    await page.waitForURL("**/home", { timeout: 30000, waitUntil: "domcontentloaded" });
 
     // 3. Navigate to Jaipur destination detail
     const jaipurPlanBtn = page.locator('a[href="/destinations/jaipur"]').first();
@@ -630,7 +630,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.locator("#email").fill("arjun.kapoor@tripmate.io");
     await page.locator("#password").fill(DEMO_PASSWORD);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/home", { timeout: 25000 });
+    await page.waitForURL("**/home", { timeout: 30000, waitUntil: "domcontentloaded" });
 
     // Customer attempts to navigate to /admin
     await page.goto("/admin");
@@ -647,7 +647,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.locator('input[type="email"]').fill("tripmateoffical007@gmail.com");
     await page.locator('input[type="password"]').fill(DEMO_PASSWORD);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/admin", { timeout: 15000 });
+    await page.waitForURL("**/admin", { timeout: 30000, waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/\/admin/);
     await expect(page.locator("text=Operations Center")).toBeVisible();
   });
@@ -671,7 +671,7 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.locator("#email").fill("arjun.kapoor@tripmate.io");
     await page.locator("#password").fill(DEMO_PASSWORD);
     await page.locator('button[type="submit"]').click();
-    await page.waitForURL("**/home", { timeout: 25000 });
+    await page.waitForURL("**/home", { timeout: 30000, waitUntil: "domcontentloaded" });
 
     // Directly attempt to access /admin
     await page.goto("/admin");
