@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
+import { formatIstTimestamp, isJustNow, sortByLatestTimestamp } from "./PaymentsView";
 import type { BookingAdmin } from "@/lib/admin/types";
 import {
   adminUpdateBookingStatusAction,
@@ -84,18 +86,33 @@ export function BookingsView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const filteredBookings = bookings.filter((b) => {
-    const query = searchQuery.toLowerCase().trim();
-    const matchQuery =
-      !query ||
-      b.booking_ref.toLowerCase().includes(query) ||
-      b.customer_name.toLowerCase().includes(query) ||
-      b.customer_email.toLowerCase().includes(query) ||
-      b.destination_name.toLowerCase().includes(query);
-
-    const matchStatus = statusFilter === "all" || b.status === statusFilter;
-    return matchQuery && matchStatus;
+  // Instant Supabase Realtime synchronization for BookingsView
+  useRealtimeTableSync(["trips", "payments"], {
+    onEvent: () => {
+      refresh();
+      refreshOperationalData();
+    },
+    debounceMs: 300,
   });
+
+  const sortedBookings = useMemo(() => {
+    return sortByLatestTimestamp(bookings);
+  }, [bookings]);
+
+  const filteredBookings = useMemo(() => {
+    return sortedBookings.filter((b) => {
+      const query = searchQuery.toLowerCase().trim();
+      const matchQuery =
+        !query ||
+        b.booking_ref.toLowerCase().includes(query) ||
+        b.customer_name.toLowerCase().includes(query) ||
+        b.customer_email.toLowerCase().includes(query) ||
+        b.destination_name.toLowerCase().includes(query);
+
+      const matchStatus = statusFilter === "all" || b.status === statusFilter;
+      return matchQuery && matchStatus;
+    });
+  }, [sortedBookings, searchQuery, statusFilter]);
 
   const handleExecuteCancel = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -471,13 +488,16 @@ export function BookingsView() {
 
       {/* Bookings Table Box */}
       <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
-        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+        <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-xs font-bold uppercase tracking-wider text-text-primary">
               Live Bookings Register
             </span>
             <span className="rounded-full bg-surface px-2 py-0.5 text-[10px] font-bold text-text-secondary border border-border-hairline">
               {filteredBookings.length}
+            </span>
+            <span className="rounded-full bg-[#1F1F1E] text-white px-2 py-0.5 text-[10px] font-bold">
+              Latest First ↓
             </span>
           </div>
           <span className="text-[11px] text-text-secondary hidden sm:inline">
@@ -506,7 +526,15 @@ export function BookingsView() {
                     <span className="font-mono font-bold text-text-primary bg-surface px-2 py-0.5 rounded-lg border border-border-hairline">
                       {b.booking_ref}
                     </span>
-                    <span className="block text-[10px] text-text-secondary mt-1 uppercase font-semibold">
+                    <span className="block text-[10px] text-text-secondary mt-1 font-mono">
+                      {formatIstTimestamp(b.created_at)}
+                    </span>
+                    {isJustNow(b.created_at) && (
+                      <span className="rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 text-[9px] font-black uppercase tracking-wider inline-block mt-0.5 animate-pulse">
+                        NEW • Just now
+                      </span>
+                    )}
+                    <span className="block text-[10px] text-text-secondary mt-0.5 uppercase font-semibold">
                       {b.kind}
                     </span>
                   </td>

@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
   let rawBodyText = "";
   let subject = "";
   let sender = "";
+  let receivedAt = "";
 
   try {
     const contentType = request.headers.get("content-type") || "";
@@ -68,13 +69,24 @@ export async function POST(request: NextRequest) {
         raw?: string;
         sender?: string;
         from?: string;
+        receivedAt?: string;
+        timestamp?: string | number;
+        date?: string;
       };
       subject = json.subject || "";
       rawBodyText = json.body || json.text || json.raw || "";
       sender = json.sender || json.from || "Bank Email Forwarder";
+      const rawTimestamp = json.receivedAt || json.timestamp || json.date;
+      if (rawTimestamp) {
+        const parsed = new Date(rawTimestamp);
+        receivedAt = !isNaN(parsed.getTime()) ? parsed.toISOString() : new Date().toISOString();
+      } else {
+        receivedAt = new Date().toISOString();
+      }
     } else {
       rawBodyText = await request.text();
       sender = "Bank Email Forwarder";
+      receivedAt = new Date().toISOString();
     }
   } catch {
     return NextResponse.json({ error: "Failed to read request body" }, { status: 400 });
@@ -117,6 +129,7 @@ export async function POST(request: NextRequest) {
       p_utr_number: parseResult.utrNumber!,
       p_payer_vpa: parseResult.payerVpa || null,
       p_extracted_trip_ref: parseResult.tripRef || null,
+      p_received_at: receivedAt,
     });
 
     if (rpcErr) {

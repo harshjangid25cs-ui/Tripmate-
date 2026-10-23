@@ -176,7 +176,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       const [compRes, profRes, payRes, coupRes, priceRes, emailRes, auditRes, directCircRes, highRes, polRes, histRes, bankRes] = await Promise.all([
         supabase.from("companies").select("*, company_members(*)").order("created_at", { ascending: false }),
         supabase.from("profiles").select("*").order("created_at", { ascending: false }),
-        supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
+        supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }).limit(200),
         supabase.from("coupons").select("*").order("created_at", { ascending: false }),
         supabase.from("pricing_config").select("*").order("updated_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("email_logs").select("*").order("created_at", { ascending: false }).limit(100),
@@ -185,7 +185,7 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         supabase.from("destination_highlights").select("*").order("sort_order", { ascending: true }),
         supabase.from("policies").select("*").order("created_at", { ascending: false }),
         supabase.from("trip_status_history").select("*").order("created_at", { ascending: false }).limit(200),
-        supabase.from("bank_messages_inbox").select("*").order("created_at", { ascending: false }).limit(100),
+        supabase.from("bank_messages_inbox").select("*").order("created_at", { ascending: false }).limit(200),
       ]);
 
       // If direct circuits query succeeded, prefer it so fresh edits in public.circuits are 100% reflected on reload
@@ -243,6 +243,11 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
           b.verification_status = pm.verification_status;
         }
       });
+
+      // Strictly enforce descending chronological sort (newest date & time first at index 0)
+      bookings.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      payments.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+      bankMessagesInbox.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
       return {
         ok: true,
@@ -371,8 +376,8 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
       supabase.from("destination_highlights").select("*").order("sort_order", { ascending: true }),
       supabase.from("policies").select("*").order("created_at", { ascending: false }),
       supabase.from("trip_status_history").select("*").order("created_at", { ascending: false }).limit(200),
-      supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }),
-      supabase.from("bank_messages_inbox").select("*").order("created_at", { ascending: false }).limit(100),
+      supabase.from("payments").select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)").order("created_at", { ascending: false }).limit(200),
+      supabase.from("bank_messages_inbox").select("*").order("created_at", { ascending: false }).limit(200),
     ]);
 
     const coupons = (coupRes.data || []).map((c) => mapDatabaseCouponToAdminCoupon(c as unknown as DbRecord));
@@ -422,6 +427,11 @@ export async function fetchAdminOperationalSnapshot(): Promise<{
         b.verification_status = pm.verification_status;
       }
     });
+
+    // Strictly enforce descending chronological sort (newest date & time first at index 0)
+    bookings.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    payments.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+    bankMessagesInbox.sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
 
     const totalRevenue = bookings
       .filter((b) => b.status === "confirmed" || b.status === "completed")

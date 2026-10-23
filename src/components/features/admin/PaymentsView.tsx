@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
+import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
 import type { PaymentInvoiceRecord, BankMessageInboxRecord, BookingAdmin } from "@/lib/admin/types";
 import {
   Download,
@@ -25,6 +27,7 @@ import {
   ChevronUp,
   Calendar,
   Receipt,
+  RotateCw,
 } from "lucide-react";
 import {
   adminVerifyUpiPaymentAction,
@@ -34,8 +37,44 @@ import {
   adminUpdateBankAlertConfigAction,
 } from "@/lib/actions/admin-ops";
 
+export const sortByLatestTimestamp = <T extends { created_at?: string | null; confirmed_at?: string | null }>(
+  items: T[]
+): T[] =>
+  [...items].sort((a, b) => {
+    const timeB = new Date(b.created_at || b.confirmed_at || 0).getTime();
+    const timeA = new Date(a.created_at || a.confirmed_at || 0).getTime();
+    return timeB - timeA; // Strictly newest date & time at index 0 (TOP)
+  });
+
+export function formatIstTimestamp(timestamp?: string | null): string {
+  if (!timestamp) return "—";
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
+
+export function isJustNow(timestamp?: string | null): boolean {
+  if (!timestamp) return false;
+  const t = new Date(timestamp).getTime();
+  if (isNaN(t)) return false;
+  const diff = Date.now() - t;
+  return diff >= 0 && diff < 5 * 60 * 1000;
+}
+
 export function PaymentsView() {
   const { currentAdmin, hasPermission, toast, refreshOperationalData } = useAdmin();
+  const router = useRouter();
+  const bankStreamContainerRef = useRef<HTMLDivElement>(null);
+  const [isRefreshingLatest, setIsRefreshingLatest] = useState(false);
 
   // Sub-tab: "bank_hub" (default) or "invoices"
   const [activeSubTab, setActiveSubTab] = useState<"bank_hub" | "invoices">("bank_hub");
@@ -94,6 +133,28 @@ export function PaymentsView() {
     setBookings(AdminService.getBookings());
     setPricing(AdminService.getPricing());
     await refreshOperationalData();
+  };
+
+  // Instant Supabase Realtime synchronization for PaymentsView
+  useRealtimeTableSync(["bank_messages_inbox", "payments", "trips"], {
+    onEvent: () => {
+      refreshAll();
+    },
+    debounceMs: 300,
+  });
+
+  const handleRefreshLatest = async () => {
+    setIsRefreshingLatest(true);
+    try {
+      await refreshAll();
+      router.refresh();
+      if (bankStreamContainerRef.current) {
+        bankStreamContainerRef.current.scrollTop = 0;
+      }
+      toast("Refreshed latest bank alerts and payment transactions", "success");
+    } finally {
+      setIsRefreshingLatest(false);
+    }
   };
 
   useEffect(() => {
@@ -311,44 +372,44 @@ export function PaymentsView() {
   const cutoff = getDateCutoff(dateFilter);
 
   // 1. Arrange latest payments on top in decreasing chronological order
-  const sortedPayments = [...payments].sort((a, b) => {
-    const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
-    return tB - tA;
-  });
+  const sortedPayments = useMemo(() => {
+    return sortByLatestTimestamp(payments);
+  }, [payments]);
 
   // 2. Filter payments by selected date range (1 month default)
-  const filteredPayments = sortedPayments.filter((p) => {
-    if (cutoff === 0) return true;
-    if (!p.created_at) return true;
-    const t = new Date(p.created_at).getTime();
-    return !isNaN(t) && t >= cutoff;
-  });
+  const filteredPayments = useMemo(() => {
+    return sortedPayments.filter((p) => {
+      if (cutoff === 0) return true;
+      if (!p.created_at) return true;
+      const t = new Date(p.created_at).getTime();
+      return !isNaN(t) && t >= cutoff;
+    });
+  }, [sortedPayments, cutoff]);
 
   // 3. Arrange latest bank alerts on top in decreasing chronological order
-  const sortedBankInbox = [...bankInbox].sort((a, b) => {
-    const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
-    const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
-    return tB - tA;
-  });
+  const sortedBankInbox = useMemo(() => {
+    return sortByLatestTimestamp(bankInbox);
+  }, [bankInbox]);
 
   // 4. Filter bank alerts by channel and selected date range
-  const filteredBankInbox = sortedBankInbox.filter((item) => {
-    if (channelFilter === "sms" && item.channel !== "sms") return false;
-    if (channelFilter === "gmail" && item.channel !== "gmail") return false;
-    if (
-      channelFilter === "pending" &&
-      !(item.verification_state === "ready_to_confirm" || item.verification_state === "unmatched")
-    )
-      return false;
-    if (channelFilter === "confirmed" && item.verification_state !== "confirmed") return false;
+  const filteredBankInbox = useMemo(() => {
+    return sortedBankInbox.filter((item) => {
+      if (channelFilter === "sms" && item.channel !== "sms") return false;
+      if (channelFilter === "gmail" && item.channel !== "gmail") return false;
+      if (
+        channelFilter === "pending" &&
+        !(item.verification_state === "ready_to_confirm" || item.verification_state === "unmatched")
+      )
+        return false;
+      if (channelFilter === "confirmed" && item.verification_state !== "confirmed") return false;
 
-    if (cutoff !== 0 && item.created_at) {
-      const t = new Date(item.created_at).getTime();
-      if (!isNaN(t) && t < cutoff) return false;
-    }
-    return true;
-  });
+      if (cutoff !== 0 && item.created_at) {
+        const t = new Date(item.created_at).getTime();
+        if (!isNaN(t) && t < cutoff) return false;
+      }
+      return true;
+    });
+  }, [sortedBankInbox, channelFilter, cutoff]);
 
   // CSV Export helper
   const exportCsv = (type: "payments" | "bookings" | "coupons") => {
@@ -878,7 +939,7 @@ function forwardBankEmailsToTripMate() {
             {/* PANEL 1: Live Bank SMS & Gmail Feeds (Left Column, 7 cols) */}
             <div className="lg:col-span-7">
               <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
-                <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+                <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-emerald-700 animate-pulse" />
                     <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">
@@ -887,8 +948,23 @@ function forwardBankEmailsToTripMate() {
                     <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
                       {filteredBankInbox.length}
                     </span>
+                    <span className="rounded-full bg-[#1F1F1E] text-white px-2 py-0.5 text-[10px] font-bold flex items-center gap-1">
+                      <span>Latest First ↓ (Live)</span>
+                    </span>
                   </div>
-                  <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside box</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isRefreshingLatest}
+                      onClick={handleRefreshLatest}
+                      className="flex items-center gap-1.5 rounded-lg border border-[#E5E3DF] bg-[#FBF9F5] hover:bg-[#EBE9E4] px-2.5 py-1 text-xs font-bold text-[#1F1F1E] transition-colors shadow-xs disabled:opacity-50"
+                      title="Fetch newest bank transactions and scroll to top"
+                    >
+                      <RotateCw className={`h-3 w-3 text-[#1F1F1E] ${isRefreshingLatest ? "animate-spin" : ""}`} />
+                      <span>↻ Refresh Latest</span>
+                    </button>
+                    <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside box</span>
+                  </div>
                 </div>
 
                 {filteredBankInbox.length === 0 ? (
@@ -900,7 +976,7 @@ function forwardBankEmailsToTripMate() {
                     </p>
                   </div>
                 ) : (
-                  <div className="max-h-[380px] overflow-y-auto custom-scrollbar admin-scroll p-4 space-y-3 overscroll-contain">
+                  <div ref={bankStreamContainerRef} className="max-h-[380px] overflow-y-auto custom-scrollbar admin-scroll p-4 space-y-3 overscroll-contain">
                   {filteredBankInbox.map((item) => {
                     const matchedBooking = bookings.find((b) => b.id === item.matched_trip_id);
                     const isConfirmed = item.verification_state === "confirmed";
@@ -930,13 +1006,16 @@ function forwardBankEmailsToTripMate() {
                             </span>
                           </div>
 
-                          <span className="text-[10px] text-text-secondary font-mono">
-                            {new Date(item.created_at).toLocaleTimeString("en-IN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
-                            })}
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[10px] text-text-secondary font-mono bg-[#FBF9F5] px-2 py-0.5 rounded border border-[#E5E3DF]">
+                              {formatIstTimestamp(item.created_at)}
+                            </span>
+                            {isJustNow(item.created_at) && (
+                              <span className="rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.2 text-[9px] font-black uppercase tracking-wider animate-pulse">
+                                NEW • Just now
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Financial Attributes: Amount & 12-Digit UTR */}
@@ -1245,14 +1324,29 @@ function forwardBankEmailsToTripMate() {
           </div>
 
           <div className="rounded-xl border border-[#E5E3DF] bg-[#FFFFFF] shadow-xs overflow-hidden flex flex-col">
-            <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3">
+            <div className="px-4 py-3 border-b border-[#E5E3DF] bg-[#FFFFFF] shrink-0 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-[#1F1F1E] uppercase tracking-wider">Financial Transactions Ledger</span>
                 <span className="rounded-full bg-[#1F1F1E] px-2 py-0.5 text-[11px] font-bold text-white">
                   {filteredPayments.length}
                 </span>
+                <span className="rounded-full bg-[#1F1F1E] text-white px-2 py-0.5 text-[10px] font-bold">
+                  Latest First ↓
+                </span>
               </div>
-              <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={isRefreshingLatest}
+                  onClick={handleRefreshLatest}
+                  className="flex items-center gap-1.5 rounded-lg border border-[#E5E3DF] bg-[#FBF9F5] hover:bg-[#EBE9E4] px-2.5 py-1 text-xs font-bold text-[#1F1F1E] transition-colors shadow-xs disabled:opacity-50"
+                  title="Fetch newest payments and scroll to top"
+                >
+                  <RotateCw className={`h-3 w-3 text-[#1F1F1E] ${isRefreshingLatest ? "animate-spin" : ""}`} />
+                  <span>↻ Refresh Latest</span>
+                </button>
+                <span className="text-xs text-[#6E6D68]">Up to 5 visible · scroll inside table</span>
+              </div>
             </div>
 
             <div className="overflow-y-auto overflow-x-auto max-h-[360px] custom-scrollbar admin-scroll overscroll-contain">
@@ -1299,9 +1393,14 @@ function forwardBankEmailsToTripMate() {
                       <tr key={p.id} className="hover:bg-surface-container-low/40">
                         <td className="py-3.5 font-mono">
                           <span className="font-bold text-text-primary block">{p.invoice_number}</span>
-                          <span className="text-[10px] text-text-secondary block">
-                            {p.created_at ? new Date(p.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"}
+                          <span className="text-[10px] text-text-secondary block font-mono">
+                            {formatIstTimestamp(p.created_at)}
                           </span>
+                          {isJustNow(p.created_at) && (
+                            <span className="rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 px-1.5 py-0.2 text-[9px] font-black uppercase tracking-wider inline-block mt-0.5 animate-pulse">
+                              NEW • Just now
+                            </span>
+                          )}
                         </td>
                       <td className="py-3.5 font-mono font-bold text-primary-container">{p.booking_ref}</td>
                       <td className="py-3.5 font-semibold text-text-primary">{p.customer_name}</td>

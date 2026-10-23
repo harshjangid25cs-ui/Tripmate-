@@ -1270,6 +1270,7 @@ export interface Database {
           p_utr_number: string;
           p_payer_vpa?: string | null;
           p_extracted_trip_ref?: string | null;
+          p_received_at?: string | null;
         };
         Returns: Json;
       };

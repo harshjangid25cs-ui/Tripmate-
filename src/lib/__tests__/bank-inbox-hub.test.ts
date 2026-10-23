@@ -618,5 +618,69 @@ describe("Bank Webhooks Ingestion Routes (/api/webhooks/bank-sms & /api/webhooks
     expect(mockRpcCalls[0]?.args.p_amount).toBe(31624);
     expect(mockRpcCalls[0]?.args.p_utr_number).toBe("429183746515");
   });
+
+  it("strictly sorts bankMessagesInbox and payments lists in descending chronological order (newest at index 0)", async () => {
+    const { sortByLatestTimestamp } = await import("@/components/features/admin/PaymentsView");
+
+    // Unordered bank messages
+    const rawBankMessages = [
+      { id: "msg-1", created_at: "2026-10-21T10:00:00.000Z", utr_number: "111111111111" },
+      { id: "msg-2", created_at: "2026-10-23T18:45:00.000Z", utr_number: "222222222222" }, // newest
+      { id: "msg-3", created_at: "2026-10-20T08:30:00.000Z", utr_number: "333333333333" }, // oldest
+      { id: "msg-4", created_at: "2026-10-22T14:15:00.000Z", utr_number: "444444444444" },
+    ];
+
+    const sortedMessages = sortByLatestTimestamp(rawBankMessages);
+
+    // Assert index 0 is newest (23 Oct), last index is oldest (20 Oct)
+    expect(sortedMessages[0]?.id).toBe("msg-2");
+    expect(sortedMessages[0]?.utr_number).toBe("222222222222");
+    expect(sortedMessages[1]?.id).toBe("msg-4");
+    expect(sortedMessages[2]?.id).toBe("msg-1");
+    expect(sortedMessages[3]?.id).toBe("msg-3");
+
+    // Unordered payments with mixed created_at and confirmed_at
+    const rawPayments = [
+      { id: "pay-1", created_at: "2026-10-15T12:00:00.000Z", amount: 15000 },
+      { id: "pay-2", created_at: "2026-10-23T20:00:00.000Z", amount: 31624 }, // newest
+      { id: "pay-3", created_at: null, confirmed_at: "2026-10-23T19:30:00.000Z", amount: 22000 }, // 2nd newest via confirmed_at
+      { id: "pay-4", created_at: "2026-10-10T05:00:00.000Z", amount: 10000 }, // oldest
+    ];
+
+    const sortedPayments = sortByLatestTimestamp(rawPayments);
+
+    expect(sortedPayments[0]?.id).toBe("pay-2");
+    expect(sortedPayments[1]?.id).toBe("pay-3");
+    expect(sortedPayments[2]?.id).toBe("pay-1");
+    expect(sortedPayments[3]?.id).toBe("pay-4");
+  });
+
+  it("bank-sms webhook preserves and forwards optional custom receivedAt ISO timestamp", async () => {
+    const { NextRequest } = await import("next/server");
+    const { POST } = await import("@/app/api/webhooks/bank-sms/route");
+    const customTimestamp = "2026-10-23T12:34:56.789Z";
+
+    const req = new NextRequest("http://localhost/api/webhooks/bank-sms", {
+      method: "POST",
+      headers: {
+        "x-sms-secret": "tm_internal_bank_secret_2026",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        sender: "FamPay",
+        message: "You received Rs. 31,624.00 from rahul@okaxis via FamPay. UPI Ref: 429183746599. Trip: TM-492011",
+        receivedAt: customTimestamp,
+      }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.ok).toBe(true);
+    expect(mockRpcCalls.length).toBe(1);
+    expect(mockRpcCalls[0]?.fn).toBe("ingest_bank_payment_message");
+    expect(mockRpcCalls[0]?.args.p_utr_number).toBe("429183746599");
+    expect(mockRpcCalls[0]?.args.p_received_at).toBe(customTimestamp);
+  });
 });
 

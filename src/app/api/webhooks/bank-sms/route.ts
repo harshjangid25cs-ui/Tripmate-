@@ -55,16 +55,33 @@ export async function POST(request: NextRequest) {
   // 3. Parse input payload
   let rawBodyText = "";
   let sender = "";
+  let receivedAt = "";
 
   try {
     const contentType = request.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
-      const json = (await request.json()) as { message?: string; body?: string; text?: string; sender?: string };
+      const json = (await request.json()) as {
+        message?: string;
+        body?: string;
+        text?: string;
+        sender?: string;
+        receivedAt?: string;
+        timestamp?: string | number;
+        date?: string;
+      };
       rawBodyText = json.message || json.body || json.text || "";
       sender = json.sender || "SMS Forwarder";
+      const rawTimestamp = json.receivedAt || json.timestamp || json.date;
+      if (rawTimestamp) {
+        const parsed = new Date(rawTimestamp);
+        receivedAt = !isNaN(parsed.getTime()) ? parsed.toISOString() : new Date().toISOString();
+      } else {
+        receivedAt = new Date().toISOString();
+      }
     } else {
       rawBodyText = await request.text();
       sender = "SMS Forwarder";
+      receivedAt = new Date().toISOString();
     }
   } catch {
     return NextResponse.json({ error: "Failed to read request body" }, { status: 400 });
@@ -106,6 +123,7 @@ export async function POST(request: NextRequest) {
       p_utr_number: parseResult.utrNumber!,
       p_payer_vpa: parseResult.payerVpa || null,
       p_extracted_trip_ref: parseResult.tripRef || null,
+      p_received_at: receivedAt,
     });
 
     if (rpcErr) {
