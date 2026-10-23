@@ -711,9 +711,11 @@ const TRIPMATE_WEBHOOK_URL = "${typeof window !== "undefined" ? window.location.
 const WEBHOOK_SECRET = "tm_internal_bank_secret_2026";
 
 function forwardBankEmailsToTripMate() {
-  const query = 'is:unread (from:fampay.in OR from:hdfcbank.net OR from:sbi.co.in OR from:icicibank.com OR subject:"credited" OR subject:"payment received" OR subject:"credit")';
+  // Only inspect unread emails from recognized bank/fintech domains with credit/payment subjects
+  const query = 'is:unread (from:fampay.in OR from:famapp.in OR from:hdfcbank.net OR from:sbi.co.in OR from:icicibank.com OR from:axisbank.com OR from:kotak.com) (subject:"credited" OR subject:"received" OR subject:"credit" OR subject:"payment")';
   const threads = GmailApp.search(query, 0, 10);
-  Logger.log("Found " + threads.length + " unread threads matching bank query.");
+  Logger.log("Found " + threads.length + " unread bank credit threads.");
+
   for (let i = 0; i < threads.length; i++) {
     const msgs = threads[i].getMessages();
     for (let j = 0; j < msgs.length; j++) {
@@ -733,10 +735,12 @@ function forwardBankEmailsToTripMate() {
         };
         try {
           const resp = UrlFetchApp.fetch(TRIPMATE_WEBHOOK_URL, options);
-          Logger.log("TripMate Response (" + resp.getResponseCode() + "): " + resp.getContentText());
-          if (resp.getResponseCode() === 200) msg.markRead();
+          const statusCode = resp.getResponseCode();
+          // Log only the HTTP status code to prevent exposing UTR/transaction payload in plain text
+          Logger.log("TripMate Forward Status: " + statusCode + (statusCode === 200 ? " (Success)" : " (Check payload)"));
+          if (statusCode === 200) msg.markRead();
         } catch (e) {
-          Logger.log("Fetch error: " + e);
+          Logger.log("Fetch error (network): " + e);
         }
       }
     }
