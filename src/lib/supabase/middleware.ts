@@ -48,15 +48,22 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // If a stale wa_session cookie exists without a valid Supabase session, clear it
+  // and do not treat as authenticated, preventing ghost unauthenticated traveler states
+  if (!user && request.cookies.has("wa_session")) {
+    supabaseResponse.cookies.set("wa_session", "", {
+      path: "/",
+      maxAge: 0,
+      httpOnly: true,
+      sameSite: "lax",
+    });
+  }
+
   const hasCompletedOnboarding =
     request.cookies.get(ONBOARDING_COOKIE_NAME)?.value === "true";
 
   const hasAdminSessionCookie = Boolean(
     request.cookies.get("tripmate_admin_session")?.value
-  );
-
-  const hasWaSessionCookie = Boolean(
-    request.cookies.get("wa_session")?.value
   );
 
   const isAdminUser =
@@ -66,7 +73,7 @@ export async function updateSession(request: NextRequest) {
 
   const redirectPath = getAuthRedirectPath({
     pathname: request.nextUrl.pathname,
-    hasUser: Boolean(user) || hasWaSessionCookie,
+    hasUser: Boolean(user),
     hasCompletedOnboarding,
     isAdminUser,
   });

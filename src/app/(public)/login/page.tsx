@@ -333,7 +333,8 @@ function LoginForm() {
             {authMethod === "whatsapp" ? (
               <WhatsAppLogin
                 onSuccess={() => {
-                  window.location.assign("/home");
+                  const redirectTarget = searchParams.get("redirect") || "/home";
+                  window.location.assign(redirectTarget);
                 }}
               />
             ) : (

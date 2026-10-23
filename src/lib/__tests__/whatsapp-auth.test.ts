@@ -11,6 +11,34 @@ import { POST as verifyOtpHandler } from "@/app/api/auth/verify-otp/route";
 import { GET as meHandler } from "@/app/api/auth/me/route";
 import * as waSupabase from "@/lib/wa-auth/supabase";
 
+vi.mock("@supabase/ssr", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@supabase/ssr")>();
+  return {
+    ...actual,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    createServerClient: vi.fn((url: string, key: string, options: any) => ({
+      auth: {
+        verifyOtp: vi.fn().mockImplementation(async () => {
+          options?.cookies?.setAll?.([
+            {
+              name: "sb-mock-auth-token",
+              value: "mock-token-value",
+              options: { path: "/", httpOnly: true, sameSite: "lax" },
+            },
+          ]);
+          return {
+            data: {
+              session: { access_token: "mock-jwt-token" },
+              user: { id: "cust-1234-uuid", email: "9899887766@phone.tripmate.in" },
+            },
+            error: null,
+          };
+        }),
+      },
+    })),
+  };
+});
+
 describe("WhatsApp OTP Authentication - Comprehensive Test Suite", () => {
   describe("Layer 1: Unit & Cryptographic Logic", () => {
     it("newOtp() generates a valid 6-digit numeric string", () => {
@@ -233,6 +261,16 @@ describe("WhatsApp OTP Authentication - Comprehensive Test Suite", () => {
             insert: async () => ({ error: null }),
           };
         }
+        if (table === "profiles") {
+          return {
+            select: () => ({
+              eq: () => ({
+                maybeSingle: async () => ({ data: null, error: null }),
+              }),
+            }),
+            upsert: async () => ({ error: null }),
+          };
+        }
         return {};
       });
 
@@ -243,6 +281,10 @@ describe("WhatsApp OTP Authentication - Comprehensive Test Suite", () => {
           admin: {
             listUsers: async () => ({ data: { users: [] } }),
             createUser: async () => ({ data: null }),
+            generateLink: async () => ({
+              data: { properties: { hashed_token: "test-hashed-token" } },
+              error: null,
+            }),
           },
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -263,6 +305,7 @@ describe("WhatsApp OTP Authentication - Comprehensive Test Suite", () => {
 
       const setCookie = verifyRes.headers.get("set-cookie");
       expect(setCookie).toBeDefined();
+      expect(setCookie).toContain("sb-mock-auth-token=");
       expect(setCookie).toContain("wa_session=");
       expect(setCookie).toContain("HttpOnly");
 

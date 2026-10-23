@@ -108,7 +108,13 @@ export function ProfileView({
         keysToRemove.forEach((k) => window.localStorage.removeItem(k));
       }
       setNotifications([]);
-      await supabase.auth.signOut();
+      await Promise.allSettled([
+        supabase.auth.signOut(),
+        fetch("/api/auth/logout", { method: "POST" }),
+      ]);
+      if (typeof document !== "undefined") {
+        document.cookie = "wa_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+      }
       router.replace("/login");
       router.refresh();
     } catch {

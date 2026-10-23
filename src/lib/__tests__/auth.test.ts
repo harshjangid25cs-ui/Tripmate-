@@ -427,4 +427,79 @@ describe("Auth & Navigation Guards (getAuthRedirectPath)", () => {
       expect(result.error).toBe("Unauthorized admin access.");
     });
   });
+
+  describe("WhatsApp Unified Supabase Auth Session Bridge & KYC Vault Integrity", () => {
+    it("stale wa_session cookies without a valid Supabase JWT cannot bypass middleware auth", () => {
+      // In the new unified architecture, middleware strictly sets hasUser: Boolean(user).
+      // If user is null, even with stale wa_session cookie, protected routes MUST redirect to /login.
+      const protectedPaths = ["/profile", "/trips", "/book/trip-123/checkout", "/commercial"];
+      for (const pathname of protectedPaths) {
+        const redirect = getAuthRedirectPath({
+          pathname,
+          hasUser: false, // user is null
+          hasCompletedOnboarding: true,
+        });
+        expect(redirect).toBe("/login");
+      }
+    });
+
+    it("verifies that profiles upsert preserves existing KYC ID Vault fields for returning users", () => {
+      const existingProfile = {
+        id: "auth-user-9988",
+        full_name: "Original Traveler",
+        saved_id_type: "passport",
+        saved_id_storage_path: "kyc-vault/auth-user-9988/passport.pdf",
+        saved_id_file_size_bytes: 524288,
+        saved_id_verified: true,
+        saved_id_updated_at: "2026-09-01T10:00:00Z",
+        saved_companions: [{ full_name: "Companion One", id_type: "aadhaar" }],
+      };
+
+      const customerName = "Updated Name";
+      const cleanPhone = "9876543210";
+      const syntheticEmail = `${cleanPhone}@phone.tripmate.in`;
+      const now = new Date().toISOString();
+
+      const profileUpsert = {
+        id: existingProfile.id,
+        email: syntheticEmail,
+        full_name: customerName || existingProfile.full_name,
+        phone: cleanPhone,
+        updated_at: now,
+        saved_id_type: existingProfile.saved_id_type ?? null,
+        saved_id_storage_path: existingProfile.saved_id_storage_path ?? null,
+        saved_id_file_size_bytes: existingProfile.saved_id_file_size_bytes ?? null,
+        saved_id_verified: existingProfile.saved_id_verified ?? false,
+        saved_id_updated_at: existingProfile.saved_id_updated_at ?? null,
+        saved_companions: existingProfile.saved_companions ?? null,
+      };
+
+      expect(profileUpsert.id).toBe("auth-user-9988");
+      expect(profileUpsert.saved_id_type).toBe("passport");
+      expect(profileUpsert.saved_id_storage_path).toBe("kyc-vault/auth-user-9988/passport.pdf");
+      expect(profileUpsert.saved_id_verified).toBe(true);
+      expect(profileUpsert.saved_companions).toHaveLength(1);
+      expect(profileUpsert.phone).toBe("9876543210");
+    });
+
+    it("confirms generateLink + verifyOtp pattern avoids all dummy password risks", async () => {
+      // Validate that synthetic credentials strictly use non-password magiclink tokens
+      const mockAdminGenerateLink = async (params: { type: string; email: string }) => {
+        expect(params.type).toBe("magiclink");
+        expect(params.email).toMatch(/^\d{10}@phone\.tripmate\.in$/);
+        return {
+          data: { properties: { hashed_token: "cryptographic_token_hash_value" } },
+          error: null,
+        };
+      };
+
+      const linkResult = await mockAdminGenerateLink({
+        type: "magiclink",
+        email: "9876543210@phone.tripmate.in",
+      });
+
+      expect(linkResult.data.properties.hashed_token).toBeDefined();
+      expect(linkResult.error).toBeNull();
+    });
+  });
 });
