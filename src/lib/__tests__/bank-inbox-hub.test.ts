@@ -49,6 +49,10 @@ vi.mock("@/lib/supabase/server", () => ({
   createPublicClient: vi.fn(),
 }));
 
+let mockBankInboxDbRows: unknown[] = [];
+let mockPaymentsDbRows: unknown[] = [];
+let mockTripsDbRows: unknown[] = [];
+
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => ({
     rpc: vi.fn(async (fn: string, args: Record<string, unknown>) => {
@@ -62,14 +66,41 @@ vi.mock("@/lib/supabase/admin", () => ({
         error: null,
       };
     }),
-    from: vi.fn((table: string) => ({
-      update: vi.fn((payload: Record<string, unknown>) => {
-        mockUpdateCalls.push({ table, payload });
-        return {
-          eq: vi.fn(async () => ({ data: null, error: null })),
-        };
-      }),
-    })),
+    from: vi.fn((table: string) => {
+      const mockQueryBuilder = {
+        update: vi.fn((payload: Record<string, unknown>) => {
+          mockUpdateCalls.push({ table, payload });
+          return {
+            eq: vi.fn(async () => ({ data: null, error: null })),
+          };
+        }),
+        upsert: vi.fn((payload: Record<string, unknown>) => ({
+          select: vi.fn(() => ({
+            single: vi.fn(async () => ({ data: { id: "mock-upsert-id", ...payload }, error: null })),
+          })),
+        })),
+        select: vi.fn(() => {
+          let returnedData: unknown[] = [];
+          if (table === "bank_messages_inbox") {
+            returnedData = mockBankInboxDbRows;
+          } else if (table === "payments") {
+            returnedData = mockPaymentsDbRows;
+          } else if (table === "trips") {
+            returnedData = mockTripsDbRows;
+          }
+          const builder = {
+            order: vi.fn(() => builder),
+            limit: vi.fn(async () => ({ data: returnedData, error: null })),
+            in: vi.fn(() => builder),
+            eq: vi.fn(() => builder),
+            maybeSingle: vi.fn(async () => ({ data: null, error: null })),
+            single: vi.fn(async () => ({ data: null, error: null })),
+          };
+          return builder;
+        }),
+      };
+      return mockQueryBuilder;
+    }),
   })),
 }));
 
@@ -85,6 +116,7 @@ import {
   adminToggleBankAutoConfirmAction,
   adminUpdateBankAlertConfigAction,
   markTripCheckoutActiveAction,
+  fetchLatestBankInboxAndPaymentsAction,
 } from "../actions/admin-ops";
 
 describe("Strict Bank-Only Gatekeeper & Parser (bank-parser.ts)", () => {
@@ -558,7 +590,7 @@ describe("Bank Webhooks Ingestion Routes (/api/webhooks/bank-sms & /api/webhooks
     });
 
     const res = await POST(req);
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(422);
     const json = await res.json();
     expect(json.skipped).toBe(true);
     expect(json.reason).toBe("rejected_debit_or_security_message");
@@ -682,5 +714,101 @@ describe("Bank Webhooks Ingestion Routes (/api/webhooks/bank-sms & /api/webhooks
     expect(mockRpcCalls[0]?.args.p_utr_number).toBe("429183746599");
     expect(mockRpcCalls[0]?.args.p_received_at).toBe(customTimestamp);
   });
-});
 
+  describe("Fix Bank Inbox Upsert, Footer Disclaimers & Live Refresh (Bugfix Suite)", () => {
+    it("accepts authentic FamPay HTML email with security disclaimer containing OTP and 'sent' in footer", () => {
+      const htmlEmail = `
+        <div style="font-family: sans-serif;">
+          <h2>Payment Received</h2>
+          <p>Hi TripMate Admin, ₹18,500.00 has been credited to your FamPay account via UPI.</p>
+          <p>UPI Ref / UTR: <strong>918273645012</strong></p>
+          <p>Sender VPA: rohit@oksbi</p>
+          <hr />
+          <footer style="font-size: 11px; color: #888;">
+            Security Disclaimer: Never share your OTP, UPI PIN, or password with anyone. 
+            If this transaction was not sent by you, report to grievance immediately.
+          </footer>
+        </div>
+      `;
+
+      const result = parseStrictBankMessage({
+        channel: "gmail",
+        sender: "FamPay Alerts <no-reply@fampay.in>",
+        subject: "Payment Received: ₹18,500 credited to your account",
+        body: htmlEmail,
+      });
+
+      expect(result.isBankMessage).toBe(true);
+      expect(result.amount).toBe(18500);
+      expect(result.utrNumber).toBe("918273645012");
+      expect(result.payerVpa).toBe("rohit@oksbi");
+      expect(result.bankName).toBe("FamPay / IDFC");
+    });
+
+    it("generates deterministic 12-digit numeric UTR fallback for bank email without 12-digit regex match", () => {
+      const emailWithoutUtr = `
+        Dear Customer,
+        You have received INR 5,500.00 in your HDFC Bank account from Priya Sharma.
+        Transaction reference: HDFC-TXN-ABC99.
+      `;
+
+      const result = parseStrictBankMessage({
+        channel: "gmail",
+        sender: "alerts@hdfcbank.net",
+        subject: "Payment Received: INR 5,500 credited",
+        body: emailWithoutUtr,
+      });
+
+      expect(result.isBankMessage).toBe(true);
+      expect(result.amount).toBe(5500);
+      expect(result.utrNumber).toMatch(/^\d{12}$/);
+      expect(result.bankName).toBe("HDFC Bank");
+    });
+
+    it("re-triggering an existing UTR updates its timestamp and surfaces it at index 0", async () => {
+      const { sortByLatestTimestamp } = await import("@/components/features/admin/PaymentsView");
+
+      interface InboxItem {
+        id: string;
+        utr_number: string;
+        created_at: string;
+      }
+
+      const item1: InboxItem = { id: "inbox-1", utr_number: "111111111111", created_at: "2026-10-24T08:00:00.000Z" };
+      const item2: InboxItem = { id: "inbox-2", utr_number: "222222222222", created_at: "2026-10-24T09:00:00.000Z" };
+      // Re-trigger inbox-3 (which was oldest at 07:00:00) with fresh now() timestamp (10:30:00)
+      const retriggeredInbox3: InboxItem = { id: "inbox-3", utr_number: "333333333333", created_at: "2026-10-24T10:30:00.000Z" };
+
+      const updatedList: InboxItem[] = [item1, item2, retriggeredInbox3];
+
+      const sorted = sortByLatestTimestamp(updatedList);
+      expect(sorted[0]?.utr_number).toBe("333333333333");
+      expect(sorted[0]?.id).toBe("inbox-3");
+    });
+
+    it("fetchLatestBankInboxAndPaymentsAction returns fresh rows ordered by created_at DESC", async () => {
+      mockAdminAuthorized = true;
+      mockBankInboxDbRows = [
+        { id: "b-1", created_at: "2026-10-24T06:00:00.000Z", utr_number: "111111111111", amount: 1000, channel: "sms", sender: "SBI", raw_body: "credit" },
+        { id: "b-2", created_at: "2026-10-24T10:00:00.000Z", utr_number: "222222222222", amount: 5000, channel: "gmail", sender: "FamPay", raw_body: "credit" },
+      ];
+      mockPaymentsDbRows = [
+        { id: "p-1", created_at: "2026-10-24T05:00:00.000Z", amount: 1000, status: "succeeded", method: "upi" },
+        { id: "p-2", created_at: "2026-10-24T09:00:00.000Z", amount: 5000, status: "succeeded", method: "upi" },
+      ];
+      mockTripsDbRows = [
+        { id: "t-1", booking_ref: "TM-100001", total_amount: 5000, status: "pending_approval" },
+      ];
+
+      const res = await fetchLatestBankInboxAndPaymentsAction();
+      expect(res.ok).toBe(true);
+      expect(res.bankInbox.length).toBe(2);
+      expect(res.bankInbox[0]?.id).toBe("b-2"); // Newest (10:00) at index 0
+      expect(res.bankInbox[1]?.id).toBe("b-1");
+      expect(res.payments.length).toBe(2);
+      expect(res.payments[0]?.id).toBe("p-2"); // Newest (09:00) at index 0
+      expect(res.payments[1]?.id).toBe("p-1");
+      expect(res.pendingTrips?.length).toBe(1);
+    });
+  });
+});

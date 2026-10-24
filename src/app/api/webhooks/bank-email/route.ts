@@ -105,12 +105,15 @@ export async function POST(request: NextRequest) {
   });
 
   if (!parseResult.isBankMessage) {
-    // Non-bank noise is silently ignored and NEVER stored in DB
-    return NextResponse.json({
-      ok: true,
-      skipped: true,
-      reason: parseResult.reason || "Non-bank email ignored",
-    });
+    // Returns HTTP 422 so Google Apps Script logs the exact reason and does NOT falsely mark as read
+    return NextResponse.json(
+      {
+        ok: false,
+        skipped: true,
+        reason: parseResult.reason || "Non-bank email ignored by gatekeeper",
+      },
+      { status: 422 }
+    );
   }
 
   // 5. Ingest authentic bank payment credit
@@ -132,11 +135,41 @@ export async function POST(request: NextRequest) {
       p_received_at: receivedAt,
     });
 
+    let finalData = rpcRes;
+
+    // Direct fallback upsert if RPC returns error
     if (rpcErr) {
-      return NextResponse.json(
-        { error: `Database ingestion error: ${rpcErr.message}` },
-        { status: 500 }
-      );
+      console.warn("ingest_bank_payment_message RPC failed, executing direct upsert fallback:", rpcErr);
+      const cleanUtr = (parseResult.utrNumber || "").trim();
+      const { data: upsertData, error: upsertErr } = await supabase
+        .from("bank_messages_inbox")
+        .upsert(
+          {
+            channel: "gmail",
+            sender: parseResult.sender || "Bank / FamPay Gmail",
+            subject: parseResult.subject || null,
+            raw_body: parseResult.rawBody,
+            amount: parseResult.amount!,
+            utr_number: cleanUtr,
+            payer_vpa: parseResult.payerVpa || null,
+            extracted_trip_ref: parseResult.tripRef || null,
+            created_at: receivedAt || new Date().toISOString(),
+          },
+          { onConflict: "utr_number" }
+        )
+        .select()
+        .single();
+
+      if (upsertErr) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: `Database ingestion error: RPC (${rpcErr.message}) & Upsert (${upsertErr.message})`,
+          },
+          { status: 422 }
+        );
+      }
+      finalData = { ...upsertData, fallback_upsert: true };
     }
 
     revalidatePath("/admin");
@@ -144,10 +177,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      data: rpcRes,
+      data: finalData,
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ ok: false, error: message }, { status: 422 });
   }
 }

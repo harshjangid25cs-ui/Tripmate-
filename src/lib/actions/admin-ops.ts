@@ -6,6 +6,8 @@ import { requireAdmin } from "@/lib/admin/admin-auth";
 import { sendTransactionalEmail } from "@/lib/notifications/email";
 import type {
   AdminOperationalSnapshot,
+  BankMessageInboxRecord,
+  PaymentInvoiceRecord,
 } from "@/lib/admin/types";
 import {
   mapDatabaseTripToAdminBooking,
@@ -3247,6 +3249,7 @@ export async function adminIngestManualBankMessageAction(input: {
   sender?: string;
   subject?: string;
   rawBody: string;
+  receivedAt?: string;
 }): Promise<{
   ok: boolean;
   message?: string;
@@ -3280,12 +3283,7 @@ export async function adminIngestManualBankMessageAction(input: {
   const supabase = createAdminClient();
 
   try {
-    const { data: rpcRes, error: rpcErr } = await (
-      supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{
-        data: Record<string, unknown> | null;
-        error: { message: string } | null;
-      }>
-    )("ingest_bank_payment_message", {
+    const rpcArgs: Record<string, unknown> = {
       p_channel: input.channel,
       p_sender: parseResult.sender || (input.channel === "sms" ? "Bank SMS" : "Bank Gmail"),
       p_subject: parseResult.subject || null,
@@ -3294,10 +3292,45 @@ export async function adminIngestManualBankMessageAction(input: {
       p_utr_number: parseResult.utrNumber!,
       p_payer_vpa: parseResult.payerVpa || null,
       p_extracted_trip_ref: parseResult.tripRef || null,
-    });
+    };
+    if (input.receivedAt) {
+      rpcArgs.p_received_at = input.receivedAt;
+    }
 
+    const { data: rpcRes, error: rpcErr } = await (
+      supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{
+        data: Record<string, unknown> | null;
+        error: { message: string } | null;
+      }>
+    )("ingest_bank_payment_message", rpcArgs);
+
+    let finalData = rpcRes;
     if (rpcErr) {
-      return { ok: false, error: rpcErr.message || "Failed to ingest bank message into ledger." };
+      console.warn("Manual ingestion RPC error, executing direct fallback upsert:", rpcErr);
+      const cleanUtr = (parseResult.utrNumber || "").trim();
+      const { data: upsertData, error: upsertErr } = await supabase
+        .from("bank_messages_inbox")
+        .upsert(
+          {
+            channel: input.channel,
+            sender: parseResult.sender || (input.channel === "sms" ? "Bank SMS" : "Bank Gmail"),
+            subject: parseResult.subject || null,
+            raw_body: parseResult.rawBody,
+            amount: parseResult.amount!,
+            utr_number: cleanUtr,
+            payer_vpa: parseResult.payerVpa || null,
+            extracted_trip_ref: parseResult.tripRef || null,
+            created_at: input.receivedAt || new Date().toISOString(),
+          },
+          { onConflict: "utr_number" }
+        )
+        .select()
+        .single();
+
+      if (upsertErr) {
+        return { ok: false, error: rpcErr.message || "Failed to ingest bank message into ledger." };
+      }
+      finalData = { ...upsertData, fallback_upsert: true };
     }
 
     revalidatePath("/admin");
@@ -3306,7 +3339,7 @@ export async function adminIngestManualBankMessageAction(input: {
     return {
       ok: true,
       message: `Successfully verified & recorded ${parseResult.bankName || "Bank"} credit of ₹${parseResult.amount?.toLocaleString("en-IN")} (UTR: ${parseResult.utrNumber})`,
-      record: rpcRes || undefined,
+      record: finalData || undefined,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error ingesting bank payment message.";
@@ -3508,5 +3541,74 @@ export async function adminUpdateBankAlertConfigAction(input: {
   }
 }
 
+// ============================================================================
+// QUERY 30: fetchLatestBankInboxAndPaymentsAction
+// ============================================================================
 
+export async function fetchLatestBankInboxAndPaymentsAction(): Promise<{
+  ok: boolean;
+  bankInbox: BankMessageInboxRecord[];
+  payments: PaymentInvoiceRecord[];
+  pendingTrips?: { id: string; booking_ref: string; total_amount: number; status: string }[];
+  error?: string;
+}> {
+  noStore();
+  const { authorized } = await verifyAdminCaller();
+  if (!authorized) {
+    return { ok: false, bankInbox: [], payments: [], error: "Unauthorized admin access." };
+  }
 
+  const supabase = createAdminClient();
+
+  try {
+    const [bankRes, payRes, tripsRes] = await Promise.all([
+      supabase
+        .from("bank_messages_inbox")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase
+        .from("payments")
+        .select("*, trips(id, booking_ref, total_amount), invoices(invoice_number)")
+        .order("created_at", { ascending: false })
+        .limit(100),
+      supabase
+        .from("trips")
+        .select("id, booking_ref, total_amount, status")
+        .in("status", ["draft", "pending_approval"])
+        .order("created_at", { ascending: false })
+        .limit(50),
+    ]);
+
+    const bankInbox = (bankRes.data || []).map((b) =>
+      mapDatabaseBankMessageToAdminBankMessage(b as unknown as DbRecord)
+    );
+    const payments = (payRes.data || []).map((p) =>
+      mapDatabasePaymentToAdminPayment(p as unknown as DbRecord)
+    );
+
+    bankInbox.sort(
+      (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    );
+    payments.sort(
+      (a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+    );
+
+    const pendingTrips = (tripsRes.data || []).map((t) => ({
+      id: String(t.id),
+      booking_ref: String(t.booking_ref || ""),
+      total_amount: Number(t.total_amount) || 0,
+      status: String(t.status),
+    }));
+
+    return {
+      ok: true,
+      bankInbox,
+      payments,
+      pendingTrips,
+    };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to fetch bank inbox and payments.";
+    return { ok: false, bankInbox: [], payments: [], error: message };
+  }
+}

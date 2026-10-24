@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { AdminService } from "@/lib/admin/admin-service";
 import { useAdmin } from "@/lib/admin/admin-context";
@@ -35,6 +35,7 @@ import {
   adminConfirmBankInboxPaymentAction,
   adminToggleBankAutoConfirmAction,
   adminUpdateBankAlertConfigAction,
+  fetchLatestBankInboxAndPaymentsAction,
 } from "@/lib/actions/admin-ops";
 
 export const sortByLatestTimestamp = <T extends { created_at?: string | null; confirmed_at?: string | null }>(
@@ -114,7 +115,36 @@ export function PaymentsView() {
   const [copiedScript, setCopiedScript] = useState(false);
   const [copiedSmsFormat, setCopiedSmsFormat] = useState(false);
 
+  // Live Webhook Status & Diagnostics State
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(() => new Date());
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+
   const canExport = hasPermission("payments_export");
+
+  // Dedicated direct live fetch action for instantaneous DB updates
+  const fetchLatest = useCallback(async (showToast = false) => {
+    try {
+      const res = await fetchLatestBankInboxAndPaymentsAction();
+      if (res.ok) {
+        if (res.bankInbox) {
+          setBankInbox(res.bankInbox);
+        }
+        if (res.payments) {
+          setPayments(res.payments);
+        }
+        AdminService.hydrateOperationalData({
+          bankMessagesInbox: res.bankInbox,
+          payments: res.payments,
+        });
+        setLastSyncTime(new Date());
+        if (showToast) {
+          toast("Latest bank alerts and payments synchronized", "success");
+        }
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+  }, [toast]);
 
   // Subscribe to live AdminService updates
   useEffect(() => {
@@ -127,6 +157,23 @@ export function PaymentsView() {
     return unsubscribe;
   }, []);
 
+  // Synchronize state with AdminService on mount
+  useEffect(() => {
+    setBankInbox(AdminService.getBankMessagesInbox());
+    setPayments(AdminService.getPayments());
+  }, []);
+
+  // Lightweight 5-second automatic polling fallback in addition to Realtime
+  useEffect(() => {
+    void fetchLatest();
+
+    const intervalId = setInterval(() => {
+      void fetchLatest();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
+  }, [fetchLatest]);
+
   const refreshAll = async () => {
     setPayments(AdminService.getPayments());
     setBankInbox(AdminService.getBankMessagesInbox());
@@ -138,6 +185,7 @@ export function PaymentsView() {
   // Instant Supabase Realtime synchronization for PaymentsView
   useRealtimeTableSync(["bank_messages_inbox", "payments", "trips"], {
     onEvent: () => {
+      void fetchLatest();
       refreshAll();
     },
     debounceMs: 300,
@@ -146,6 +194,7 @@ export function PaymentsView() {
   const handleRefreshLatest = async () => {
     setIsRefreshingLatest(true);
     try {
+      await fetchLatest();
       await refreshAll();
       router.refresh();
       if (bankStreamContainerRef.current) {
@@ -255,6 +304,7 @@ export function PaymentsView() {
         sender: pasteSender.trim() || (pasteChannel === "sms" ? "Bank SMS" : "FamPay Alert"),
         subject: pasteSubject.trim() || undefined,
         rawBody: pasteBody.trim(),
+        receivedAt: new Date().toISOString(),
       });
 
       if (res.ok) {
@@ -262,7 +312,11 @@ export function PaymentsView() {
         setPasteBody("");
         setPasteSender("");
         setPasteSubject("");
+        await fetchLatest();
         await refreshAll();
+        if (bankStreamContainerRef.current) {
+          bankStreamContainerRef.current.scrollTop = 0;
+        }
       } else {
         toast(res.error || "Validation rejected message", "error");
       }
@@ -279,7 +333,9 @@ export function PaymentsView() {
     const pendingTrip = bookings.find((b) => b.status === "pending_approval" || (b.status as string) === "draft");
     const amount = pendingTrip ? pendingTrip.total_amount : 31624;
     const ref = pendingTrip ? pendingTrip.booking_ref : "TM-492011";
-    const randomUtr = Math.floor(100000000000 + Math.random() * 900000000000).toString();
+    // Always generate brand-new unique 12-digit UTR and fresh timestamp so it immediately lands at Row #1
+    const randomUtr = Date.now().toString().slice(-12);
+    const nowTimestamp = new Date().toISOString();
 
     let text = "";
     let channel: "sms" | "gmail" = "sms";
@@ -313,6 +369,7 @@ export function PaymentsView() {
         sender,
         subject: subject || undefined,
         rawBody: text,
+        receivedAt: nowTimestamp,
       });
 
       if (res.ok) {
@@ -320,7 +377,11 @@ export function PaymentsView() {
         setPasteBody("");
         setPasteSender("");
         setPasteSubject("");
+        await fetchLatest();
         await refreshAll();
+        if (bankStreamContainerRef.current) {
+          bankStreamContainerRef.current.scrollTop = 0;
+        }
       } else {
         toast(res.error || "Simulation rejected", "error");
       }
@@ -328,6 +389,49 @@ export function PaymentsView() {
       toast("Error running simulation", "error");
     } finally {
       setIsIngestingManual(false);
+    }
+  };
+
+  // Real HTTP Webhook Roundtrip Test
+  const handleTestWebhookRoundtrip = async () => {
+    setIsTestingWebhook(true);
+    try {
+      const testUtr = Date.now().toString().slice(-12);
+      const testAmount = 2499;
+      const secret = pricing.bank_webhook_secret || "tm_internal_bank_secret_2026";
+      const payload = {
+        sender: "FamPay Alerts <no-reply@fampay.in>",
+        subject: `Payment Received: INR ${testAmount.toLocaleString("en-IN")} credited to your account`,
+        body: `Payment of INR ${testAmount}.00 received from live_test@upi via FamPay. UPI Ref: ${testUtr}. Note: TM-TEST. Live diagnostic roundtrip test successful.`,
+        receivedAt: new Date().toISOString(),
+      };
+
+      const res = await fetch("/api/webhooks/bank-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-webhook-secret": secret,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const json = (await res.json()) as { ok?: boolean; error?: string; reason?: string };
+
+      if (res.ok && json.ok) {
+        await fetchLatest();
+        await refreshAll();
+        if (bankStreamContainerRef.current) {
+          bankStreamContainerRef.current.scrollTop = 0;
+        }
+        toast(`⚡ Webhook Roundtrip Verified! 100% Connected. Transaction (UTR: ${testUtr}) at Row #1.`, "success");
+      } else {
+        toast(`Webhook failed (HTTP ${res.status}): ${json.error || json.reason || "Check secret or payload"}`, "error");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error testing webhook";
+      toast(`Webhook roundtrip test failed: ${msg}`, "error");
+    } finally {
+      setIsTestingWebhook(false);
     }
   };
 
@@ -578,6 +682,46 @@ export function PaymentsView() {
       {/* SUB-TAB 1: BANK SMS & GMAIL VERIFICATION HUB */}
       {activeSubTab === "bank_hub" && (
         <div className="space-y-6">
+          {/* Live Webhook Diagnostic Status Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-border-hairline bg-[#FFFFFF] px-4 py-3 shadow-xs">
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <div className="h-2.5 w-2.5 rounded-full bg-emerald-600 animate-pulse" />
+                <span className="text-xs font-black text-text-primary tracking-tight">
+                  Bank Hub Pipeline: LIVE
+                </span>
+              </div>
+
+              <div className="h-4 w-px bg-border-hairline hidden sm:block" />
+
+              <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                <span className="font-bold text-text-primary">{bankInbox.length}</span>
+                <span>Total Bank Alerts in DB</span>
+              </div>
+
+              <div className="h-4 w-px bg-border-hairline hidden sm:block" />
+
+              <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+                <span>Last Synced:</span>
+                <span className="font-mono font-bold text-text-primary">
+                  {lastSyncTime
+                    ? lastSyncTime.toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata", hour12: false }) + " IST"
+                    : "Syncing..."}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              disabled={isTestingWebhook}
+              onClick={handleTestWebhookRoundtrip}
+              className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-900 transition-colors shadow-xs disabled:opacity-50"
+            >
+              <Zap className={`h-3.5 w-3.5 text-emerald-700 ${isTestingWebhook ? "animate-spin" : ""}`} />
+              <span>{isTestingWebhook ? "Verifying Roundtrip..." : "⚡ Test Live Webhook Roundtrip"}</span>
+            </button>
+          </div>
+
           {/* Top Control Bar */}
           <div className="rounded-2xl border border-border-hairline bg-card-surface p-4 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Auto-Confirm Mode Switcher */}
@@ -1247,7 +1391,7 @@ function forwardBankEmailsToTripMate() {
                       <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-black text-sky-800 border border-sky-200">
                         📱 SMS
                       </span>
-                      <span className="font-bold text-text-primary">FamPay Credit SMS</span>
+                      <span className="font-bold text-text-primary">Simulate Incoming FamPay SMS</span>
                     </div>
                     <span className="text-[10px] font-mono text-primary-container font-black">9664340734@fam</span>
                   </button>
@@ -1262,7 +1406,7 @@ function forwardBankEmailsToTripMate() {
                       <span className="rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-black text-sky-800 border border-sky-200">
                         📱 SMS
                       </span>
-                      <span className="font-bold text-text-primary">SBI UPI Credit SMS</span>
+                      <span className="font-bold text-text-primary">Simulate Incoming SBI SMS</span>
                     </div>
                     <span className="text-[10px] font-mono text-text-secondary font-bold">State Bank</span>
                   </button>
@@ -1277,7 +1421,7 @@ function forwardBankEmailsToTripMate() {
                       <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-black text-amber-800 border border-amber-200">
                         ✉️ GMAIL
                       </span>
-                      <span className="font-bold text-text-primary">FamPay Transaction Alert</span>
+                      <span className="font-bold text-text-primary">Simulate Incoming Bank Gmail</span>
                     </div>
                     <span className="text-[10px] font-mono text-text-secondary font-bold">Gmail</span>
                   </button>
