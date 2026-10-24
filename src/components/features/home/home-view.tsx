@@ -8,6 +8,7 @@ import { getDestinationImageUrl, getCircuitImageUrl } from "@/lib/data/images";
 import { formatCurrency } from "@/lib/format";
 import { toggleSavedItem, getSavedItemIds } from "@/lib/data/saved-items";
 import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
+import { PwaInstallButton } from "@/components/features/pwa/PwaInstallManager";
 
 interface HomeViewProps {
   initialDestinations: Destination[];
@@ -163,6 +164,9 @@ export function HomeView({
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 1-Tap PWA App Install Button */}
+          <PwaInstallButton />
+
           {/* Notifications Button */}
           <div className="relative">
             <button

@@ -9,6 +9,7 @@ import { cancelTripBooking } from "@/lib/actions/trips";
 import { formatCurrency, formatDateRange } from "@/lib/format";
 import { getHotelImageUrl } from "@/lib/data/images";
 import { useRealtimeTableSync } from "@/lib/supabase/use-realtime-sync";
+import { PwaInstallButton } from "@/components/features/pwa/PwaInstallManager";
 
 interface RecentTripsViewProps {
   initialTrips: UserTripSummary[];
@@ -150,6 +151,7 @@ export function RecentTripsView({ initialTrips }: RecentTripsViewProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            <PwaInstallButton />
             <Link
               href="/profile"
               className="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-text-primary hover:bg-surface-container-high transition-colors"

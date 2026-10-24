@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CompanyMembershipInfo } from "@/lib/data/commercial-types";
 import { createCommercialDraftAction } from "@/lib/actions/commercial";
+import { PwaInstallButton } from "@/components/features/pwa/PwaInstallManager";
 
 interface CommercialIntroViewProps {
   membership: CompanyMembershipInfo | null;
@@ -55,6 +56,7 @@ export function CommercialIntroView({ membership }: CommercialIntroViewProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <PwaInstallButton />
             {membership?.company && (
               <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-surface-container text-[11px] font-semibold text-text-secondary">
                 {membership.company.name}

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { FloatingMascotTrigger } from "@/components/features/ai-companion/FloatingMascotTrigger";
+import { PwaInstallManager } from "@/components/features/pwa/PwaInstallManager";
 import "./globals.css";
 
 const inter = Inter({
@@ -12,6 +13,14 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "TripMate — Plan. Ride. Stay.",
   description: "Curated road trips, boutique heritage stays, and verified highway stops across India.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "TripMate",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export const viewport: Viewport = {
@@ -20,7 +29,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#FAF9F7",
+  themeColor: "#FF5E1E",
 };
 
 export default function RootLayout({
@@ -41,8 +50,10 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface font-sans text-text-primary antialiased selection:bg-primary-container selection:text-white">
-        {children}
-        <FloatingMascotTrigger />
+        <PwaInstallManager>
+          {children}
+          <FloatingMascotTrigger />
+        </PwaInstallManager>
       </body>
     </html>
   );

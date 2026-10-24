@@ -17,6 +17,7 @@ import {
   markNotificationReadAction,
   markAllNotificationsReadAction,
 } from "@/lib/actions/profile";
+import { PwaInstallButton } from "@/components/features/pwa/PwaInstallManager";
 
 interface ProfileViewProps {
   initialProfile: UserProfileData;
@@ -223,6 +224,9 @@ export function ProfileView({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {/* 1-Tap PWA App Install Button */}
+          <PwaInstallButton />
+
           {/* Notifications Bell */}
           <button
             type="button"
