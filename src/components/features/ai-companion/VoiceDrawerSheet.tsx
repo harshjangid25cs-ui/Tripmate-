@@ -5,6 +5,10 @@ import { useRouter, usePathname } from "next/navigation";
 import { MascotCharacter, type MascotState } from "./MascotCharacter";
 import { useVoiceRecording } from "@/lib/hooks/use-voice-recording";
 import type { EvonAction } from "@/lib/ai/evon-router";
+import {
+  createInitialSessionState,
+  type VoiceBookingSessionState,
+} from "@/lib/ai/travel-agent-state";
 
 export interface MessageItem {
   id: string;
@@ -33,8 +37,12 @@ export function VoiceDrawerSheet({
   const [mascotState, setInternalMascotState] = useState<MascotState>("idle");
   const [preferredLang, setPreferredLang] = useState<"Hinglish" | "EN">("Hinglish");
   const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [continuousCallMode, setContinuousCallMode] = useState<boolean>(false);
   const [textInput, setTextInput] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [sessionState, setSessionState] = useState<VoiceBookingSessionState>(
+    createInitialSessionState()
+  );
 
   // Sync external state if provided
   useEffect(() => {
@@ -55,7 +63,7 @@ export function VoiceDrawerSheet({
     {
       id: "initial-matey",
       sender: "assistant",
-      text: "Hi Harsh! I can help with your Jaipur trip or plan your next adventure.",
+      text: "Namaste! Main Matey hoon, aapka TripMate travel agent. Bataiye, agli chhuttiyon mein kahan chalna hai aur kitne din ka plan hai?",
       action: {
         type: "NAVIGATE_OR_FILTER",
         targetUrl: "/destinations/jaipur",
@@ -130,11 +138,12 @@ export function VoiceDrawerSheet({
           formData.append("audio", audioBlob, "user_recording.webm");
         }
         if (fallbackText) {
-          formData.append("text", fallbackText);
+          formData.append("textOverride", fallbackText);
         }
 
         formData.append("currentPath", pathname);
         formData.append("language", preferredLang === "Hinglish" ? "code-mixed" : "en-IN");
+        formData.append("sessionState", JSON.stringify(sessionState));
 
         const res = await fetch("/api/ai/voice", {
           method: "POST",
@@ -147,7 +156,21 @@ export function VoiceDrawerSheet({
 
         const data = await res.json();
 
-        // Append user voice message
+        // Update session state
+        if (data.updatedSessionState) {
+          setSessionState(data.updatedSessionState);
+        }
+
+        // Live Background UI Sync / Navigation
+        if (data.uiAction?.targetUrl) {
+          if (data.uiAction.autoNavigate) {
+            router.push(data.uiAction.targetUrl);
+          } else {
+            router.refresh();
+          }
+        }
+
+        // Append user message
         const userMsg: MessageItem = {
           id: `user-${Date.now()}`,
           sender: "user",
@@ -166,18 +189,32 @@ export function VoiceDrawerSheet({
 
         setMessages((prev) => [...prev, userMsg, assistantMsg]);
 
-        // Trigger success reaction
-        triggerSuccessState();
+        // Trigger reaction
+        if (data.mascotState === "success") {
+          triggerSuccessState();
+        }
 
         // Audio playback
         if (data.audioBase64 && !isMuted) {
-          updateMascotState("guiding");
+          updateMascotState(data.mascotState === "success" ? "success" : "guiding");
           const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
           currentAudioRef.current = audio;
 
           audio.onended = () => {
-            updateMascotState("idle");
             currentAudioRef.current = null;
+            if (continuousCallMode) {
+              // Soft transition back into listening for continuous agent call mode
+              setTimeout(async () => {
+                try {
+                  updateMascotState("listening");
+                  await startRecording();
+                } catch {
+                  updateMascotState("idle");
+                }
+              }, 400);
+            } else {
+              updateMascotState("idle");
+            }
           };
 
           audio.onerror = () => {
@@ -208,7 +245,18 @@ export function VoiceDrawerSheet({
         setIsProcessing(false);
       }
     },
-    [pathname, preferredLang, isMuted, stopCurrentAudio, triggerSuccessState, updateMascotState]
+    [
+      pathname,
+      preferredLang,
+      sessionState,
+      isMuted,
+      continuousCallMode,
+      router,
+      startRecording,
+      stopCurrentAudio,
+      triggerSuccessState,
+      updateMascotState,
+    ]
   );
 
   // Toggle microphone recording
@@ -262,8 +310,8 @@ export function VoiceDrawerSheet({
       {/* Sliding Bottom Sheet (Mobile) & Floating Dialog (Desktop) */}
       <div
         className="fixed z-[120] bg-[#FFFFFF] border-t-2 md:border-2 border-[#1F1F1E] flex flex-col overflow-hidden shadow-2xl transition-transform duration-300
-          inset-x-0 bottom-0 h-[500px] rounded-t-3xl
-          md:inset-auto md:bottom-24 md:right-6 md:w-[400px] md:h-[550px] md:rounded-2xl"
+          inset-x-0 bottom-0 h-[560px] rounded-t-3xl
+          md:inset-auto md:bottom-24 md:right-6 md:w-[420px] md:h-[600px] md:rounded-2xl"
         role="dialog"
         aria-modal="true"
         aria-label="TripMate AI Companion Matey"
@@ -285,18 +333,35 @@ export function VoiceDrawerSheet({
               />
             </div>
             <div>
-              <div className="font-bold text-sm text-[#1F1F1E]">Your TripMate</div>
+              <div className="font-bold text-sm text-[#1F1F1E]">
+                <span>Your TripMate</span> <span className="text-xs font-normal text-[#5A5956]">• Matey</span>
+              </div>
               <div className="flex items-center gap-1.5 text-[11px] text-[#5A5956]">
                 <span className="w-2 h-2 rounded-full bg-[#16A34A] inline-block" />
-                <span className="font-medium text-[#16A34A]">Online</span>
+                <span className="font-medium text-[#16A34A]">Live Agent</span>
                 <span>•</span>
-                <span>Ready to help</span>
+                <span>{continuousCallMode ? "Call Active" : "Online"}</span>
               </div>
             </div>
           </div>
 
-          {/* Right: Language toggle, Audio Mute & Close Button */}
+          {/* Right: Controls (Continuous Mode, Language, Audio, Close) */}
           <div className="flex items-center gap-1.5">
+            {/* Continuous Agent Call Mode Toggle */}
+            <button
+              type="button"
+              onClick={() => setContinuousCallMode((prev) => !prev)}
+              className={`text-xs font-semibold px-2 py-1 rounded-md border transition-colors flex items-center gap-1 ${
+                continuousCallMode
+                  ? "bg-[#1F1F1E] text-white border-[#1F1F1E]"
+                  : "bg-[#FFFFFF] text-[#1F1F1E] border-[#EBE9E4] hover:bg-[#FBF9F5]"
+              }`}
+              title="Continuous call mode: automatically listens when Matey finishes speaking"
+            >
+              <span>📞</span>
+              <span className="hidden sm:inline">Call</span>
+            </button>
+
             <button
               type="button"
               onClick={() => setPreferredLang((prev) => (prev === "Hinglish" ? "EN" : "Hinglish"))}
@@ -328,6 +393,89 @@ export function VoiceDrawerSheet({
               ×
             </button>
           </div>
+        </div>
+
+        {/* Live Trip Draft Receipt Card */}
+        <div
+          data-testid="live-trip-receipt-card"
+          className="shrink-0 bg-[#FBF9F5] border-b border-[#EBE9E4] px-4 py-2.5 flex flex-col gap-1.5 select-none"
+        >
+          <div className="flex items-center justify-between text-[11px] font-bold text-[#1F1F1E]">
+            <span className="flex items-center gap-1">
+              <span>📋</span>
+              <span>Live Trip Draft</span>
+            </span>
+            <span className="text-[#FF5E1E] font-bold">
+              {sessionState.totalEstimatedPrice
+                ? `₹${sessionState.totalEstimatedPrice.toLocaleString("en-IN")}`
+                : "Estimating ₹..."}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5 text-[11px]">
+            {/* Destination Slot */}
+            <div
+              className={`px-2 py-1 rounded border transition-colors flex items-center gap-1.5 ${
+                sessionState.destinationName
+                  ? "bg-[#FFFFFF] border-[#1F1F1E] text-[#1F1F1E] font-medium"
+                  : "bg-[#FFFFFF] border-[#EBE9E4] text-[#6B7280]"
+              }`}
+            >
+              <span>📍</span>
+              <span className="truncate">{sessionState.destinationName || "Destination"}</span>
+            </div>
+
+            {/* Days & Travelers Slot */}
+            <div
+              className={`px-2 py-1 rounded border transition-colors flex items-center gap-1.5 ${
+                sessionState.durationDays
+                  ? "bg-[#FFFFFF] border-[#1F1F1E] text-[#1F1F1E] font-medium"
+                  : "bg-[#FFFFFF] border-[#EBE9E4] text-[#6B7280]"
+              }`}
+            >
+              <span>📅</span>
+              <span className="truncate">
+                {sessionState.durationDays ? `${sessionState.durationDays} Days` : "Days"} •{" "}
+                {sessionState.travelerCount ? `${sessionState.travelerCount} Pax` : "Pax"}
+              </span>
+            </div>
+
+            {/* Hotel Slot */}
+            <div
+              className={`px-2 py-1 rounded border transition-colors flex items-center gap-1.5 ${
+                sessionState.selectedHotelName
+                  ? "bg-[#FFFFFF] border-[#1F1F1E] text-[#1F1F1E] font-medium"
+                  : "bg-[#FFFFFF] border-[#EBE9E4] text-[#6B7280]"
+              }`}
+            >
+              <span>🏨</span>
+              <span className="truncate">{sessionState.selectedHotelName || "Hotel"}</span>
+            </div>
+
+            {/* Vehicle Slot */}
+            <div
+              className={`px-2 py-1 rounded border transition-colors flex items-center gap-1.5 ${
+                sessionState.selectedVehicleName
+                  ? "bg-[#FFFFFF] border-[#1F1F1E] text-[#1F1F1E] font-medium"
+                  : "bg-[#FFFFFF] border-[#EBE9E4] text-[#6B7280]"
+              }`}
+            >
+              <span>🚗</span>
+              <span className="truncate">{sessionState.selectedVehicleName || "Cab"}</span>
+            </div>
+          </div>
+
+          {/* Checkout CTA banner if trip is ready */}
+          {sessionState.currentStage === "ready_for_checkout" && sessionState.tripId && (
+            <button
+              type="button"
+              onClick={() => router.push(`/book/${sessionState.tripId}/checkout`)}
+              className="w-full bg-[#FF5E1E] hover:bg-[#E04D12] text-white text-xs font-bold py-1.5 px-3 rounded-lg shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1 mt-0.5 cursor-pointer"
+            >
+              <span>Proceed to Checkout (₹{sessionState.totalEstimatedPrice?.toLocaleString("en-IN")})</span>
+              <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+            </button>
+          )}
         </div>
 
         {/* Message & Conversation Canvas */}
@@ -374,23 +522,21 @@ export function VoiceDrawerSheet({
             </div>
           ))}
 
-          {/* Context Card as in image_5.png */}
+          {/* Quick Context Card */}
           <div
-            onClick={() => handleQuickPrompt("Explore Jaipur itinerary, places and budget")}
+            onClick={() => handleQuickPrompt("Explore Jaipur 3 days itinerary with Innova cab")}
             className="bg-[#FFFFFF] border border-[#EBE9E4] rounded-xl p-3 shadow-sm hover:border-[#1F1F1E] transition-colors cursor-pointer flex items-center gap-3 select-none"
             role="button"
             tabIndex={0}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
-                handleQuickPrompt("Explore Jaipur itinerary, places and budget");
+                handleQuickPrompt("Explore Jaipur 3 days itinerary with Innova cab");
               }
             }}
           >
-            {/* Heritage Fort/Palace Thumbnail */}
             <div className="w-12 h-12 rounded-lg bg-[#FAF9F7] border border-[#EBE9E4] overflow-hidden shrink-0 flex items-center justify-center">
               <span className="material-symbols-outlined text-[#1F1F1E] text-2xl">fort</span>
             </div>
-            {/* Text description */}
             <div className="flex-1 min-w-0">
               <div className="font-bold text-xs text-[#1F1F1E] truncate">
                 Want to explore Jaipur?
@@ -408,27 +554,27 @@ export function VoiceDrawerSheet({
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs select-none">
             <button
               type="button"
-              onClick={() => handleQuickPrompt("Plan my day in Jaipur")}
-              className="shrink-0 bg-[#FBF9F5] hover:bg-[#EBE9E4] border border-[#EBE9E4] text-[#1F1F1E] font-medium rounded-full px-3 py-1.5 text-xs transition-colors flex items-center gap-1.5"
-            >
-              <span>📅</span>
-              <span>Plan my day</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickPrompt("Check budget for 3-day Jaipur trip")}
-              className="shrink-0 bg-[#FBF9F5] hover:bg-[#EBE9E4] border border-[#EBE9E4] text-[#1F1F1E] font-medium rounded-full px-3 py-1.5 text-xs transition-colors flex items-center gap-1.5"
-            >
-              <span>📊</span>
-              <span>Check budget</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickPrompt("Find places to visit in Jaipur")}
+              onClick={() => handleQuickPrompt("Hum 4 log Jaipur 3 din ke liye jana chahte hain")}
               className="shrink-0 bg-[#FBF9F5] hover:bg-[#EBE9E4] border border-[#EBE9E4] text-[#1F1F1E] font-medium rounded-full px-3 py-1.5 text-xs transition-colors flex items-center gap-1.5"
             >
               <span>📍</span>
-              <span>Find places</span>
+              <span>4 log Jaipur 3 din</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickPrompt("Shahpura Haveli aur Innova lock kar do")}
+              className="shrink-0 bg-[#FBF9F5] hover:bg-[#EBE9E4] border border-[#EBE9E4] text-[#1F1F1E] font-medium rounded-full px-3 py-1.5 text-xs transition-colors flex items-center gap-1.5"
+            >
+              <span>🏨</span>
+              <span>Shahpura Haveli + Innova</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleQuickPrompt("Payment pe le chalo checkout kar do")}
+              className="shrink-0 bg-[#FBF9F5] hover:bg-[#EBE9E4] border border-[#EBE9E4] text-[#1F1F1E] font-medium rounded-full px-3 py-1.5 text-xs transition-colors flex items-center gap-1.5"
+            >
+              <span>💳</span>
+              <span>Checkout now</span>
             </button>
           </div>
 
@@ -510,7 +656,7 @@ export function VoiceDrawerSheet({
               />
             </div>
 
-            {/* Red / Orange Circular Submit Button as in image_5.png */}
+            {/* Red / Orange Circular Submit Button */}
             <button
               type="submit"
               disabled={!textInput.trim() || isProcessing}
