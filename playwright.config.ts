@@ -39,11 +39,6 @@ export default defineConfig({
       name: "chromium",
       use: {
         browserName: "chromium",
-        launchOptions: {
-          args: [
-            "--host-resolver-rules=MAP jqywwuzycnyjidiescue.supabase.co 104.18.38.10",
-          ],
-        },
       },
     },
   ],

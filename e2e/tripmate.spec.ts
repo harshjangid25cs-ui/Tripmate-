@@ -83,10 +83,10 @@ test.describe("TripMate End-to-End Acceptance Suite", () => {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, "02_home_catalog.png") });
 
     // Assert exactly the 4 seeded destinations from DB
-    await expect(page.locator("text=Jaipur")).toBeVisible();
-    await expect(page.locator("text=Udaipur")).toBeVisible();
-    await expect(page.locator("text=Munnar")).toBeVisible();
-    await expect(page.locator("text=Hampi")).toBeVisible();
+    await expect(page.locator("text=Jaipur").first()).toBeVisible();
+    await expect(page.locator("text=Udaipur").first()).toBeVisible();
+    await expect(page.locator("text=Munnar").first()).toBeVisible();
+    await expect(page.locator("text=Hampi").first()).toBeVisible();
     await expect(page.locator("text=Coorg")).not.toBeVisible();
     await expect(page.locator("text=Spiti")).not.toBeVisible();
 

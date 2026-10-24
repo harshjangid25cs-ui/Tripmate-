@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { FloatingMascotTrigger } from "@/components/features/ai-companion/FloatingMascotTrigger";
 import "./globals.css";
 
 const inter = Inter({
@@ -41,6 +42,7 @@ export default function RootLayout({
       </head>
       <body className="bg-surface font-sans text-text-primary antialiased selection:bg-primary-container selection:text-white">
         {children}
+        <FloatingMascotTrigger />
       </body>
     </html>
   );
