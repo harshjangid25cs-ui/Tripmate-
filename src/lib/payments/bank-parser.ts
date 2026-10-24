@@ -29,6 +29,9 @@ export interface StrictBankMessageResult {
   rawBody: string;
 }
 
+export const INDIAN_TRAI_DLT_SENDER_REGEX = /^[A-Z]{2}-[A-Z0-9]{5,8}(?:-[A-Z])?$/i;
+export const INDIAN_TRAI_DLT_MATCH_REGEX = /[A-Z]{2}-[A-Z0-9]{5,8}(?:-[A-Z])?/i;
+
 export const BANK_UPI_ALLOWLIST = [
   "sbi",
   "state bank",
@@ -74,6 +77,8 @@ export const ALLOWED_BANK_DOMAINS = [
 
 const REJECT_PATTERNS = [
   /\bdebited\b/i,
+  /\bamt\s+sent\b/i,
+  /\bamount\s+sent\b/i,
   /\bsent\s+to\b/i,
   /\bpaid\s+to\b/i,
   /\bwithdrawn\b/i,
@@ -87,6 +92,10 @@ const REJECT_PATTERNS = [
 
 const HARD_DEBIT_OR_FAILURE_PATTERNS = [
   /\bdebited\b/i,
+  /\bamt\s+sent\b/i,
+  /\bamount\s+sent\b/i,
+  /\bsent\s+to\b/i,
+  /\bpaid\s+to\b/i,
   /\bwithdrawn\b/i,
   /\bcollect\s+request\b/i,
   /\bfailed\b/i,
@@ -167,14 +176,17 @@ function identifyBankName(text: string, sender?: string): string {
   if (senderLower.includes("baroda") || senderLower.includes("bob")) {
     return "Bank of Baroda";
   }
+  if (senderLower.includes("canara") || senderLower.includes("canbnk")) {
+    return "Canara Bank";
+  }
+  if (senderLower.includes("paytm") || senderLower.includes("paytmb")) {
+    return "Paytm Payments Bank";
+  }
   if (senderLower.includes("gpay") || senderLower.includes("google pay")) {
     return "Google Pay";
   }
   if (senderLower.includes("phonepe")) {
     return "PhonePe UPI";
-  }
-  if (senderLower.includes("paytm")) {
-    return "Paytm Payments Bank";
   }
 
   // Fallback to body inspection
@@ -215,6 +227,9 @@ function identifyBankName(text: string, sender?: string): string {
   if (lower.includes("baroda") || lower.includes("bob")) {
     return "Bank of Baroda";
   }
+  if (lower.includes("canara") || lower.includes("canbnk")) {
+    return "Canara Bank";
+  }
   return "Verified Bank / UPI";
 }
 
@@ -227,7 +242,7 @@ function extractAmount(text: string): number | null {
 
   // Pattern 1: credited by/with [Rs./INR/₹] 12,215.00
   const matchCredited = preBalanceText.match(
-    /(?:credited\s+(?:by|with)?\s*(?:Rs\.?|INR|₹)?\s*|received\s+(?:Rs\.?|INR|₹)?\s*|deposit(?:ed)?\s+(?:Rs\.?|INR|₹)?\s*)([0-9,]+(?:\.[0-9]{1,2})?)/i
+    /(?:credited\s+(?:by|with|for)?\s*(?:Rs\.?|INR|₹)?\s*|received\s*(?:amount\s*of)?\s*(?:Rs\.?|INR|₹)?\s*|deposit(?:ed)?\s+(?:Rs\.?|INR|₹)?\s*)([0-9,]+(?:\.[0-9]{1,2})?)/i
   );
   if (matchCredited?.[1]) {
     const val = parseFloat(matchCredited[1].replace(/,/g, ""));
@@ -236,7 +251,7 @@ function extractAmount(text: string): number | null {
 
   // Pattern 2: [Rs./INR/₹] 12,215.00 credited
   const matchAmountCredited = preBalanceText.match(
-    /(?:Rs\.?|INR|₹)\s*([0-9,]+(?:\.[0-9]{1,2})?)\s*(?:has\s+been\s+)?credited/i
+    /(?:Rs\.?|INR|₹)\s*([0-9,]+(?:\.[0-9]{1,2})?)\s*(?:has\s+been\s+|is\s+)?credited/i
   );
   if (matchAmountCredited?.[1]) {
     const val = parseFloat(matchAmountCredited[1].replace(/,/g, ""));
@@ -277,7 +292,7 @@ function extractAmount(text: string): number | null {
 function extractUtr(text: string): string | null {
   // Pattern 1: explicit label like Ref No / UTR / RRN / UPI Ref / Txn ID
   const labeledMatch = text.match(
-    /(?:ref(?:erence)?(?:\s*(?:no\.?|id|num))?|utr|rrn|upi\s*(?:ref|trans(?:action)?(?:\s*id)?|id|no\.?)|txni?d?|txn)\s*[:\/-]?\s*(\d{12})\b/i
+    /(?:ref(?:erence)?(?:\s*(?:no\.?|id|num|code))?|utr|rrn|upi\s*(?:ref|reference|trans(?:action)?(?:\s*id)?|id|no\.?)|txni?d?|txn)\s*[:\/-]?\s*(\d{12})\b/i
   );
   if (labeledMatch?.[1] && /^\d{12}$/.test(labeledMatch[1])) {
     return labeledMatch[1];
@@ -289,7 +304,13 @@ function extractUtr(text: string): string | null {
     return upiDelimitedMatch[1];
   }
 
-  // Pattern 3: Isolated 12-digit number (not preceded by date or phone code)
+  // Pattern 3: UPI with intermediate codes (e.g. UPI/CR/429183746512)
+  const upiPathMatch = text.match(/(?:by\s+upi|upi)(?:[^\d]{1,10})(\d{12})\b/i);
+  if (upiPathMatch?.[1] && /^\d{12}$/.test(upiPathMatch[1])) {
+    return upiPathMatch[1];
+  }
+
+  // Pattern 4: Isolated 12-digit number (not preceded by date or phone code)
   const standaloneMatches = text.match(/\b\d{12}\b/g);
   if (standaloneMatches) {
     for (const match of standaloneMatches) {
@@ -344,8 +365,12 @@ export function parseStrictBankMessage(input: ParseStrictBankMessageInput): Stri
   const combined = `${input.sender || ""} ${cleanedSubject} ${cleanedBody}`.trim();
   const lower = combined.toLowerCase();
 
-  // RULE 1: Bank/UPI Service Allowlist Check
-  const hasBankSignature = BANK_UPI_ALLOWLIST.some((keyword) => lower.includes(keyword));
+  // RULE 1: Bank/UPI Service Allowlist Check & Indian TRAI DLT Check
+  const isTraiSender = input.sender ? INDIAN_TRAI_DLT_MATCH_REGEX.test(input.sender.trim()) : false;
+  const hasBankSignature =
+    isTraiSender ||
+    BANK_UPI_ALLOWLIST.some((keyword) => lower.includes(keyword));
+
   if (!hasBankSignature) {
     return {
       isBankMessage: false,
@@ -429,13 +454,23 @@ export function parseStrictBankMessage(input: ParseStrictBankMessageInput): Stri
     };
   }
 
-  // Extract UTR or use flexible fallback for bank emails
+  // Extract UTR or use flexible fallback for bank messages with alphanumeric references or bank emails
   let utrNumber = extractUtr(combined);
 
-  // Flexible UTR Fallback for Bank Emails & Testing
+  // Flexible UTR Fallback for Alphanumeric Bank References & Testing
   if (!utrNumber || !/^\d{12}$/.test(utrNumber)) {
+    const alphaRefMatch = combined.match(
+      /(?:ref(?:erence)?(?:\s*(?:no\.?|id|num|code))?|utr|rrn|upi\s*(?:ref|reference|trans(?:action)?(?:\s*id)?|id|no\.?)|txni?d?|txn)\s*[:\/-]?\s*([a-zA-Z0-9\-_]{4,40})\b/i
+    );
+    // An alphanumeric reference must contain letters (e.g. SBIN123456, CMS98765).
+    // Purely numeric codes that are not 12 digits (e.g. 10-digit or 14-digit) are invalid numeric UTRs.
+    const hasAlphanumericRef = Boolean(alphaRefMatch?.[1] && /[a-zA-Z]/.test(alphaRefMatch[1]));
     const isAllowedBankDomain = ALLOWED_BANK_DOMAINS.some((domain) => lower.includes(domain));
-    if (isAllowedBankDomain && (input.channel === "gmail" || input.channel === "admin_manual")) {
+
+    if (
+      hasAlphanumericRef ||
+      ((input.channel === "gmail" || input.channel === "admin_manual") && isAllowedBankDomain)
+    ) {
       const seed = `${input.sender || ""}:${cleanedSubject}:${amount}:${cleanedBody}`;
       utrNumber = generateDeterministic12DigitUtr(seed);
     }

@@ -91,8 +91,8 @@ export function PaymentsView() {
   const [bookings, setBookings] = useState<BookingAdmin[]>(() => AdminService.getBookings());
   const [pricing, setPricing] = useState(() => AdminService.getPricing());
 
-  // Filter & Control state for Bank Hub
-  const [channelFilter, setChannelFilter] = useState<"all" | "sms" | "gmail" | "pending" | "confirmed">("all");
+  // Filter & Control state for Bank Hub (Default: 📱 Bank SMS Feed)
+  const [channelFilter, setChannelFilter] = useState<"all" | "sms" | "gmail" | "pending" | "confirmed">("sms");
   const [dateFilter, setDateFilter] = useState<"1m" | "3m" | "6m" | "all">("1m");
   const [isAutoConfirming, setIsAutoConfirming] = useState<boolean>(() => pricing.bank_auto_confirm ?? true);
   const [togglingAutoConfirm, setTogglingAutoConfirm] = useState(false);
@@ -115,9 +115,11 @@ export function PaymentsView() {
   const [copiedScript, setCopiedScript] = useState(false);
   const [copiedSmsFormat, setCopiedSmsFormat] = useState(false);
 
-  // Live Webhook Status & Diagnostics State
+  // Live Webhook Status, Quick-Connect & Diagnostics State
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(() => new Date());
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
+  const [copiedWebhookUrl, setCopiedWebhookUrl] = useState(false);
+  const [isFiringTestSms, setIsFiringTestSms] = useState(false);
 
   const canExport = hasPermission("payments_export");
 
@@ -435,6 +437,57 @@ export function PaymentsView() {
     }
   };
 
+  // Phone SMS Forwarder Quick-Connect Webhook URL and Live Test
+  const smsWebhookSecret = pricing.bank_webhook_secret || "tm_internal_bank_secret_2026";
+  const canonicalWebhookUrl = `https://trippmatee.vercel.app/api/webhooks/bank-sms?secret=${smsWebhookSecret}`;
+
+  const handleCopyWebhookUrl = () => {
+    void navigator.clipboard.writeText(canonicalWebhookUrl);
+    setCopiedWebhookUrl(true);
+    setTimeout(() => setCopiedWebhookUrl(false), 2000);
+    toast("Copied Phone SMS Webhook URL with secret to clipboard!", "success");
+  };
+
+  const handleFireLiveTestBankSms = async () => {
+    setIsFiringTestSms(true);
+    try {
+      const pendingTrip = bookings.find((b) => b.status === "pending_approval" || (b.status as string) === "draft");
+      const testAmount = pendingTrip ? pendingTrip.total_amount : 31624;
+      const testRef = pendingTrip ? pendingTrip.booking_ref : "TM-492011";
+      const testUtr = Date.now().toString().slice(-12);
+
+      const smsText = `Dear SBI UPI User, A/C X1234 credited by Rs ${testAmount.toFixed(2)} on 24Oct26 transfer from HARSH KUMAR Ref No ${testUtr} - SBI. Ref: ${testRef}`;
+
+      const res = await fetch(`/api/webhooks/bank-sms?secret=${encodeURIComponent(smsWebhookSecret)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sender: "AD-SBIBNK-S",
+          message: smsText,
+        }),
+      });
+
+      const json = (await res.json()) as { ok?: boolean; error?: string; reason?: string };
+
+      if (res.ok && json.ok) {
+        await fetchLatest();
+        await refreshAll();
+        router.refresh();
+        if (bankStreamContainerRef.current) {
+          bankStreamContainerRef.current.scrollTop = 0;
+        }
+        toast(`⚡ Live Test Bank SMS Fired! UTR ${testUtr} (₹${testAmount.toLocaleString("en-IN")}) landed at Row #1 in <1s.`, "success");
+      } else {
+        toast(`Test SMS failed: ${json.error || json.reason || "Check webhook secret"}`, "error");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Network error firing test SMS";
+      toast(`Test SMS failed: ${msg}`, "error");
+    } finally {
+      setIsFiringTestSms(false);
+    }
+  };
+
   // Legacy UTR verification action
   const handleVerifyUpi = async (paymentId: string, status: "verified" | "rejected") => {
     setProcessingId(paymentId);
@@ -722,6 +775,62 @@ export function PaymentsView() {
             </button>
           </div>
 
+          {/* Phone SMS Forwarder Quick-Connect Bar */}
+          <div className="rounded-2xl border border-border-hairline bg-[#FFFFFF] p-4 shadow-xs space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-sky-50 border border-sky-200 text-sky-800">
+                  <Smartphone className="h-4 w-4" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xs font-black text-text-primary tracking-tight">
+                      📱 Phone SMS Forwarder Quick-Connect
+                    </h3>
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.2 text-[9px] font-black uppercase">
+                      Universal Ingestion
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-text-secondary">
+                    Paste into MacroDroid, SMS Forwarder, or phone app. Accepts JSON, Form, or Raw Text with query secret.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={handleCopyWebhookUrl}
+                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-[#FBF9F5] hover:bg-[#EBE9E4] px-3 py-1.5 text-xs font-bold text-text-primary transition-colors shadow-xs"
+                  title="Copy complete Webhook URL with pre-attached secret query parameter"
+                >
+                  {copiedWebhookUrl ? <Check className="h-3.5 w-3.5 text-emerald-700" /> : <Copy className="h-3.5 w-3.5" />}
+                  <span>{copiedWebhookUrl ? "Copied URL!" : "Copy SMS Webhook URL"}</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isFiringTestSms}
+                  onClick={handleFireLiveTestBankSms}
+                  className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 hover:bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-900 transition-colors shadow-xs disabled:opacity-50"
+                  title="Fire a real HTTP POST to /api/webhooks/bank-sms to verify instantaneous Row #1 ingestion"
+                >
+                  <Zap className={`h-3.5 w-3.5 text-amber-700 ${isFiringTestSms ? "animate-spin" : ""}`} />
+                  <span>{isFiringTestSms ? "Firing SMS..." : "⚡ Fire Live Test Bank SMS"}</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 rounded-xl border border-border-hairline bg-[#FBF9F5] px-3 py-2">
+              <span className="text-[10px] font-mono font-bold text-text-secondary uppercase shrink-0">
+                POST / GET:
+              </span>
+              <code className="text-xs font-mono font-bold text-[#1F1F1E] truncate select-all">
+                {canonicalWebhookUrl}
+              </code>
+            </div>
+          </div>
+
           {/* Top Control Bar */}
           <div className="rounded-2xl border border-border-hairline bg-card-surface p-4 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             {/* Auto-Confirm Mode Switcher */}
@@ -772,8 +881,8 @@ export function PaymentsView() {
               <div className="flex items-center gap-1 rounded-xl border border-border-hairline bg-surface p-1">
                 {(
                   [
+                    { id: "sms", label: "📱 Bank SMS Feed" },
                     { id: "all", label: "All Alerts" },
-                    { id: "sms", label: "📱 SMS" },
                     { id: "gmail", label: "✉️ Gmail" },
                     { id: "pending", label: "⏳ Needs Confirm" },
                     { id: "confirmed", label: "✓ Confirmed" },

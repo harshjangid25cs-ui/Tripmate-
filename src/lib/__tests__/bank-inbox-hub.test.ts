@@ -811,4 +811,158 @@ describe("Bank Webhooks Ingestion Routes (/api/webhooks/bank-sms & /api/webhooks
       expect(res.pendingTrips?.length).toBe(1);
     });
   });
+
+  describe("Indian TRAI DLT Bank SMS Parser & Webhook Route Enhancements", () => {
+    it("recognizes all Indian TRAI DLT SMS sender headers (AD-SBIBNK-S, VM-HDFCBK-S, JX-IDFCFB-S, BP-ICICIT, AX-FAMPAY, TM-PAYTMB, CP-AXISBK)", () => {
+      const senders = [
+        { sender: "AD-SBIBNK-S", expectedBank: "State Bank of India (SBI)" },
+        { sender: "VM-HDFCBK-S", expectedBank: "HDFC Bank" },
+        { sender: "JX-IDFCFB-S", expectedBank: "IDFC FIRST Bank" },
+        { sender: "BP-ICICIT", expectedBank: "ICICI Bank" },
+        { sender: "AX-FAMPAY", expectedBank: "FamPay / IDFC" },
+        { sender: "TM-PAYTMB", expectedBank: "Paytm Payments Bank" },
+        { sender: "CP-AXISBK", expectedBank: "Axis Bank" },
+      ];
+
+      for (const item of senders) {
+        const sms = `Dear Customer, A/c credited with Rs 2,500.00 via UPI. Ref 429183746512.`;
+        const res = parseStrictBankMessage({
+          channel: "sms",
+          sender: item.sender,
+          body: sms,
+        });
+        expect(res.isBankMessage).toBe(true);
+        expect(res.bankName).toBe(item.expectedBank);
+        expect(res.amount).toBe(2500);
+        expect(res.utrNumber).toBe("429183746512");
+      }
+    });
+
+    it("parses all real Indian UPI Credit SMS templates with high precision", () => {
+      // SBI
+      const sbiSms = "Dear SBI UPI User, A/C X1234 credited by Rs 12215.00 on 24Oct26 transfer from HARSH KUMAR Ref No 429183746512";
+      const sbiRes = parseStrictBankMessage({
+        channel: "sms",
+        sender: "AD-SBIBNK-S",
+        body: sbiSms,
+      });
+      expect(sbiRes.isBankMessage).toBe(true);
+      expect(sbiRes.amount).toBe(12215);
+      expect(sbiRes.utrNumber).toBe("429183746512");
+
+      // HDFC
+      const hdfcSms = "Rs. 2500.00 credited to a/c XX1234 on 24-10-26 by UPI: 429183746512";
+      const hdfcRes = parseStrictBankMessage({
+        channel: "sms",
+        sender: "VM-HDFCBK-S",
+        body: hdfcSms,
+      });
+      expect(hdfcRes.isBankMessage).toBe(true);
+      expect(hdfcRes.amount).toBe(2500);
+      expect(hdfcRes.utrNumber).toBe("429183746512");
+
+      // ICICI
+      const iciciSms = "Acct XX987 is credited with INR 8,450.00 on 24-Oct-26 from rahul@upi UPI:429183746512";
+      const iciciRes = parseStrictBankMessage({
+        channel: "sms",
+        sender: "BP-ICICIT",
+        body: iciciSms,
+      });
+      expect(iciciRes.isBankMessage).toBe(true);
+      expect(iciciRes.amount).toBe(8450);
+      expect(iciciRes.utrNumber).toBe("429183746512");
+
+      // Axis / Kotak / IDFC / BOB / PNB
+      const axisSms = "INR 1,500.00 credited to A/c no. XX123 on 24-10-26. UPI Ref: 429183746512";
+      const axisRes = parseStrictBankMessage({
+        channel: "sms",
+        sender: "CP-AXISBK",
+        body: axisSms,
+      });
+      expect(axisRes.isBankMessage).toBe(true);
+      expect(axisRes.amount).toBe(1500);
+      expect(axisRes.utrNumber).toBe("429183746512");
+
+      // FamPay / UPI App Alerts
+      const famSms = "Received Rs.1,499.00 from rohit@fam via UPI. Ref: 429183746512";
+      const famRes = parseStrictBankMessage({
+        channel: "sms",
+        sender: "AX-FAMPAY",
+        body: famSms,
+      });
+      expect(famRes.isBankMessage).toBe(true);
+      expect(famRes.amount).toBe(1499);
+      expect(famRes.utrNumber).toBe("429183746512");
+    });
+
+    it("strictly rejects outgoing Amt Sent / debited messages", () => {
+      const sentSms = "Amt Sent Rs.2500.00 from a/c XX1234 on 24-10-26 to merchant. Ref: 429183746512";
+      const res = parseStrictBankMessage({
+        channel: "sms",
+        sender: "VM-HDFCBK-S",
+        body: sentSms,
+      });
+      expect(res.isBankMessage).toBe(false);
+      expect(res.reason).toBe("rejected_debit_or_security_message");
+    });
+
+    it("generates deterministic 12-digit numeric ID for SMS when reference is alphanumeric", () => {
+      const alphaRefSms = "Dear SBI User, your A/c credited by Rs 3,200.00. Txn Ref: SBIN98234812.";
+      const res = parseStrictBankMessage({
+        channel: "sms",
+        sender: "AD-SBIBNK-S",
+        body: alphaRefSms,
+      });
+      expect(res.isBankMessage).toBe(true);
+      expect(res.amount).toBe(3200);
+      expect(res.utrNumber).toMatch(/^\d{12}$/);
+    });
+
+    it("bank-sms GET endpoint returns online status when secret query param is valid", async () => {
+      const { NextRequest } = await import("next/server");
+      const { GET } = await import("@/app/api/webhooks/bank-sms/route");
+
+      const req = new NextRequest("http://localhost/api/webhooks/bank-sms?secret=tm_internal_bank_secret_2026", {
+        method: "GET",
+      });
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+      expect(json.status).toContain("TripMate Bank SMS Webhook Online");
+    });
+
+    it("bank-sms GET endpoint rejects request when secret is missing or invalid", async () => {
+      const { NextRequest } = await import("next/server");
+      const { GET } = await import("@/app/api/webhooks/bank-sms/route");
+
+      const req = new NextRequest("http://localhost/api/webhooks/bank-sms?secret=invalid_secret", {
+        method: "GET",
+      });
+      const res = await GET(req);
+      expect(res.status).toBe(401);
+    });
+
+    it("bank-sms POST endpoint accepts raw text body with query param secret (MacroDroid format)", async () => {
+      const { NextRequest } = await import("next/server");
+      const { POST } = await import("@/app/api/webhooks/bank-sms/route");
+
+      const rawText = "Dear SBI UPI User, A/C X1234 credited by Rs 12215.00 on 24Oct26 transfer from HARSH KUMAR Ref No 429183746599";
+      const req = new NextRequest("http://localhost/api/webhooks/bank-sms?secret=tm_internal_bank_secret_2026&sender=AD-SBIBNK-S", {
+        method: "POST",
+        headers: {
+          "content-type": "text/plain",
+        },
+        body: rawText,
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+      expect(mockRpcCalls.length).toBe(1);
+      expect(mockRpcCalls[0]?.args.p_amount).toBe(12215);
+      expect(mockRpcCalls[0]?.args.p_utr_number).toBe("429183746599");
+    });
+  });
 });
