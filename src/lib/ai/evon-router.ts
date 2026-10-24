@@ -132,6 +132,37 @@ export async function routeEvonIntent(
   const intent = classifyIntent(query, currentPath);
   const isHinglish = context.preferredLanguage === "hi-IN" || isHinglishQuery(query);
 
+interface VehicleRow {
+  name?: string | null;
+  price?: number | null;
+}
+
+interface HotelRow {
+  name?: string | null;
+  price_per_night?: number | null;
+}
+
+interface TripRow {
+  status?: string | null;
+  total_amount?: number | null;
+}
+
+interface CircuitRow {
+  title?: string | null;
+}
+
+async function withQueryTimeout<T>(promise: PromiseLike<T>, ms = 1200): Promise<T> {
+  let timeoutId: NodeJS.Timeout;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Supabase query timeout")), ms);
+  });
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    clearTimeout(timeoutId!);
+  }
+}
+
   let supabase;
   try {
     supabase = createPublicClient();
@@ -162,7 +193,10 @@ export async function routeEvonIntent(
           queryBuilder = queryBuilder.eq("type", "car");
         }
 
-        const { data } = await queryBuilder.order("price", { ascending: true }).limit(2);
+        const queryRes = await withQueryTimeout(
+          queryBuilder.order("price", { ascending: true }).limit(2)
+        );
+        const data = (queryRes as { data?: VehicleRow[] | null })?.data;
 
         if (data && data.length > 0 && data[0]) {
           vehicleName = data[0].name || vehicleName;
@@ -206,12 +240,15 @@ export async function routeEvonIntent(
 
     if (supabase) {
       try {
-        const { data } = await supabase
-          .from("hotels")
-          .select("id, name, price_per_night, neighborhood")
-          .eq("is_active", true)
-          .ilike("name", "%Shahpura%")
-          .limit(1);
+        const queryRes = await withQueryTimeout(
+          supabase
+            .from("hotels")
+            .select("id, name, price_per_night, neighborhood")
+            .eq("is_active", true)
+            .ilike("name", "%Shahpura%")
+            .limit(1)
+        );
+        const data = (queryRes as { data?: HotelRow[] | null })?.data;
 
         if (data && data.length > 0) {
           hotelName = data[0]?.name || hotelName;
@@ -256,14 +293,17 @@ export async function routeEvonIntent(
 
     if (supabase && bookingRef) {
       try {
-        const { data } = await supabase
-          .from("trips")
-          .select("id, booking_ref, status, total_amount")
-          .or(`booking_ref.ilike.%${bookingRef}%,id.eq.${bookingRef}`)
-          .limit(1);
+        const queryRes = await withQueryTimeout(
+          supabase
+            .from("trips")
+            .select("id, booking_ref, status, total_amount")
+            .or(`booking_ref.ilike.%${bookingRef}%,id.eq.${bookingRef}`)
+            .limit(1)
+        );
+        const data = (queryRes as { data?: TripRow[] | null })?.data;
 
         if (data && data.length > 0 && data[0]) {
-          tripStatus = data[0].status === "confirmed" ? "Confirmed" : data[0].status === "draft" ? "Draft" : data[0].status;
+          tripStatus = data[0].status === "confirmed" ? "Confirmed" : data[0].status === "draft" ? "Draft" : (data[0].status || tripStatus);
           totalAmount = data[0].total_amount || totalAmount;
         }
       } catch (err) {
@@ -309,15 +349,18 @@ export async function routeEvonIntent(
 
     if (supabase) {
       try {
-        const { data } = await supabase
-          .from("circuits")
-          .select("id, title, days, base_price_per_person, destination_id")
-          .eq("is_active", true)
-          .ilike("title", `%${destinationSlug}%`)
-          .limit(1);
+        const queryRes = await withQueryTimeout(
+          supabase
+            .from("circuits")
+            .select("id, title, days, base_price_per_person, destination_id")
+            .eq("is_active", true)
+            .ilike("title", `%${destinationSlug}%`)
+            .limit(1)
+        );
+        const data = (queryRes as { data?: CircuitRow[] | null })?.data;
 
         if (data && data.length > 0 && data[0]) {
-          circuitTitle = data[0].title;
+          circuitTitle = data[0].title || circuitTitle;
         }
       } catch (err) {
         console.warn("[Evon] Error querying circuits:", err);

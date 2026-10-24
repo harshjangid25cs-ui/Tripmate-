@@ -133,6 +133,33 @@ const config: Config = {
         "card-hover": "0 8px 30px rgba(0, 0, 0, 0.12)",
         "bottom-sheet": "0 -4px 24px rgba(20, 21, 26, 0.08)",
       },
+      keyframes: {
+        "bounce-slow": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-3px)" },
+        },
+        wave: {
+          "0%, 100%": { transform: "rotate(0deg)" },
+          "25%": { transform: "rotate(-8deg)" },
+          "75%": { transform: "rotate(8deg)" },
+        },
+        "scale-up": {
+          "0%": { transform: "scale(0.95)" },
+          "50%": { transform: "scale(1.08)" },
+          "100%": { transform: "scale(1)" },
+        },
+        "bounce-in": {
+          "0%": { opacity: "0", transform: "scale(0.3) translateY(8px)" },
+          "60%": { opacity: "1", transform: "scale(1.05) translateY(-2px)" },
+          "100%": { opacity: "1", transform: "scale(1) translateY(0)" },
+        },
+      },
+      animation: {
+        "bounce-slow": "bounce-slow 3s infinite ease-in-out",
+        wave: "wave 1s infinite",
+        "scale-up": "scale-up 0.4s ease-out",
+        "bounce-in": "bounce-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+      },
     },
   },
   plugins: [],

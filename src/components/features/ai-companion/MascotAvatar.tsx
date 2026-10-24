@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export type MascotState = "idle" | "listening" | "thinking" | "speaking";
+export type MascotState = "idle" | "listening" | "thinking" | "speaking" | "guiding" | "success";
 
 interface MascotAvatarProps {
   state?: MascotState;
@@ -28,12 +28,14 @@ export function MascotAvatar({
       : 52;
 
   // Animation classes per state
-  const stateContainerClasses = {
+  const stateContainerClasses: Record<string, string> = {
     idle: "animate-[pulse_3s_ease-in-out_infinite] motion-safe:translate-y-0.5",
     listening: "ring-4 ring-[#FF5E1E]/40 animate-pulse",
     thinking: "-rotate-6 transition-transform duration-300",
     speaking: "scale-105 transition-transform duration-200",
-  }[state];
+    guiding: "animate-[wave_1s_infinite] transition-transform duration-200",
+    success: "animate-[scale-up_0.4s_ease-out]",
+  };
 
   return (
     <div

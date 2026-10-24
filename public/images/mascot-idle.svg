@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" fill="none">
+    <!-- Drop Shadow / Contact Shadow -->
+    <ellipse cx="128" cy="226" rx="64" ry="14" fill="#000000" fill-opacity="0.12" />
+
+    <!-- Listening Aqua / Cyan Outer Sound Waves -->
+    
+
+    <!-- Sparkle Stars for Success State -->
+    
+
+    <!-- Main Headband Arch (Cream Fluffy Fleece #F5F3ED) -->
+    <path d="M 46 112 C 46 56 82 28 128 28 C 174 28 210 56 210 112" stroke="#F5F3ED" stroke-width="26" stroke-linecap="round" fill="none" />
+    <path d="M 46 112 C 46 56 82 28 128 28 C 174 28 210 56 210 112" stroke="#EBE7DE" stroke-width="20" stroke-linecap="round" fill="none" />
+
+    <!-- Plush Blue Body -->
+    <g transform="">
+      <!-- Main Body Circle / Oval -->
+      <circle cx="128" cy="142" r="76" fill="#1650DD" />
+      <!-- Top / Front Plush Volume -->
+      <circle cx="128" cy="138" r="72" fill="#2563EB" />
+      <!-- Highlight Reflection -->
+      <ellipse cx="128" cy="98" rx="42" ry="24" fill="#3B82F6" fill-opacity="0.5" />
+
+      <!-- Left Plush Arm / Hand -->
+      <circle cx="56" cy="180" r="18" fill="#1D4ED8" />
+      <circle cx="56" cy="178" r="16" fill="#2563EB" />
+
+      <!-- Right Plush Arm / Hand (Waving in Guiding State) -->
+      
+        <!-- Resting Right Hand -->
+        <circle cx="200" cy="180" r="18" fill="#1D4ED8" />
+        <circle cx="200" cy="178" r="16" fill="#2563EB" />
+      
+
+      <!-- Face Expressions -->
+      
+        <!-- Glossy Black Bead Eyes -->
+        <!-- Left Eye -->
+        <circle cx="106" cy="134" r="14" fill="#1F1F1E" />
+        <circle cx="111" cy="129" r="5" fill="#FFFFFF" />
+        <circle cx="103" cy="138" r="2.5" fill="#FFFFFF" />
+
+        <!-- Right Eye -->
+        <circle cx="150" cy="134" r="14" fill="#1F1F1E" />
+        <circle cx="155" cy="129" r="5" fill="#FFFFFF" />
+        <circle cx="147" cy="138" r="2.5" fill="#FFFFFF" />
+
+        <!-- Mouth Expression -->
+        
+          <!-- Gentle Happy Smile -->
+          <path d="M 118 152 Q 128 162 138 152" stroke="#1F1F1E" stroke-width="5" stroke-linecap="round" fill="none" />
+        
+      
+
+      <!-- Cheeks Warm Coral Blush -->
+      <circle cx="86" cy="150" r="10" fill="#FF8A65" fill-opacity="0.6" />
+      <circle cx="170" cy="150" r="10" fill="#FF8A65" fill-opacity="0.6" />
+    </g>
+
+    <!-- Bulky Fluffy Cream Earmuffs (Left & Right) -->
+    <!-- Left Earmuff -->
+    <g>
+      <ellipse cx="44" cy="122" rx="28" ry="36" fill="#DAD5C8" />
+      <ellipse cx="44" cy="120" rx="26" ry="34" fill="#EBE7DE" />
+      <ellipse cx="44" cy="118" rx="22" ry="30" fill="#F5F3ED" />
+      <!-- Fluffy Cloud Bumps -->
+      <circle cx="28" cy="104" r="10" fill="#F5F3ED" />
+      <circle cx="24" cy="120" r="11" fill="#F5F3ED" />
+      <circle cx="28" cy="136" r="10" fill="#F5F3ED" />
+      <circle cx="58" cy="104" r="9" fill="#F5F3ED" />
+      <circle cx="62" cy="120" r="10" fill="#F5F3ED" />
+      <circle cx="58" cy="136" r="9" fill="#F5F3ED" />
+    </g>
+
+    <!-- Right Earmuff -->
+    <g>
+      <ellipse cx="212" cy="122" rx="28" ry="36" fill="#DAD5C8" />
+      <ellipse cx="212" cy="120" rx="26" ry="34" fill="#EBE7DE" />
+      <ellipse cx="212" cy="118" rx="22" ry="30" fill="#F5F3ED" />
+      <!-- Fluffy Cloud Bumps -->
+      <circle cx="228" cy="104" r="10" fill="#F5F3ED" />
+      <circle cx="232" cy="120" r="11" fill="#F5F3ED" />
+      <circle cx="228" cy="136" r="10" fill="#F5F3ED" />
+      <circle cx="198" cy="104" r="9" fill="#F5F3ED" />
+      <circle cx="194" cy="120" r="10" fill="#F5F3ED" />
+      <circle cx="198" cy="136" r="9" fill="#F5F3ED" />
+    </g>
+
+    <!-- Speech Bubble for Guiding State: "Let's go explore!" -->
+    
+  </svg>
