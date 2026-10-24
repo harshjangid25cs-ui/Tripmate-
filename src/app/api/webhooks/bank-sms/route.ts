@@ -2,50 +2,16 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-import crypto from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseStrictBankMessage } from "@/lib/payments/bank-parser";
 
-function isSecretValid(received: string | null, allowedSecrets: string[]): boolean {
-  if (!received) return false;
-  const trimmed = received.trim();
-  for (const expected of allowedSecrets) {
-    if (!expected) continue;
-    try {
-      const bufReceived = Buffer.from(trimmed, "utf-8");
-      const bufExpected = Buffer.from(expected.trim(), "utf-8");
-      if (bufReceived.length === bufExpected.length && crypto.timingSafeEqual(bufReceived, bufExpected)) {
-        return true;
-      }
-    } catch {
-      // Continue to next secret
-    }
-  }
-  return false;
-}
-
-async function getAllowedSecrets(supabase: ReturnType<typeof createAdminClient>): Promise<string[]> {
-  const secrets = ["tm_internal_bank_secret_2026"];
-  if (process.env.BANK_SMS_WEBHOOK_SECRET) {
-    secrets.push(process.env.BANK_SMS_WEBHOOK_SECRET);
-  }
-  try {
-    const { data: config } = await supabase
-      .from("pricing_config")
-      .select("bank_webhook_secret")
-      .eq("id", 1)
-      .maybeSingle();
-
-    if (config?.bank_webhook_secret) {
-      secrets.push(config.bank_webhook_secret);
-    }
-  } catch {
-    // Fall back to defaults
-  }
-  return Array.from(new Set(secrets.filter(Boolean)));
-}
+import {
+  extractIncomingSecret,
+  getAllowedSecrets,
+  isValidWebhookSecret,
+} from "@/lib/payments/webhook-auth";
 
 function isMacroDroidTestTrigger(message: string, urlTestParam: string | null): boolean {
   if (urlTestParam === "1" || urlTestParam === "true") return true;
@@ -79,13 +45,6 @@ interface ExtractedPayload {
 
 async function extractWebhookPayload(request: NextRequest): Promise<ExtractedPayload> {
   const urlParams = request.nextUrl.searchParams;
-  let receivedSecret: string | null =
-    request.headers.get("x-sms-secret") ||
-    request.headers.get("x-webhook-secret") ||
-    urlParams.get("secret") ||
-    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
-    null;
-
   let rawMessage =
     urlParams.get("text") ||
     urlParams.get("message") ||
@@ -101,6 +60,7 @@ async function extractWebhookPayload(request: NextRequest): Promise<ExtractedPay
     "";
 
   let receivedAt = urlParams.get("receivedAt") || urlParams.get("timestamp") || "";
+  let parsedBody: Record<string, unknown> | null = null;
 
   if (request.method === "POST") {
     let rawBodyText = "";
@@ -115,6 +75,7 @@ async function extractWebhookPayload(request: NextRequest): Promise<ExtractedPay
       try {
         const json = JSON.parse(rawBodyText);
         if (json && typeof json === "object") {
+          parsedBody = json;
           sender = json.sender || json.from || json.address || sender || "";
           rawMessage =
             json.message ||
@@ -123,9 +84,6 @@ async function extractWebhookPayload(request: NextRequest): Promise<ExtractedPay
             json.sms ||
             json.content ||
             rawMessage;
-          if (!receivedSecret && (json.secret || json.key)) {
-            receivedSecret = String(json.secret || json.key);
-          }
           const rawTimestamp = json.receivedAt || json.timestamp || json.date;
           if (rawTimestamp) {
             const parsed = new Date(rawTimestamp);
@@ -140,12 +98,10 @@ async function extractWebhookPayload(request: NextRequest): Promise<ExtractedPay
         ) {
           try {
             const params = new URLSearchParams(rawBodyText);
+            parsedBody = Object.fromEntries(params.entries());
             rawMessage =
               params.get("message") || params.get("text") || params.get("body") || params.get("sms") || rawMessage;
             sender = params.get("sender") || params.get("from") || sender;
-            if (!receivedSecret && params.get("secret")) {
-              receivedSecret = params.get("secret");
-            }
           } catch {
             rawMessage = rawBodyText.trim();
           }
@@ -157,6 +113,8 @@ async function extractWebhookPayload(request: NextRequest): Promise<ExtractedPay
     }
   }
 
+  const receivedSecret = extractIncomingSecret(request, parsedBody);
+
   if (!sender) {
     sender = "ANDROID-SMS";
   }
@@ -167,19 +125,19 @@ async function extractWebhookPayload(request: NextRequest): Promise<ExtractedPay
   return { rawMessage, sender, receivedAt, receivedSecret };
 }
 
-export async function GET(request: NextRequest) {
+export async function GET(req: NextRequest) {
   const supabase = createAdminClient();
   const allowedSecrets = await getAllowedSecrets(supabase);
-  const { sender, receivedSecret } = await extractWebhookPayload(request);
+  const receivedSecret = extractIncomingSecret(req);
 
-  if (!isSecretValid(receivedSecret, allowedSecrets)) {
+  if (!isValidWebhookSecret(receivedSecret, allowedSecrets)) {
     return NextResponse.json(
       { error: "Unauthorized: Invalid or missing SMS webhook secret" },
       { status: 401 }
     );
   }
 
-  const urlParams = request.nextUrl.searchParams;
+  const urlParams = req.nextUrl.searchParams;
   const hasTestOrText =
     urlParams.has("text") ||
     urlParams.has("message") ||
@@ -188,16 +146,17 @@ export async function GET(request: NextRequest) {
     urlParams.get("test") === "true";
 
   if (hasTestOrText) {
-    const rawText =
+    const sender =
+      urlParams.get("sender") ||
+      urlParams.get("from") ||
+      "PHONE-BROWSER-TEST";
+    const raw_body =
       urlParams.get("text") ||
       urlParams.get("message") ||
       urlParams.get("body") ||
-      "Test Phone Connection Rs.1";
-    const testUtr = Date.now().toString().slice(-12);
-    const testSender = sender !== "ANDROID-SMS" ? sender : "PHONE-TEST-OK";
-    const matchAmt = rawText.match(/(?:Rs\.?|INR|₹)?\s*([0-9,]+(?:\.\d{1,2})?)/i);
-    const testAmount = matchAmt && matchAmt[1] ? parseFloat(matchAmt[1].replace(/,/g, "")) || 1 : 1;
-    const testBody = `TEST PING from Phone Browser: ${rawText} via UPI. Ref: ${testUtr}`;
+      "Test Phone Connection: Received Rs. 1.00 via UPI";
+    const amount = 1;
+    const utr_number = Date.now().toString().slice(-12);
     const nowIso = new Date().toISOString();
 
     await (
@@ -215,11 +174,11 @@ export async function GET(request: NextRequest) {
       .upsert(
         {
           channel: "sms",
-          sender: testSender,
+          sender,
           subject: "Phone Browser Live Test Ping",
-          raw_body: testBody,
-          amount: testAmount,
-          utr_number: testUtr,
+          raw_body,
+          amount,
+          utr_number,
           verification_state: "unmatched",
           created_at: nowIso,
         },
@@ -233,12 +192,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
+      status: "TripMate Bank SMS Webhook Online & Test Row Ingested at Row #1!",
+      utr_number,
+      utrNumber: utr_number,
       testMode: true,
       ingested: true,
-      utrNumber: testUtr,
-      amount: testAmount,
-      status: "TripMate Bank SMS Webhook Online & Test Ping Ingested at Row #1 in /admin",
-      preview: testBody,
+      amount,
     });
   }
 
@@ -254,7 +213,7 @@ export async function POST(request: NextRequest) {
   const { rawMessage, sender, receivedAt, receivedSecret } = await extractWebhookPayload(request);
 
   // 1. Flexible Secret Verification
-  if (!isSecretValid(receivedSecret || null, allowedSecrets)) {
+  if (!isValidWebhookSecret(receivedSecret, allowedSecrets)) {
     return NextResponse.json(
       { error: "Unauthorized: Invalid or missing SMS webhook secret" },
       { status: 401 }

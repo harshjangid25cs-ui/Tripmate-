@@ -2,62 +2,45 @@ export const dynamic = "force-dynamic";
 export const revalidate = 0;
 export const fetchCache = "force-no-store";
 
-import crypto from "crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseStrictBankMessage } from "@/lib/payments/bank-parser";
 
-function verifySecret(received: string | null, expected: string): boolean {
-  if (!received) return false;
-  try {
-    const bufReceived = Buffer.from(received.trim(), "utf-8");
-    const bufExpected = Buffer.from(expected.trim(), "utf-8");
-    if (bufReceived.length !== bufExpected.length) return false;
-    return crypto.timingSafeEqual(bufReceived, bufExpected);
-  } catch {
-    return false;
-  }
-}
+import {
+  extractIncomingSecret,
+  getAllowedSecrets,
+  isValidWebhookSecret,
+} from "@/lib/payments/webhook-auth";
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   const supabase = createAdminClient();
+  const allowedSecrets = await getAllowedSecrets(supabase);
+  const receivedSecret = extractIncomingSecret(request);
 
-  // 1. Fetch expected secret from database pricing_config or fallback to env
-  let expectedSecret = process.env.BANK_SMS_WEBHOOK_SECRET || "tm_internal_bank_secret_2026";
-  try {
-    const { data: config } = await supabase
-      .from("pricing_config")
-      .select("bank_webhook_secret")
-      .eq("id", 1)
-      .maybeSingle();
-
-    if (config?.bank_webhook_secret) {
-      expectedSecret = config.bank_webhook_secret;
-    }
-  } catch {
-    // Fall back to default
-  }
-
-  // 2. Authenticate webhook caller
-  const receivedSecret =
-    request.headers.get("x-webhook-secret") ||
-    request.headers.get("x-email-secret") ||
-    request.headers.get("x-sms-secret") ||
-    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
-
-  if (!verifySecret(receivedSecret || null, expectedSecret)) {
+  if (!isValidWebhookSecret(receivedSecret, allowedSecrets)) {
     return NextResponse.json(
       { error: "Unauthorized: Invalid or missing email webhook secret" },
       { status: 401 }
     );
   }
 
-  // 3. Parse input payload
+  return NextResponse.json({
+    ok: true,
+    status: "TripMate Bank Email Webhook Online",
+  });
+}
+
+export async function POST(request: NextRequest) {
+  const supabase = createAdminClient();
+  const allowedSecrets = await getAllowedSecrets(supabase);
+
+  // 1. Parse input payload
   let rawBodyText = "";
   let subject = "";
   let sender = "";
   let receivedAt = "";
+  let parsedBody: Record<string, unknown> | null = null;
 
   try {
     const contentType = request.headers.get("content-type") || "";
@@ -72,7 +55,11 @@ export async function POST(request: NextRequest) {
         receivedAt?: string;
         timestamp?: string | number;
         date?: string;
+        secret?: string;
+        token?: string;
+        key?: string;
       };
+      parsedBody = json as Record<string, unknown>;
       subject = json.subject || "";
       rawBodyText = json.body || json.text || json.raw || "";
       sender = json.sender || json.from || "Bank Email Forwarder";
@@ -90,6 +77,16 @@ export async function POST(request: NextRequest) {
     }
   } catch {
     return NextResponse.json({ error: "Failed to read request body" }, { status: 400 });
+  }
+
+  // 2. Flexible Secret Verification
+  const receivedSecret = extractIncomingSecret(request, parsedBody);
+
+  if (!isValidWebhookSecret(receivedSecret, allowedSecrets)) {
+    return NextResponse.json(
+      { error: "Unauthorized: Invalid or missing email webhook secret" },
+      { status: 401 }
+    );
   }
 
   if (!rawBodyText.trim() && !subject.trim()) {

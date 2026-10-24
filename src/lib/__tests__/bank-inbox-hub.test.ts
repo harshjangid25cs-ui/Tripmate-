@@ -1012,7 +1012,7 @@ describe("Bank Webhooks Ingestion Routes (/api/webhooks/bank-sms & /api/webhooks
       expect(json.utrNumber).toBe("772918346512");
     });
 
-    it("GET 1-tap test link with ?text= inserts test row at Row #1", async () => {
+    it("GET 1-tap test link with ?text= inserts test row at Row #1 and returns expected status and utr_number", async () => {
       const { NextRequest } = await import("next/server");
       const { GET } = await import("@/app/api/webhooks/bank-sms/route");
 
@@ -1024,9 +1024,82 @@ describe("Bank Webhooks Ingestion Routes (/api/webhooks/bank-sms & /api/webhooks
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.ok).toBe(true);
-      expect(json.testMode).toBe(true);
-      expect(json.amount).toBe(1);
+      expect(json.status).toBe("TripMate Bank SMS Webhook Online & Test Row Ingested at Row #1!");
+      expect(json.utr_number).toMatch(/^\d{12}$/);
       expect(json.utrNumber).toMatch(/^\d{12}$/);
+      expect(json.amount).toBe(1);
+    });
+
+    it("cleanSecret strips surrounding double and single quotes and trims whitespace", async () => {
+      const { cleanSecret } = await import("@/lib/payments/webhook-auth");
+
+      expect(cleanSecret('"tm_internal_bank_secret_2026"')).toBe("tm_internal_bank_secret_2026");
+      expect(cleanSecret("'tm_internal_bank_secret_2026'")).toBe("tm_internal_bank_secret_2026");
+      expect(cleanSecret("  tm_internal_bank_secret_2026  ")).toBe("tm_internal_bank_secret_2026");
+      expect(cleanSecret('  "tm_internal_bank_secret_2026"  ')).toBe("tm_internal_bank_secret_2026");
+      expect(cleanSecret(null)).toBeNull();
+      expect(cleanSecret("")).toBeNull();
+      expect(cleanSecret("   ")).toBeNull();
+    });
+
+    it("extractIncomingSecret resolves secrets across query params, headers, bearer auth, and body", async () => {
+      const { NextRequest } = await import("next/server");
+      const { extractIncomingSecret } = await import("@/lib/payments/webhook-auth");
+
+      // 1. ?secret=
+      const req1 = new NextRequest("http://localhost/api/webhooks/bank-sms?secret=query_sec");
+      expect(extractIncomingSecret(req1)).toBe("query_sec");
+
+      // 2. ?token=
+      const req2 = new NextRequest("http://localhost/api/webhooks/bank-sms?token=token_sec");
+      expect(extractIncomingSecret(req2)).toBe("token_sec");
+
+      // 3. x-sms-secret header
+      const req3 = new NextRequest("http://localhost/api/webhooks/bank-sms", {
+        headers: { "x-sms-secret": "hdr_sms_sec" },
+      });
+      expect(extractIncomingSecret(req3)).toBe("hdr_sms_sec");
+
+      // 4. x-webhook-secret header
+      const req4 = new NextRequest("http://localhost/api/webhooks/bank-sms", {
+        headers: { "x-webhook-secret": "hdr_wh_sec" },
+      });
+      expect(extractIncomingSecret(req4)).toBe("hdr_wh_sec");
+
+      // 5. Authorization: Bearer
+      const req5 = new NextRequest("http://localhost/api/webhooks/bank-sms", {
+        headers: { authorization: "Bearer bearer_sec_123" },
+      });
+      expect(extractIncomingSecret(req5)).toBe("bearer_sec_123");
+
+      // 6. parsedBody.secret
+      const req6 = new NextRequest("http://localhost/api/webhooks/bank-sms");
+      expect(extractIncomingSecret(req6, { secret: "body_sec" })).toBe("body_sec");
+    });
+
+    it("isValidWebhookSecret authorizes both internal and live FamPay webhook secrets", async () => {
+      const { isValidWebhookSecret } = await import("@/lib/payments/webhook-auth");
+      const allowed = ["tm_internal_bank_secret_2026", "tm_whsec_live_9664340734_fampay_upi"];
+
+      expect(isValidWebhookSecret("tm_internal_bank_secret_2026", allowed)).toBe(true);
+      expect(isValidWebhookSecret('"tm_internal_bank_secret_2026"', allowed)).toBe(true);
+      expect(isValidWebhookSecret("tm_whsec_live_9664340734_fampay_upi", allowed)).toBe(true);
+      expect(isValidWebhookSecret("invalid_secret_123", allowed)).toBe(false);
+      expect(isValidWebhookSecret(null, allowed)).toBe(false);
+    });
+
+    it("bank-email GET endpoint returns 200 when authenticated with token query parameter", async () => {
+      const { NextRequest } = await import("next/server");
+      const { GET } = await import("@/app/api/webhooks/bank-email/route");
+
+      const req = new NextRequest("http://localhost/api/webhooks/bank-email?token=tm_internal_bank_secret_2026", {
+        method: "GET",
+      });
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+      expect(json.status).toBe("TripMate Bank Email Webhook Online");
     });
   });
 });
