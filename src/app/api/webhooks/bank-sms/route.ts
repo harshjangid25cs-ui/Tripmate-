@@ -150,12 +150,21 @@ export async function GET(req: NextRequest) {
       urlParams.get("sender") ||
       urlParams.get("from") ||
       "PHONE-BROWSER-TEST";
-    const raw_body =
+    const rawText =
       urlParams.get("text") ||
       urlParams.get("message") ||
       urlParams.get("body") ||
       "Test Phone Connection: Received Rs. 1.00 via UPI";
-    const amount = 1;
+    const matchAmt = rawText.match(/(?:Rs\.?|INR|₹)?\s*([0-9,]+(?:\.\d{1,2})?)/i);
+    const amount = urlParams.get("amount")
+      ? parseFloat(urlParams.get("amount")!)
+      : matchAmt && matchAmt[1]
+        ? parseFloat(matchAmt[1].replace(/,/g, "")) || 1
+        : 1;
+    const raw_body =
+      rawText.includes("Rs") || rawText.includes("INR") || rawText.includes("₹")
+        ? rawText
+        : `${rawText}: Received Rs. ${amount.toFixed(2)} via UPI`;
     const utr_number = Date.now().toString().slice(-12);
     const nowIso = new Date().toISOString();
 
@@ -228,8 +237,11 @@ export async function POST(request: NextRequest) {
   if (isMacroDroidTestTrigger(rawMessage, request.nextUrl.searchParams.get("test"))) {
     const testUtr = Date.now().toString().slice(-12);
     const testSender = sender !== "ANDROID-SMS" ? sender : "PHONE-TEST-OK";
-    const testBody = `TEST PING from Android Phone: Received Rs. 1.00 via UPI. Ref: ${testUtr}`;
-    const testAmount = 1;
+    const matchAmt = rawMessage.match(/(?:Rs\.?|INR|₹)?\s*([0-9,]+(?:\.\d{1,2})?)/i);
+    const testAmount = matchAmt && matchAmt[1] ? parseFloat(matchAmt[1].replace(/,/g, "")) || 1 : 1;
+    const testBody = rawMessage && (rawMessage.includes("Rs") || rawMessage.includes("INR") || rawMessage.includes("₹"))
+      ? `TEST PING from Android Phone: ${rawMessage}. Ref: ${testUtr}`
+      : `TEST PING from Android Phone: Received Rs. ${testAmount.toFixed(2)} via UPI. Ref: ${testUtr}`;
 
     await (
       supabase.from("bank_messages_inbox") as unknown as {

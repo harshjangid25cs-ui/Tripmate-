@@ -73,8 +73,6 @@ export function extractIncomingSecret(
 
 export async function getAllowedSecrets(supabase: ReturnType<typeof createAdminClient>): Promise<string[]> {
   const secrets: (string | undefined | null)[] = [
-    "tm_internal_bank_secret_2026",
-    "tm_whsec_live_9664340734_fampay_upi",
     process.env.BANK_SMS_WEBHOOK_SECRET,
   ];
 
@@ -89,7 +87,12 @@ export async function getAllowedSecrets(supabase: ReturnType<typeof createAdminC
       secrets.push(config.bank_webhook_secret);
     }
   } catch {
-    // Fall back to defaults
+    // Database query fallback
+  }
+
+  // Allow default internal secret for non-production environments or when no secret is yet configured
+  if (process.env.NODE_ENV !== "production" || secrets.filter(Boolean).length === 0) {
+    secrets.push("tm_internal_bank_secret_2026");
   }
 
   const cleanList = secrets

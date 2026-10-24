@@ -1077,15 +1077,31 @@ describe("Bank Webhooks Ingestion Routes (/api/webhooks/bank-sms & /api/webhooks
       expect(extractIncomingSecret(req6, { secret: "body_sec" })).toBe("body_sec");
     });
 
-    it("isValidWebhookSecret authorizes both internal and live FamPay webhook secrets", async () => {
+    it("isValidWebhookSecret authorizes both internal and configured webhook secrets", async () => {
       const { isValidWebhookSecret } = await import("@/lib/payments/webhook-auth");
-      const allowed = ["tm_internal_bank_secret_2026", "tm_whsec_live_9664340734_fampay_upi"];
+      const allowed = ["tm_internal_bank_secret_2026", "tm_whsec_configured_fampay"];
 
       expect(isValidWebhookSecret("tm_internal_bank_secret_2026", allowed)).toBe(true);
       expect(isValidWebhookSecret('"tm_internal_bank_secret_2026"', allowed)).toBe(true);
-      expect(isValidWebhookSecret("tm_whsec_live_9664340734_fampay_upi", allowed)).toBe(true);
+      expect(isValidWebhookSecret("tm_whsec_configured_fampay", allowed)).toBe(true);
       expect(isValidWebhookSecret("invalid_secret_123", allowed)).toBe(false);
       expect(isValidWebhookSecret(null, allowed)).toBe(false);
+    });
+
+    it("keeps test-row amount consistent with stored raw_body when customized amount or text is provided", async () => {
+      const { NextRequest } = await import("next/server");
+      const { GET } = await import("@/app/api/webhooks/bank-sms/route");
+
+      const req = new NextRequest(
+        "http://localhost/api/webhooks/bank-sms?secret=tm_internal_bank_secret_2026&text=Phone+Live+Test+Rs.500",
+        { method: "GET" }
+      );
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+      expect(json.amount).toBe(500);
+      expect(json.utr_number).toMatch(/^\d{12}$/);
     });
 
     it("bank-email GET endpoint returns 200 when authenticated with token query parameter", async () => {
