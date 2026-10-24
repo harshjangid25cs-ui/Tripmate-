@@ -964,5 +964,69 @@ describe("Bank Webhooks Ingestion Routes (/api/webhooks/bank-sms & /api/webhooks
       expect(mockRpcCalls[0]?.args.p_amount).toBe(12215);
       expect(mockRpcCalls[0]?.args.p_utr_number).toBe("429183746599");
     });
+
+    it("synthesizes test bank SMS card at Row #1 when MacroDroid Test Action sends literal placeholder", async () => {
+      const { NextRequest } = await import("next/server");
+      const { POST } = await import("@/app/api/webhooks/bank-sms/route");
+
+      const req = new NextRequest("http://localhost/api/webhooks/bank-sms?secret=tm_internal_bank_secret_2026", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          message: "[sms_message]",
+          sender: "PHONE-TEST-OK",
+        }),
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+      expect(json.testMode).toBe(true);
+      expect(json.amount).toBe(1);
+      expect(json.sender).toBe("PHONE-TEST-OK");
+      expect(json.utrNumber).toMatch(/^\d{12}$/);
+    });
+
+    it("permissively accepts unrecognized bank SMS format when rupee amount is present (non-OTP)", async () => {
+      const { NextRequest } = await import("next/server");
+      const { POST } = await import("@/app/api/webhooks/bank-sms/route");
+
+      // Custom/regional bank wording with Rs amount and 12-digit reference
+      const unconventionalSms = "Alert from Co-op Society: Rs 4,500.00 received in your credit balance. Ref: 772918346512.";
+      const req = new NextRequest("http://localhost/api/webhooks/bank-sms?secret=tm_internal_bank_secret_2026", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          message: unconventionalSms,
+          sender: "COOP-BANK",
+        }),
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+      expect(json.ingested).toBe(true);
+      expect(json.amount).toBe(4500);
+      expect(json.utrNumber).toBe("772918346512");
+    });
+
+    it("GET 1-tap test link with ?text= inserts test row at Row #1", async () => {
+      const { NextRequest } = await import("next/server");
+      const { GET } = await import("@/app/api/webhooks/bank-sms/route");
+
+      const req = new NextRequest(
+        "http://localhost/api/webhooks/bank-sms?secret=tm_internal_bank_secret_2026&text=Test+Phone+Connection+Rs.1",
+        { method: "GET" }
+      );
+      const res = await GET(req);
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.ok).toBe(true);
+      expect(json.testMode).toBe(true);
+      expect(json.amount).toBe(1);
+      expect(json.utrNumber).toMatch(/^\d{12}$/);
+    });
   });
 });

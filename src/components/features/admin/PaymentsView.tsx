@@ -118,7 +118,8 @@ export function PaymentsView() {
   // Live Webhook Status, Quick-Connect & Diagnostics State
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(() => new Date());
   const [isTestingWebhook, setIsTestingWebhook] = useState(false);
-  const [copiedWebhookUrl, setCopiedWebhookUrl] = useState(false);
+  const [copiedMacroDroidUrl, setCopiedMacroDroidUrl] = useState(false);
+  const [copiedInstantTestUrl, setCopiedInstantTestUrl] = useState(false);
   const [isFiringTestSms, setIsFiringTestSms] = useState(false);
 
   const canExport = hasPermission("payments_export");
@@ -437,15 +438,23 @@ export function PaymentsView() {
     }
   };
 
-  // Phone SMS Forwarder Quick-Connect Webhook URL and Live Test
+  // Phone SMS Forwarder Quick-Connect Webhook URLs and Handlers
   const smsWebhookSecret = pricing.bank_webhook_secret || "tm_internal_bank_secret_2026";
-  const canonicalWebhookUrl = `https://trippmatee.vercel.app/api/webhooks/bank-sms?secret=${smsWebhookSecret}`;
+  const canonicalMacroDroidUrl = `https://trippmatee.vercel.app/api/webhooks/bank-sms?secret=${smsWebhookSecret}`;
+  const canonicalInstantTestUrl = `https://trippmatee.vercel.app/api/webhooks/bank-sms?secret=${smsWebhookSecret}&text=Test+Phone+Connection+Rs.1`;
 
-  const handleCopyWebhookUrl = () => {
-    void navigator.clipboard.writeText(canonicalWebhookUrl);
-    setCopiedWebhookUrl(true);
-    setTimeout(() => setCopiedWebhookUrl(false), 2000);
-    toast("Copied Phone SMS Webhook URL with secret to clipboard!", "success");
+  const handleCopyMacroDroidUrl = () => {
+    void navigator.clipboard.writeText(canonicalMacroDroidUrl);
+    setCopiedMacroDroidUrl(true);
+    setTimeout(() => setCopiedMacroDroidUrl(false), 2000);
+    toast("Copied MacroDroid POST Webhook URL to clipboard!", "success");
+  };
+
+  const handleCopyInstantTestUrl = () => {
+    void navigator.clipboard.writeText(canonicalInstantTestUrl);
+    setCopiedInstantTestUrl(true);
+    setTimeout(() => setCopiedInstantTestUrl(false), 2000);
+    toast("Copied Phone Browser Instant Test Link to clipboard!", "success");
   };
 
   const handleFireLiveTestBankSms = async () => {
@@ -788,26 +797,16 @@ export function PaymentsView() {
                       📱 Phone SMS Forwarder Quick-Connect
                     </h3>
                     <span className="rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 px-2 py-0.2 text-[9px] font-black uppercase">
-                      Universal Ingestion
+                      Universal Android Ingestion
                     </span>
                   </div>
                   <p className="text-[11px] text-text-secondary">
-                    Paste into MacroDroid, SMS Forwarder, or phone app. Accepts JSON, Form, or Raw Text with query secret.
+                    No tricky query variables. Works with MacroDroid, SMS Forwarder, or 1-tap browser test.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  type="button"
-                  onClick={handleCopyWebhookUrl}
-                  className="flex items-center gap-1.5 rounded-xl border border-border-hairline bg-[#FBF9F5] hover:bg-[#EBE9E4] px-3 py-1.5 text-xs font-bold text-text-primary transition-colors shadow-xs"
-                  title="Copy complete Webhook URL with pre-attached secret query parameter"
-                >
-                  {copiedWebhookUrl ? <Check className="h-3.5 w-3.5 text-emerald-700" /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copiedWebhookUrl ? "Copied URL!" : "Copy SMS Webhook URL"}</span>
-                </button>
-
                 <button
                   type="button"
                   disabled={isFiringTestSms}
@@ -821,13 +820,62 @@ export function PaymentsView() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 rounded-xl border border-border-hairline bg-[#FBF9F5] px-3 py-2">
-              <span className="text-[10px] font-mono font-bold text-text-secondary uppercase shrink-0">
-                POST / GET:
-              </span>
-              <code className="text-xs font-mono font-bold text-[#1F1F1E] truncate select-all">
-                {canonicalWebhookUrl}
-              </code>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1">
+              {/* 1. MacroDroid POST URL */}
+              <div className="rounded-xl border border-border-hairline bg-[#FBF9F5] p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-text-primary">
+                    1. MacroDroid POST Webhook URL
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCopyMacroDroidUrl}
+                    className="flex items-center gap-1 rounded-lg border border-border-hairline bg-[#FFFFFF] hover:bg-[#EBE9E4] px-2 py-1 text-[10px] font-bold text-text-primary transition-colors shadow-xs"
+                  >
+                    {copiedMacroDroidUrl ? <Check className="h-3 w-3 text-emerald-700" /> : <Copy className="h-3 w-3" />}
+                    <span>{copiedMacroDroidUrl ? "Copied!" : "Copy POST URL"}</span>
+                  </button>
+                </div>
+                <code className="block text-xs font-mono font-bold text-[#1F1F1E] truncate select-all bg-[#FFFFFF] p-2 rounded-lg border border-border-hairline">
+                  {canonicalMacroDroidUrl}
+                </code>
+                <p className="text-[10px] text-text-secondary">
+                  Set HTTP POST in MacroDroid with body <code className="font-mono text-text-primary">&#123;&quot;message&quot;: &quot;[sms_message]&quot;&#125;</code>
+                </p>
+              </div>
+
+              {/* 2. Phone Browser Instant Test Link */}
+              <div className="rounded-xl border border-border-hairline bg-[#FBF9F5] p-3 space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-text-primary">
+                    2. Phone Browser Instant Test Link (1-Tap)
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <a
+                      href={canonicalInstantTestUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 rounded-lg border border-sky-300 bg-sky-50 hover:bg-sky-100 px-2 py-1 text-[10px] font-bold text-sky-900 transition-colors shadow-xs"
+                    >
+                      <span>Open Test</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleCopyInstantTestUrl}
+                      className="flex items-center gap-1 rounded-lg border border-border-hairline bg-[#FFFFFF] hover:bg-[#EBE9E4] px-2 py-1 text-[10px] font-bold text-text-primary transition-colors shadow-xs"
+                    >
+                      {copiedInstantTestUrl ? <Check className="h-3 w-3 text-emerald-700" /> : <Copy className="h-3 w-3" />}
+                      <span>{copiedInstantTestUrl ? "Copied!" : "Copy Link"}</span>
+                    </button>
+                  </div>
+                </div>
+                <code className="block text-xs font-mono font-bold text-[#1F1F1E] truncate select-all bg-[#FFFFFF] p-2 rounded-lg border border-border-hairline">
+                  {canonicalInstantTestUrl}
+                </code>
+                <p className="text-[10px] text-text-secondary">
+                  Open in phone browser to test live connectivity &amp; instantly place a ₹1 test card at Row #1.
+                </p>
+              </div>
             </div>
           </div>
 
